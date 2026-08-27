@@ -1,0 +1,21 @@
+{
+  "name": "sombras-de-brentel-prologue",
+  "version": "1.0.0",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder --dir"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
+    "vite": "^8.2.2",
+    "wait-on": "^9.1.0"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  }
+}

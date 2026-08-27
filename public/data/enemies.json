@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "name": "Guarda de Estayler",
+    "hp": 50,
+    "attack": 10,
+    "speed": 5
+  }
+]

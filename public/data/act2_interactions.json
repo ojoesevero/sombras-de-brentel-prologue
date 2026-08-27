@@ -1,0 +1,57 @@
+{
+  "sacerdotisa_palmem": {
+    "nodes": [
+      {
+        "name": "Sacerdotisa",
+        "text": "O veneno arcano corrói o espírito de Gruther. Se não expurgarmos a fonte de magia negra no Bosque Cinzento, ele perecerá.",
+        "portraitKey": "portrait_priestess"
+      }
+    ]
+  },
+  "gruther_leito": {
+    "nodes": [
+      {
+        "name": "Gruther",
+        "text": "As sombras... invadiram o celeiro. Um monstro de chifres. Eu ouvi o grito de Melissa... Salve-a...",
+        "portraitKey": "portrait_gruther"
+      }
+    ]
+  },
+  "guardas_muralha": {
+    "nodes": [
+      {
+        "name": "Guarda Telmer",
+        "text": "Atenção viajante. Criaturas estranhas foram vistas na Estrada Sul."
+      },
+      {
+        "name": "Guarda Breno",
+        "text": "Tenha cuidado se for prosseguir. Os portões estão abertos para aventureiros."
+      }
+    ]
+  },
+  "halfling_fazendeiro": {
+    "nodes": [
+      {
+        "name": "Fazendeiro",
+        "text": "Oh, deuses! Minha filha foi levada! O celeiro foi completamente arrombado por algo colossal!",
+        "portraitKey": "portrait_farmer"
+      }
+    ]
+  },
+  "celeiro_pistas": {
+    "nodes": [
+      {
+        "name": "Rhogar",
+        "text": "Estas pegadas são imensas... Cascos fendidos e poças de icor negro. A besta arrastou algo para a floresta."
+      }
+    ]
+  },
+  "mercador_yanil": {
+    "nodes": [
+      {
+        "name": "Yânil",
+        "text": "Dizem que as ruínas do Bosque Cinzento despertaram novamente. Tenho suprimentos, se tiver ouro."
+      }
+    ]
+  }
+}

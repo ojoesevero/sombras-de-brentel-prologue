@@ -1,0 +1,29 @@
+{
+  "corruptor_abissal": {
+    "name": "Corruptor Abissal",
+    "hp": 110,
+    "maxHp": 110,
+    "atk": 16,
+    "def": 12,
+    "exp": 60,
+    "gold": 35
+  },
+  "cultista_sombras": {
+    "name": "Cultista das Sombras",
+    "hp": 75,
+    "maxHp": 75,
+    "atk": 17,
+    "def": 5,
+    "exp": 45,
+    "gold": 25
+  },
+  "goblin_emboscador": {
+    "name": "Goblin Emboscador",
+    "hp": 50,
+    "maxHp": 50,
+    "atk": 12,
+    "def": 4,
+    "exp": 30,
+    "gold": 15
+  }
+}

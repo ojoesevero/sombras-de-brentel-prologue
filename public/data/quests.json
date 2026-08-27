@@ -1,0 +1,32 @@
+{
+  "quest_01_flashback": {
+    "id": "quest_01_flashback",
+    "title": "Memórias de Estayler",
+    "description": "Converse com os clientes da Taverna e depois fale com Joseph Sylven.",
+    "status": "active"
+  },
+  "quest_02_temple": {
+    "id": "quest_02_temple",
+    "title": "O Templo de Palmem",
+    "description": "Visite Gruther no Templo de Palmem ao norte de Rastphen.",
+    "status": "locked"
+  },
+  "quest_03_investigate_farm": {
+    "id": "quest_03_investigate_farm",
+    "title": "Rastros na Névoa",
+    "description": "Investigue o celeiro na Fazenda dos Halflings na Estrada Sul.",
+    "status": "locked"
+  },
+  "quest_04_forest_trail": {
+    "id": "quest_04_forest_trail",
+    "title": "A Trilha do Bosque Cinzento",
+    "description": "Siga o rastro do Minotauro até as ruínas da Masmorra.",
+    "status": "locked"
+  },
+  "quest_05_defeat_minotaur": {
+    "id": "quest_05_defeat_minotaur",
+    "title": "O Pesadelo Abissal",
+    "description": "Derrote o Minotauro no coração do templo em ruínas.",
+    "status": "locked"
+  }
+}

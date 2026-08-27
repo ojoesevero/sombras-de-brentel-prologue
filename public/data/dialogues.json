@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "character": "Iksar",
+    "text": "Largue a minha nova escrava! Vão me pagar muito ouro por ela!",
+    "portraitKey": "port_iksar_smug"
+  },
+  {
+    "id": 2,
+    "character": "Rhogar",
+    "text": "Esta mulher não é uma escrava! Ela é uma acólita de Harcos... É uma meio-elfa livre, não uma criminosa. Abra já essa sua jaula imunda e liberte-a agora!",
+    "portraitKey": "port_rhogar_neutral"
+  }
+]

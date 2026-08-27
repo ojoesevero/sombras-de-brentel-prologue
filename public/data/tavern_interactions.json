@@ -1,0 +1,82 @@
+{
+  "hilda": {
+    "nodes": [
+      { "speaker": "Hilda", "text": "Bem-vindo à Taverna Cauda do Dragão, garoto. A cerveja anã de colina está sempre fresca." },
+      { "speaker": "Hilda", "text": "As regras estão na placa. O que vai querer?", 
+        "choices": [
+          { "text": "[Positiva] Elogiar a comida e a ordem da casa.", "response": "Hilda: Ha! Pelo menos você tem modos, ao contrário dos camponeses." },
+          { "text": "[Neutra] Perguntar sobre o preço das poções e cerveja.", "response": "Hilda: Uma peça de prata a cerveja, cinco de ouro a poção. Sem fiado." },
+          { "text": "[Negativa] Reclamar da cerveja rala ou do barulho.", "response": "Hilda: Se não gosta, a porta da rua é serventia da casa, meio-sangue!" }
+        ]
+      },
+      { "speaker": "Hilda", "text": "A propósito, tome cuidado... Há rumores de corruptores assombrando as estradas ao sul." }
+    ]
+  },
+  "traudon_alicia": {
+    "nodes": [
+      { "speaker": "Traudon", "text": "Ah... damascos em calda com cerveja, a perfeição da culinária anã! Não é mesmo, Alícia?" },
+      { "speaker": "Alícia", "text": "Você devia focar na sua magia, Traudon. Diga a ele, viajante.",
+        "choices": [
+          { "text": "[Positiva] Apreciar a melodia do alaúde de Alícia.", "response": "Alícia: Obrigada. É bom ver que alguém aqui tem ouvidos refinados." },
+          { "text": "[Neutra] Perguntar sobre a receita dos damascos.", "response": "Traudon: Segredo de família! Mas garanto que leva mel e canela!" },
+          { "text": "[Negativa] Pedir silêncio para pensar.", "response": "Alícia: Ora, que indelicadeza. Guardarei meu alaúde então." }
+        ]
+      },
+      { "speaker": "Traudon", "text": "Bah, não ligue para ela. Um druida anão retira seu poder da terra e dos doces!" }
+    ]
+  },
+  "veronica_stinfy": {
+    "nodes": [
+      { "speaker": "Verônica Stinfy", "text": "A magia abissal... Ela contorce a trama da realidade de formas interessantes." },
+      { "speaker": "Verônica Stinfy", "text": "O que você quer, meio-elfo?",
+        "choices": [
+          { "text": "[Positiva] Oferecer cooperação contra os cultistas.", "response": "Verônica: Não preciso de babá, guerreiro. Mas sua intenção é... aceitável." },
+          { "text": "[Neutra] Perguntar friamente sobre os pergaminhos.", "response": "Verônica: São registros de feitiços de necromancia. Não que você entenda." },
+          { "text": "[Negativa] Dizer que magia arcana atrai problemas.", "response": "Verônica: A ignorância é uma bênção. Volte a balançar sua espada." }
+        ]
+      },
+      { "speaker": "Verônica Stinfy", "text": "Agora não me incomode. Estou trabalhando." }
+    ]
+  },
+  "john_bardem": {
+    "nodes": [
+      { "speaker": "John Bardem", "text": "Fique frio e não faça movimentos bruscos." },
+      { "speaker": "John Bardem", "text": "Vê aquele mercenário perto da mesa? O que acha de agir?",
+        "choices": [
+          { "text": "[Positiva] Oferecer cobertura caso o mercenário reaja.", "response": "John Bardem: Uma ajuda oportuna. Fique de prontidão se ele puxar aço." },
+          { "text": "[Neutra] Perguntar quem é o alvo do cartaz.", "response": "John Bardem: Um desertor do rei. Vale 100 PO vivo ou 50 morto." },
+          { "text": "[Negativa] Dizer para não arrumar confusão no salão.", "response": "John Bardem: Não me dê lições de moral. A lei é a lei." }
+        ]
+      }
+    ]
+  },
+  "joseph_initial": {
+    "nodes": [
+      { "speaker": "Joseph Sylven", "text": "Rhogar, ainda há tensão no ar. Converse com os frequentadores da taverna e beba algo antes de falarmos sobre nosso passado." }
+    ]
+  },
+  "joseph_ready": {
+    "nodes": [
+      { "speaker": "Joseph Sylven", "text": "Rhogar, meu rapaz. Vejo que a herança da sua mãe, a lâmina de Brentel, ainda pesa em suas costas." },
+      { "speaker": "Joseph Sylven", "text": "Aquela emboscada em Estayler ainda o assombra, não é? Lembre-se do que houve na carroça de escravos..." }
+    ]
+  },
+  "joseph_victory": {
+    "nodes": [
+      { "speaker": "Joseph Sylven", "text": "Superamos aquele cerco com honra. Agora as muralhas nos esperam." },
+      { "speaker": "Joseph Sylven", "text": "As muralhas de Rastphen levam à Estrada Sul. Vá, os portões sul foram abertos." }
+    ]
+  },
+  "joseph_defeat": {
+    "nodes": [
+      { "speaker": "Joseph Sylven", "text": "Aquele dia cobrou um preço alto e as feridas ainda ardem, mas sobrevivemos. Vamos em frente." },
+      { "speaker": "Joseph Sylven", "text": "As muralhas de Rastphen levam à Estrada Sul. Vá, os portões sul foram abertos." }
+    ]
+  },
+  "placa_regras": {
+    "nodes": [
+      { "speaker": "Placa da Taverna", "text": "[O entalhe está desgastado, escrito em quatro línguas de Walldarten]" },
+      { "speaker": "Placa da Taverna", "text": "'A Ordem Mantém a Paz. Por isso Comam, Bebam, Paguem... e Briguem Lá Fora!'" }
+    ]
+  }
+}

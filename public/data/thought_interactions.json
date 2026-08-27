@@ -1,0 +1,22 @@
+{
+  "thought_locked_tavern": {
+    "name": "Rhogar (Pensamento)",
+    "text": "Preciso falar com Joseph Sylven sobre nosso passado antes de sair para as ruas de Rastphen.",
+    "character": "Rhogar (Pensamento)"
+  },
+  "thought_locked_south_gate": {
+    "name": "Rhogar (Pensamento)",
+    "text": "Antes de seguir para a Estrada Sul, devo ir ao Templo de Palmem ao norte para verificar o estado de Gruther.",
+    "character": "Rhogar (Pensamento)"
+  },
+  "thought_locked_dungeon_entry": {
+    "name": "Rhogar (Pensamento)",
+    "text": "Não posso avançar às cegas pela névoa do bosque. Devo examinar o celeiro destruído na fazenda dos halflings primeiro para achar pistas da criatura.",
+    "character": "Rhogar (Pensamento)"
+  },
+  "thought_locked_boss_gate": {
+    "name": "Rhogar (Pensamento)",
+    "text": "O Grande Portão está selado por feitiçaria sombria. Preciso purificar as 3 Runas de Pestilência nos altares para romper o selo.",
+    "character": "Rhogar (Pensamento)"
+  }
+}
