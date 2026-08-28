@@ -15,6 +15,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.json('quests', './data/quests.json');
     this.load.json('dungeon_enemies', './data/dungeon_enemies.json');
     this.load.json('thought_interactions', './data/thought_interactions.json');
+    this.load.json('map_transitions', './data/map_transitions.json');
   }
 
   create() {

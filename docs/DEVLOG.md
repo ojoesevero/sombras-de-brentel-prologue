@@ -117,3 +117,60 @@
 - **Status:** Concluído
 - **Detalhes:** Cenário massivo (1600x1200) desenvolvido. A lógica de exploração avança do RPG tradicional (NPCs) para o sistema de *Dungeon Crawler*, mesclando interações dinâmicas (Fogueiras que acionam `SaveManager`) e Puzzles Ambientais em tempo real (Purificação de Runas disparando terremotos em cadeia antes de abrir as portas do chefe). A `ForestRouteScene` foi vinculada com sucesso à dungeon recém-instanciada.
 
+## Correção Crítica: Transição do Portão Sul e Desacoplamento de Triggers (v0.16.6)
+- **Status:** Concluído
+- **Detalhes:** Identificado e resolvido o congelamento do jogo ao tentar cruzar o Portão Sul rumo à estrada da floresta. Havia uma sobreposição física entre a área de interação dos guardas e a zona de transição de mapa, causando *race conditions*. A área do portão foi reposicionada estrategicamente. A `ForestRouteScene.js` recebeu blindagem no recebimento de metadados (`spawnX` e `spawnY`) e correção na iniciação do `resetFX` da câmera e fade, mitigando carregamentos silenciosos defeituosos.
+Adicionalmente, injetamos uma camada de instrumentação de telemetria refinada no `Logger.js` (input, dialogue, transition, quest) para traçar o mapa mental das sessões em tempo real. Por fim, democratizamos o acesso aos controles de front-end com navegação 100% Keyboard no modal da Hilda (Loja), RewardScene e DialogueBox (escolhas), sincronizados com a API de eventos do Phaser para um fluxo livre do mouse.
+
+## Correção Arquitetural: IPC ContextBridge e Preload.js (v0.16.8)
+- **Status:** Concluído
+- **Detalhes:** O módulo `Logger.js` havia recebido suas implementações de escrita em disco, porém os objetos `contextBridge` e `electronAPI` persistiam como *undefined* no Chromium DevTools. Isso se dava devido à flag `nodeIntegration` configurada como `true` no `electron/main.js`, aliada a um pathing obsoleto no `preload.js`. Forçamos `contextIsolation: true` e `nodeIntegration: false`, roteando tudo corretamente através de `path.join(__dirname, 'preload.js')`. O utilitário Logger também recebeu um log mestre imediato de inicialização (`[INIT] Logger inicializado...`).
+
+## Softlock e Resolutividade: Portão Sul - Desobstrução de Callbacks (v0.16.8)
+- **Status:** Concluído
+- **Detalhes:** A zona física sul de Rastphen ainda se mostrava instável. O problema base encontrava-se na chamada do método `startDialogue()`, que não convertia objetos simples `thoughtData` nativamente caso os metadados do JSON não possuíssem formato de array estrito na raiz. Retificamos o fluxo de eventos `overlap` com a reatribuição da propriedade `isInteracting` de forma mútua, além de aplicar `[thoughtData]` para garantir que o contêiner de diálogo empacote os nós narrativos de forma polimórfica e à prova de falhas.
+
+## Alinhamento Físico de Zona: Portão Sul de Rastphen (v0.16.9)
+- **Status:** Concluído
+- **Detalhes:** Foi diagnosticada uma discrepância grave entre o hitbox físico da `southGateTrigger` e a arte (render pass) verde pintada no chão, resultando em "vácuos" não detectáveis pelo gerenciador de colisão do Arcade Physics. Reposicionamos e forçamos a instanciação conjunta gráfica-física, blindando o overlap para que o callback ocorra de imediato assim que a hitbox do player transpor o limite geométrico visual, destravando totalmente o fluxo para a `ForestRouteScene`.
+
+## Resolução de Diálogo Fantasma: Reset Atômico (v0.16.9)
+- **Status:** Concluído
+- **Detalhes:** O módulo `DialogueBox.js` não estava propagando sua finalização para as variáveis de estado booleanas (deixando `isOpen = true`), o que tornava o input `CONFIRM` escravo de uma rotina invisível em cenas de alto adensamento de NPCs (como `TempleScene`). Centralizamos o *teardown* do componente na função `closeDialogue()`, injetando de maneira destrutiva a invalidação das interações (`this.scene.isInteracting = false`), erradicando a falha de input Z consecutiva.
+
+## Refatoração da Física de Transição: Portão Sul (v0.16.10)
+- **Status:** Concluído
+- **Detalhes:** O problema persistente de transição no Portão Sul foi definitivamente solucionado. A abordagem baseada em uma Zone invisível sobreposta ao visual causava desalinhamentos. A zona invisível foi removida, e o próprio retângulo verde visual foi promovido a um corpo físico estático da Phaser (`STATIC_BODY`). Isso garante que a detecção de *overlap* dispare exatamente na área desenhada, estabilizando as transições para a `ForestRouteScene`. Em conjunto, a cena de floresta recebeu ajustes no fluxo de `create()` garantindo telemetria e o correto inicializar do `fadeIn()`.
+
+## Pacote de Diagnóstico e Blindagem de Cenas (v0.16.11)
+- **Status:** Concluído
+- **Detalhes:** Foi injetada uma camada de diagnóstico profundo abrindo o `DevTools` de forma destacada diretamente no `electron/main.js` e implementados gatilhos `window.onerror` e `unhandledrejection` repassando a carga para o Logger em arquivo, prevenindo silêncios no caso de crashes invisíveis. O `QuestManager` ganhou tolerância com retornos polimórficos de `getQuestStatus()`. Na cena de `RastphenCityScene`, a transição do portão sul obteve envolventes de `try/catch`. Caso o JSON das missões falhe, o jogador recebe acesso irrestrito por fallback; se o `WorldManager` engasgar na gestão direcional de spawn, o fallback final empurra brutalmente a câmera para a cena da floresta (direct boot).
+
+## Resolução de Deadlock de Transição e Gatilhos (v0.16.12)
+- **Status:** Concluído
+- **Detalhes:** Rastreada e neutralizada a *race condition* (deadlock) que ocorria na transição inter-cenas do `WorldManager`. Cenas como `RastphenCityScene` hasteavam `this.isTransitioning = true` instantes antes da chamada, disparando a defesa interna do `WorldManager` que abortava silenciosamente a transição (pois ele abortava se a flag já estivesse verdadeira). O motor foi refatorado para operar por bloqueio de eventos da câmera (`_fadeRunning`), tornando `WorldManager.transitionTo()` perfeitamente idempotente sem devorar os inputs. Adicionalmente, corrigiu-se falha de inicialização em `ForestRouteScene` devido a restrição de default export e o gatilho físico inferior de transição na metrópole de Rastphen foi redimensionado (y: 550, altura 80px) de forma estrita para evitar que a barreira elidisse jogadores.
+
+## Matriz Visual Universal e Proteção Final de Transição (v0.16.13)
+- **Status:** Concluído
+- **Detalhes:** Aplicação estrita da Paleta de Cores (Color Palette Matrix) criando uma taxonomia visual coesa nas cenas de exploração (Tavern, Temple, Rastphen e ForestRoute): Jogador em Azul (`0x2980b9`), Portas e Transições em Verde (`0x27ae60`) e NPCs em Amarelo (`0xf1c40f`), normalizando e padronizando todas as *Zones* (áreas invisíveis) em retângulos visuais renderizados nativamente pela engine física para combater descompassos de colisão. O motor de trânsito bidirecional obteve o conserto resolutivo do erro de compilação `Phaser is not defined` injetando o contexto local via *import*, além da blindagem estrita na `RewardScene.js`, assegurando invulnerabilidade contra múltiplos despachos assíncronos durante o encerramento do combate de tutorial (Flashback).
+
+## Correção Definitiva da Transição de Mapa (Portão Sul) (v0.16.14)
+- **Status:** Concluído
+- **Detalhes:** Diagnóstico e erradicação do travamento fatal de portão na `RastphenCityScene.js` (overlap loop). A flag de bloqueio anterior suprimia a transição indefinidamente enquanto a área estava ativa, e o hitbox com altura de 40px no topo impedia que o jogador penetrasse adequadamente a área. O evento de colisão do Portão Sul foi refatorado adotando um hitbox profundo (80px) perfeitamente alinhado (X: 1200, Y: 1750), garantindo overlap absoluto com o jogador parado entre os guardas. A lógica interna agora repassa diretamente o controle ao `WorldManager.transitionTo` restabelecido.
+## Padronização do Portão Sul (v0.16.15)
+- **Status:** Concluído
+- **Detalhes:** O evento de colisão do Portão Sul na metrópole de Rastphen foi completamente refatorado para espelhar a arquitetura de bloqueio unificado já comprovada nas portas da Taverna e do Templo. Expurgamos todas as checagens híbridas de flags e callbacks locais, delegando a responsabilidade de trava unicamente a `isDialogueOpen` e terceirizando a execução de *fade* e carregamento de malha para a camada madura do `WorldManager`. O vetor topológico de entrada na `ForestRouteScene` também foi reconfigurado (X: 800, Y: 100), pousando precisamente o jogador no centro visível da estrada de terra e encerrando o ciclo de bugs de interface.
+
+## Reset de Estado e Transição Temporizada Segura (v0.16.16)
+- **Status:** Concluído
+- **Detalhes:** Identificado e corrigido o bloqueio das portas de Rastphen causado pelo acúmulo de estado de diálogo e dependência do callback de câmera do Phaser. Implementou-se o reset explícito das variáveis de controle (`isDialogueOpen`, `isInteracting`, `_fadeRunning`) e ocultação preventiva do `dialogueBox` no `create()` de `RastphenCityScene.js`. Todas as zonas de transição (Taverna, Templo e Portão Sul) foram liberadas da trava de `isDialogueOpen`, direcionando para o `WorldManager.transitionTo()`. Por fim, o `WorldManager` foi aprimorado para usar `time.delayedCall(220)` em vez de `FADE_OUT_COMPLETE`, garantindo a troca de cenas sem travamento por fade pendente.
+
+## Overhaul Arquitetural: FSM, UIScene e Portais Data-Driven (v0.17.0)
+- **Status:** Concluído
+- **Detalhes:** Realizado um profundo refatoramento arquitetural no ecossistema do jogo:
+  1. **Data-Driven Transitions:** Portas e zonas de transição mapeadas em `public/data/map_transitions.json` e geradas dinamicamente com corpos estáticos por `WorldManager.buildTransitions(scene)`.
+  2. **UIScene Global:** Criação da `UIScene.js` rodando em paralelo como overlay perene, centralizando a `DialogueBox` e HUD de objetivos via EventBus (`game.events`), eliminando acoplamentos locais de `setScrollFactor(0)` e vazamento de instâncias.
+  3. **Player FSM:** O modelo `Player.js` agora controla o estado de movimento/interação via enumeração `PlayerState` (`IDLE`, `WALKING`, `INTERACTING`, `TRANSITIONING`, `PAUSED`), garantindo anulação de velocidade e bloqueio de novos gatilhos durante diálogos ou transições.
+  4. **DevShortcuts:** Utilitário global com hotkeys (`F1` para depuração física, `F2` para destravar quests e teclas `1-5` para teletransporte direto entre os cenários).
+  5. **Higienização Geral:** Expurgados códigos legados e instâncias repetidas em todas as cenas de exploração (`TavernScene`, `RastphenCityScene`, `TempleScene`, `ForestRouteScene` e `DungeonScene`).
+

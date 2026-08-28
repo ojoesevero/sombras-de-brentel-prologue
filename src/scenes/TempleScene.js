@@ -3,7 +3,8 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
-import DialogueBox from '../ui/DialogueBox.js';
+import Player from '../entities/Player.js';
+import DevShortcuts from '../utils/DevShortcuts.js';
 
 /**
  * Cena do Templo de Palmem (Ato II).
@@ -18,7 +19,6 @@ export default class TempleScene extends Phaser.Scene {
   }
 
   create() {
-    this.isTransitioning = false;
     Logger.info('TempleScene', 'Renderizando Templo de Palmem.');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -45,102 +45,99 @@ export default class TempleScene extends Phaser.Scene {
     this.add.text(400, 150, 'Altar de Palmem', { fill: '#fff', fontSize: '12px' }).setOrigin(0.5);
 
     // Área de Enfermaria (Leito de Gruther)
-    const leito = this.add.rectangle(150, 100, 80, 120, 0x8b0000);
+    const leito = this.add.rectangle(230, 220, 80, 120, 0x8b0000);
     this.physics.add.existing(leito, true);
     this.staticGroup.add(leito);
-    this.add.text(150, 100, 'Gruther\n(Febril)', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
+    this.add.text(230, 220, 'Gruther\n(Febril)', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
 
     // NPCs e Zonas
     this.staticGroupNPCs = this.physics.add.staticGroup();
     
     // Sacerdotisa
-    this.sacerdotisa = this.add.circle(400, 220, 16, 0x00aaff);
+    this.sacerdotisa = this.add.rectangle(400, 250, 32, 32, 0xf1c40f);
     this.physics.add.existing(this.sacerdotisa, true);
     this.staticGroupNPCs.add(this.sacerdotisa);
-    this.add.text(400, 220, 'Sacerdotisa', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
+    this.add.text(400, 250, 'Sacerdotisa', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
 
-    // Spawn do Jogador
+    // Spawn do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 520);
-    this.player = this.add.rectangle(spawnX, spawnY, 32, 32, 0x0055ff);
-    this.physics.add.existing(this.player, false);
-    this.player.body.setSize(32, 32);
-    this.player.body.setCollideWorldBounds(true);
+    this.player = new Player(this, spawnX, spawnY, 32, 32, 0x2980b9);
     
     this.physics.add.collider(this.player, this.staticGroup);
     this.physics.add.collider(this.player, this.staticGroupNPCs);
 
-    // Porta Sul (Saída)
-    this.southDoor = this.add.rectangle(400, 590, 160, 20, 0x00ffff, 0.5);
-    this.physics.add.existing(this.southDoor, true);
-    this.physics.add.overlap(this.player, this.southDoor, () => {
-      if (!this.isInteracting) {
-        WorldManager.transitionTo(this, 'RastphenCityScene', { x: 600, y: 220 });
-      }
-    });
-
-    // HUD de Objetivo
-    this.objectiveText = this.add.text(400, 20, '', { fontSize: '14px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
-    this.objectiveText.setDepth(50);
+    // Portas e Triggers Data-Driven
+    WorldManager.buildTransitions(this);
 
     // Interações e Diálogos
-    this.dialogueBox = new DialogueBox(this, 50, 440, 700, 140);
-    this.dialogueBox.setDepth(1000);
-    this.dialogueBox.setScrollFactor(0);
-    this.dialogueBox.setVisible(false);
-    
-    this.isInteracting = false;
     this.interactionsData = this.cache.json.get('act2_interactions');
     this.interactIndicator = this.add.text(0, 0, '▼ [Z] Interagir', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#000' }).setOrigin(0.5).setVisible(false);
     this.currentInteractTarget = null;
     
     this.setupInteractions();
+    this.updateHUD();
 
     // Inputs e Pause
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
     InputManager.onAction('CONFIRM', () => {
-      if (this.isInteracting) {
-        this.dialogueBox.skipOrNext();
+      if (this.player && !this.player.canInteract()) {
+        Logger.info('Intent', 'Input Z/ESPAÇO recebido: Avançando diálogo na UIScene.');
+        this.game.events.emit('advanceDialogue');
         return;
       }
 
       if (this.currentInteractTarget) {
-        this.isInteracting = true;
-        this.player.body.setVelocity(0, 0);
-        this.interactIndicator.setVisible(false);
-        
-        let data = this.interactionsData[this.currentInteractTarget];
+        let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
-          Logger.info('TempleScene', `Iniciando diálogo: ${this.currentInteractTarget}`);
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(data);
+          Logger.info('Intent', `Iniciando interação com alvo [${this.currentInteractTarget}].`);
+          this.interactIndicator.setVisible(false);
+          this.game.events.emit('openDialogue', data);
         } else {
-          this.isInteracting = false;
+          Logger.warn('TempleScene', `Nenhum dado de diálogo encontrado para ${this.currentInteractTarget}`);
         }
       }
     });
 
     InputManager.onAction('MENU', () => {
-      if (this.isInteracting) return;
+      if (this.player && !this.player.canInteract()) return;
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'TempleScene' });
     });
 
-    this.dialogueBox.on('dialogueComplete', () => {
-      this.isInteracting = false;
-      // Avançar missão ao falar com Sacerdotisa ou Gruther
+    // Ouvinte para conclusão de diálogos
+    this._onGlobalDialogueClosed = () => {
       if (this.currentInteractTarget === 'sacerdotisa_palmem' || this.currentInteractTarget === 'gruther_leito') {
         if (!QuestManager.isQuestCompleted('quest_02_temple')) {
           QuestManager.advanceQuest('quest_02_temple', 'completed');
           QuestManager.advanceQuest('quest_03_investigate_farm', 'active');
           Logger.info('TempleScene', 'Quest "O Templo de Palmem" concluída! Nova Missão: Investigar a Fazenda.');
-          this.objectiveText.setText('Objetivo Atual: Investigue o celeiro na Fazenda dos Halflings na Estrada Sul');
+          this.updateHUD();
         }
       }
+      this.currentInteractTarget = null;
+    };
+
+    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
     });
+
+    // Atalhos de desenvolvedor
+    DevShortcuts.register(this);
+  }
+
+  updateHUD() {
+    let text = '';
+    if (QuestManager.isQuestCompleted('quest_02_temple') || QuestManager.getQuestStatus('quest_03_investigate_farm') === 'active') {
+      text = 'Objetivo Atual: Investigue o celeiro na Fazenda dos Halflings na Estrada Sul';
+    } else {
+      text = 'Objetivo: Fale com a Sacerdotisa e veja o estado de Gruther';
+    }
+    this.game.events.emit('updateObjective', text);
   }
 
   setupInteractions() {
@@ -155,32 +152,26 @@ export default class TempleScene extends Phaser.Scene {
     };
 
     addZone(this.sacerdotisa, 'sacerdotisa_palmem');
-    const leitoZone = this.add.zone(150, 100, 100, 140);
+    const leitoZone = this.add.zone(230, 220, 100, 140);
     this.physics.add.existing(leitoZone, true);
     leitoZone.interactId = 'gruther_leito';
-    leitoZone.targetEntity = { x: 150, y: 100 };
+    leitoZone.targetEntity = { x: 230, y: 220 };
     this.interactZones.add(leitoZone);
   }
 
   update() {
-    if (this.isInteracting) return;
-    if (!this.input.keyboard.enabled) return;
+    if (!this.input.keyboard || !this.input.keyboard.enabled) return;
     
     const cursors = this.input.keyboard.createCursorKeys();
-    const w = this.input.keyboard.addKey('W');
-    const a = this.input.keyboard.addKey('A');
-    const s = this.input.keyboard.addKey('S');
-    const d = this.input.keyboard.addKey('D');
+    const wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
 
-    let velX = 0; let velY = 0;
-    const speed = 180;
-
-    if (cursors.left.isDown || a.isDown) velX = -speed;
-    else if (cursors.right.isDown || d.isDown) velX = speed;
-    if (cursors.up.isDown || w.isDown) velY = -speed;
-    else if (cursors.down.isDown || s.isDown) velY = speed;
-
-    this.player.body.setVelocity(velX, velY);
+    // Controle de movimentação delegado ao Player (FSM)
+    this.player.handleMovement(cursors, wasd, 180);
 
     let touching = false;
     this.physics.overlap(this.player, this.interactZones, (player, zone) => {

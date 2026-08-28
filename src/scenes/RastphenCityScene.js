@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
-import DialogueBox from '../ui/DialogueBox.js';
+import Player from '../entities/Player.js';
+import DevShortcuts from '../utils/DevShortcuts.js';
 
 /**
  * Cena Hub de Mundo Aberto - Rastphen.
@@ -17,7 +18,6 @@ export default class RastphenCityScene extends Phaser.Scene {
   }
 
   create() {
-    this.isTransitioning = false;
     Logger.info('RastphenCityScene', 'Renderizando mapa aberto da cidade.');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -54,26 +54,23 @@ export default class RastphenCityScene extends Phaser.Scene {
     // NPCs da Cidade
     this.staticGroupNPCs = this.physics.add.staticGroup();
     
-    this.mercadorYanil = this.add.circle(1200, 850, 20, 0x00ff00);
+    this.mercadorYanil = this.add.rectangle(1200, 850, 32, 32, 0xf1c40f);
     this.physics.add.existing(this.mercadorYanil, true);
     this.staticGroupNPCs.add(this.mercadorYanil);
     this.add.text(1200, 850, 'Yânil', { fill: '#fff' }).setOrigin(0.5);
 
-    this.guardaTelmer = this.add.rectangle(1100, 1750, 32, 32, 0xaaaaaa);
+    this.guardaTelmer = this.add.rectangle(1100, 1750, 32, 32, 0xf1c40f);
     this.physics.add.existing(this.guardaTelmer, true);
     this.staticGroupNPCs.add(this.guardaTelmer);
 
-    this.guardaBreno = this.add.rectangle(1300, 1750, 32, 32, 0xaaaaaa);
+    this.guardaBreno = this.add.rectangle(1300, 1750, 32, 32, 0xf1c40f);
     this.physics.add.existing(this.guardaBreno, true);
     this.staticGroupNPCs.add(this.guardaBreno);
 
-    // Sistema de Telemetria e Spawn do Jogador
+    // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 1200);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 900);
-    this.player = this.add.rectangle(spawnX, spawnY, 32, 32, 0x0055ff);
-    this.physics.add.existing(this.player, false);
-    this.player.body.setSize(32, 32);
-    this.player.body.setCollideWorldBounds(true);
+    this.player = new Player(this, spawnX, spawnY, 32, 32, 0x2980b9);
     
     this.physics.add.collider(this.player, this.staticGroup);
     this.physics.add.collider(this.player, this.staticGroupNPCs);
@@ -82,54 +79,11 @@ export default class RastphenCityScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, 2400, 1800);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
-    // Portas e Triggers de Transição (Bidirecionais)
-    
-    // Porta da Taverna (Lado direito da Taverna)
-    this.tavernTrigger = this.add.rectangle(520, 800, 50, 80, 0x00ffff, 0.5);
-    this.physics.add.existing(this.tavernTrigger, true);
-    this.physics.add.overlap(this.player, this.tavernTrigger, () => {
-      if (!this.isDialogueOpen) {
-        WorldManager.transitionTo(this, 'TavernScene', { x: 400, y: 540 });
-      }
-    });
-
-    // Porta Norte (Templo)
-    this.templeTrigger = this.add.rectangle(1200, 370, 400, 50, 0x00ffff, 0.5);
-    this.physics.add.existing(this.templeTrigger, true);
-    this.physics.add.overlap(this.player, this.templeTrigger, () => {
-      if (!this.isDialogueOpen) {
-        WorldManager.transitionTo(this, 'TempleScene', { x: 400, y: 520 });
-      }
-    });
-
-    // Portão Sul (Saída pro Mato/Dungeon)
-    this.southGateTrigger = this.add.rectangle(1200, 1790, 400, 40, 0x00ff00, 0.5);
-    this.physics.add.existing(this.southGateTrigger, true);
-    this.physics.add.overlap(this.player, this.southGateTrigger, () => {
-      if (!this.isDialogueOpen) {
-        if (!QuestManager.isQuestCompleted('quest_02_temple')) {
-          this.player.y -= 30; // pushback
-          this.player.body.setVelocity(0, 0);
-          this.isDialogueOpen = true;
-          
-          const thoughts = this.cache.json.get('thought_interactions');
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(thoughts['thought_locked_south_gate']);
-        } else {
-          WorldManager.transitionTo(this, 'ForestRouteScene', { x: 400, y: 150 });
-        }
-      }
-    });
+    // Portas e Triggers Data-Driven
+    WorldManager.buildTransitions(this);
 
     // Interações e Diálogos
-    this.dialogueBox = new DialogueBox(this, 50, 440, 700, 140);
-    this.dialogueBox.setDepth(2000);
-    this.dialogueBox.setScrollFactor(0);
-    this.dialogueBox.setVisible(false);
-    
-    this.isDialogueOpen = false;
     this.interactionsData = this.cache.json.get('act2_interactions');
-
     this.interactIndicator = this.add.text(0, 0, '[Z]', { fontSize: '16px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5).setVisible(false);
     this.currentInteractTarget = null;
     
@@ -142,38 +96,33 @@ export default class RastphenCityScene extends Phaser.Scene {
     }
 
     InputManager.onAction('CONFIRM', () => {
-      if (this.isDialogueOpen) {
-        this.dialogueBox.skipOrNext();
+      if (this.player && !this.player.canInteract()) {
+        Logger.info('Intent', 'Input Z/ESPAÇO: Avançando diálogo na UIScene.');
+        this.game.events.emit('advanceDialogue');
         return;
       }
 
       if (this.currentInteractTarget) {
-        this.isDialogueOpen = true;
-        this.player.body.setVelocity(0, 0);
-        this.interactIndicator.setVisible(false);
-        
-        let data = this.interactionsData[this.currentInteractTarget];
+        let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
-          Logger.info('RastphenCityScene', `Iniciando diálogo: ${this.currentInteractTarget}`);
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(data);
+          Logger.info('Intent', `Iniciando interação com [${this.currentInteractTarget}].`);
+          this.interactIndicator.setVisible(false);
+          this.game.events.emit('openDialogue', data);
         } else {
-          this.isDialogueOpen = false;
+          Logger.warn('RastphenCityScene', `Nenhum dado de diálogo para ${this.currentInteractTarget}`);
         }
       }
     });
 
     InputManager.onAction('MENU', () => {
-      if (this.isDialogueOpen) return;
+      if (this.player && !this.player.canInteract()) return;
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'RastphenCityScene' });
     });
 
-    this.dialogueBox.on('dialogueComplete', () => {
-      this.dialogueBox.setVisible(false);
-      this.isDialogueOpen = false;
-    });
+    // Atalhos de Desenvolvedor
+    DevShortcuts.register(this);
   }
 
   setupInteractions() {
@@ -193,26 +142,18 @@ export default class RastphenCityScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isDialogueOpen) return;
-    if (!this.input.keyboard.enabled) return;
+    if (!this.input.keyboard || !this.input.keyboard.enabled) return;
     
     const cursors = this.input.keyboard.createCursorKeys();
-    const w = this.input.keyboard.addKey('W');
-    const a = this.input.keyboard.addKey('A');
-    const s = this.input.keyboard.addKey('S');
-    const d = this.input.keyboard.addKey('D');
+    const wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
 
-    let velX = 0;
-    let velY = 0;
-    const speed = 250; // Nas ruas pavimentadas o sprint é maior
-
-    if (cursors.left.isDown || a.isDown) velX = -speed;
-    else if (cursors.right.isDown || d.isDown) velX = speed;
-    
-    if (cursors.up.isDown || w.isDown) velY = -speed;
-    else if (cursors.down.isDown || s.isDown) velY = speed;
-
-    this.player.body.setVelocity(velX, velY);
+    // Controle de movimento delegado ao Player (FSM)
+    this.player.handleMovement(cursors, wasd, 250);
 
     // Checar zonas de interação
     let touching = false;

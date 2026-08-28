@@ -118,7 +118,8 @@ class InputManager extends Phaser.Events.EventEmitter {
 
   emitAction(action) {
     this.emit(action);
-    Logger.debug('InputManager', `Ação disparada: ${action}`);
+    const sceneName = (this.scene && this.scene.scene) ? this.scene.scene.key : 'Global';
+    Logger.input('KEY_EVENT', action, sceneName);
   }
 
   /**

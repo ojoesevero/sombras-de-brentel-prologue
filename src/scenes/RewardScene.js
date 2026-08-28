@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import SaveManager from '../services/SaveManager.js';
-import SaveManager from '../services/SaveManager.js';
 import QuestManager from '../services/QuestManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
@@ -76,24 +75,34 @@ export default class RewardScene extends Phaser.Scene {
     const btnText = this.add.text(0, 0, 'Continuar', { fontSize: '18px', fill: '#ffffff' }).setOrigin(0.5);
     btnContainer.add([btnRect, btnText]);
 
-    btnRect.on('pointerdown', () => {
-      Logger.info('RewardScene', `Retornando para a cena: ${this.returnScene}`);
-      this.cameras.main.fadeOut(1000, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        if (this.isFlashback) {
-          this.registry.set('hasCompletedFlashback', true);
-          QuestManager.advanceQuest('quest_01_flashback', 'completed');
-          QuestManager.advanceQuest('quest_02_temple', 'active');
-          
-          WorldManager.transitionTo(this, 'TavernScene', { 
-            x: 700, 
-            y: 480, 
-            returnedFromFlashback: true, 
-            battleOutcome: 'victory' 
-          });
-          return;
-        }
+    // Foco Inicial Ativo
+    btnRect.setStrokeStyle(4, 0xd4af37);
+    btnRect.fillColor = 0x333333;
 
+    this.isTransitioning = false;
+    
+    const proceed = () => {
+      if (this.isTransitioning) return;
+      this.isTransitioning = true;
+      
+      Logger.info('RewardScene', `Retornando para a cena: ${this.returnScene}`);
+      
+      if (this.isFlashback) {
+        this.registry.set('hasCompletedFlashback', true);
+        QuestManager.advanceQuest('quest_01_flashback', 'completed');
+        QuestManager.advanceQuest('quest_02_temple', 'active');
+        
+        WorldManager.transitionTo(this, 'TavernScene', { 
+          x: 700, 
+          y: 480, 
+          returnedFromFlashback: true, 
+          battleOutcome: 'victory' 
+        });
+        return;
+      }
+
+      this.cameras.main.fadeOut(1000, 0, 0, 0);
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
         if (this.isOverlay) {
           this.scene.resume(this.returnScene);
           this.scene.stop();
@@ -101,6 +110,20 @@ export default class RewardScene extends Phaser.Scene {
           this.scene.start(this.returnScene, { returnedFromFlashback: this.isFlashback, battleOutcome: 'victory' });
         }
       });
-    });
+    };
+
+    btnRect.on('pointerdown', proceed);
+    
+    // Suporte 100% a Teclado (Z, Espaço, Enter)
+    this.input.keyboard.on('keydown-Z', proceed);
+    this.input.keyboard.on('keydown-SPACE', proceed);
+    this.input.keyboard.on('keydown-ENTER', proceed);
+  }
+
+  // Prevenir leaks de input se a cena for destruída
+  shutdown() {
+    this.input.keyboard.off('keydown-Z');
+    this.input.keyboard.off('keydown-SPACE');
+    this.input.keyboard.off('keydown-ENTER');
   }
 }

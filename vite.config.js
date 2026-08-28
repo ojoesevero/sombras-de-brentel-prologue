@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
+const { defineConfig } = require('vite');
 
-export default defineConfig({
+module.exports = defineConfig({
   base: './',
   server: {
     port: 3000,

@@ -1,14 +1,33 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const fs = require('fs');
+
+// Garante que o diretório logs/ exista
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
+ipcMain.on('write-log', (event, logEntry) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const logFile = path.join(logsDir, `${today}.log`);
+    const line = typeof logEntry === 'string' ? logEntry : JSON.stringify(logEntry);
+    fs.appendFileSync(logFile, `[${new Date().toLocaleTimeString()}] ${line}\n`, 'utf8');
+  } catch (err) {
+    console.error('Erro ao escrever log:', err);
+  }
+});
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 768,
     useContentSize: true,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
@@ -22,6 +41,7 @@ function createWindow() {
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

@@ -4,6 +4,8 @@
  * @module Logger
  */
 
+const ENABLE_FILE_LOGGING = true;
+
 class Logger {
   constructor() {
     if (Logger.instance) {
@@ -25,71 +27,116 @@ class Logger {
     const hh = String(now.getHours()).padStart(2, '0');
     const min = String(now.getMinutes()).padStart(2, '0');
     const ss = String(now.getSeconds()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+    const mmm = String(now.getMilliseconds()).padStart(3, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}.${mmm}`;
+  }
+
+  /**
+   * Escreve no arquivo de log via IPC se habilitado e rodando no Electron
+   * @private
+   */
+  _writeToFile(logEntry) {
+    if (ENABLE_FILE_LOGGING && window && window.electronAPI && window.electronAPI.writeLog) {
+      window.electronAPI.writeLog(logEntry + '\n');
+    }
   }
 
   /**
    * Registra uma mensagem informativa.
-   * @param {string} context - O contexto ou módulo de onde o log se origina (ex: 'GameScene', 'Network').
-   * @param {string} message - A mensagem principal do log.
-   * @param {Object} [data] - Objeto opcional com dados adicionais a serem registrados.
    */
   info(context, message, data = null) {
     const prefix = `[${this._getTimestamp()}] [INFO] [${context}]`;
-    if (data) {
-      console.info(`${prefix} ${message}`, data);
-    } else {
-      console.info(`${prefix} ${message}`);
-    }
+    const fullMsg = data ? `${prefix} ${message} ${JSON.stringify(data)}` : `${prefix} ${message}`;
+    console.info(prefix, message, data || '');
+    this._writeToFile(fullMsg);
   }
 
   /**
    * Registra um aviso (warning).
-   * @param {string} context - O contexto ou módulo de onde o log se origina.
-   * @param {string} message - A mensagem de aviso.
-   * @param {Object} [data] - Objeto opcional com dados adicionais a serem registrados.
    */
   warn(context, message, data = null) {
     const prefix = `[${this._getTimestamp()}] [WARN] [${context}]`;
-    if (data) {
-      console.warn(`${prefix} ${message}`, data);
-    } else {
-      console.warn(`${prefix} ${message}`);
-    }
+    const fullMsg = data ? `${prefix} ${message} ${JSON.stringify(data)}` : `${prefix} ${message}`;
+    console.warn(prefix, message, data || '');
+    this._writeToFile(fullMsg);
   }
 
   /**
    * Registra um erro.
-   * @param {string} context - O contexto ou módulo de onde o erro se origina.
-   * @param {string} message - A mensagem de erro.
-   * @param {Error|Object} [error] - O objeto de erro associado para stack trace.
    */
   error(context, message, error = null) {
     const prefix = `[${this._getTimestamp()}] [ERROR] [${context}]`;
-    if (error) {
-      console.error(`${prefix} ${message}`, error);
-    } else {
-      console.error(`${prefix} ${message}`);
-    }
+    const errStr = error instanceof Error ? error.stack : JSON.stringify(error);
+    const fullMsg = error ? `${prefix} ${message} ${errStr}` : `${prefix} ${message}`;
+    console.error(prefix, message, error || '');
+    this._writeToFile(fullMsg);
   }
 
   /**
    * Registra uma mensagem de depuração.
-   * @param {string} context - O contexto ou módulo de onde o log se origina.
-   * @param {string} message - A mensagem de depuração.
-   * @param {Object} [data] - Objeto opcional com dados adicionais.
    */
   debug(context, message, data = null) {
     const prefix = `[${this._getTimestamp()}] [DEBUG] [${context}]`;
-    if (data) {
-      console.debug(`${prefix} ${message}`, data);
-    } else {
-      console.debug(`${prefix} ${message}`);
-    }
+    const fullMsg = data ? `${prefix} ${message} ${JSON.stringify(data)}` : `${prefix} ${message}`;
+    console.debug(prefix, message, data || '');
+    this._writeToFile(fullMsg);
+  }
+
+  /**
+   * Loga ações de input do teclado/gamepad.
+   */
+  input(key, action, sceneName) {
+    const prefix = `[${this._getTimestamp()}] [INPUT] [${sceneName}]`;
+    const msg = `${prefix} Key: ${key} -> Action: ${action}`;
+    console.info(msg);
+    this._writeToFile(msg);
+  }
+
+  /**
+   * Loga eventos de diálogo.
+   */
+  dialogue(event, speaker, data = null) {
+    const prefix = `[${this._getTimestamp()}] [DIALOGUE] [${event}]`;
+    const fullMsg = data ? `${prefix} Speaker: ${speaker} | ${JSON.stringify(data)}` : `${prefix} Speaker: ${speaker}`;
+    console.info(prefix, `Speaker: ${speaker}`, data || '');
+    this._writeToFile(fullMsg);
+  }
+
+  /**
+   * Loga transições de cena.
+   */
+  transition(fromScene, toScene, payload = null) {
+    const prefix = `[${this._getTimestamp()}] [TRANSITION]`;
+    const fullMsg = payload ? `${prefix} ${fromScene} -> ${toScene} | ${JSON.stringify(payload)}` : `${prefix} ${fromScene} -> ${toScene}`;
+    console.info(prefix, `${fromScene} -> ${toScene}`, payload || '');
+    this._writeToFile(fullMsg);
+  }
+
+  /**
+   * Loga atualizações de quest.
+   */
+  quest(questId, status) {
+    const prefix = `[${this._getTimestamp()}] [QUEST]`;
+    const msg = `${prefix} ${questId} -> ${status}`;
+    console.info(msg);
+    this._writeToFile(msg);
   }
 }
 
 const loggerInstance = new Logger();
 Object.freeze(loggerInstance);
+
+if (typeof window !== 'undefined' && window.electronAPI?.writeLog) {
+  window.electronAPI.writeLog('[INIT] Logger inicializado e conectado ao Electron.');
+}
+
+if (typeof window !== 'undefined') {
+  window.onerror = (message, source, lineno, colno, error) => {
+    loggerInstance.error('UnhandledException', `${message} at ${source}:${lineno}:${colno}`, error?.stack);
+  };
+  window.addEventListener('unhandledrejection', (event) => {
+    loggerInstance.error('UnhandledRejection', event.reason?.message || event.reason, event.reason?.stack);
+  });
+}
 
 export default loggerInstance;

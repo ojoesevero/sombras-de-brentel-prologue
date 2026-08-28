@@ -109,9 +109,74 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - A `RewardScene` agora avança explicitamente a missão `quest_01_flashback` para concluída, além de invocar nativamente a transição da cena através do `WorldManager.transitionTo()`, prevenindo que a taverna recarregue o diálogo bloqueador do tutorial.
 - Resolvido travamento silencioso (caixa de diálogo oculta) ao interagir com guardas em Rastphen graças ao repasse explícito de configurações fixas (`setScrollFactor(0)` e `setVisible(true)`) na `DialogueBox` da cidade.
 
-## [0.17.0] - A Masmorra do Bosque Cinzento (Ato III)
+## [0.16.9] - Hotfix: Colisões e Reset de Diálogos
+### Fixed
+- Reset atômico da `DialogueBox`: A caixa de diálogo agora gerencia seu próprio encerramento (`closeDialogue()`) assegurando o despache das variáveis `isOpen` e desativando estritamente a trava `isInteracting` da cena parental, resolvendo o input "fantasma" que impedia interações consecutivas (Ex: Gruther seguido da Sacerdotisa na `TempleScene`).
+- O Portão Sul na `RastphenCityScene` teve suas diretrizes de colisão física realinhadas de forma milimétrica (x: 1200, y: 1790, w: 120, h: 20) com a representação gráfica subjacente da zona. Isso normaliza a resposta de input espacial da trava verde rumo à estrada da fazenda.
+### Fixed
+- A injeção nativa do arquivo `preload.js` através das diretrizes do *webPreferences* no Electron (`contextIsolation: true` e `nodeIntegration: false`) foi reconfigurada, reabilitando a persistência física dos logs com suporte à conversão de objetos (JSON). O canal IPC agora consegue interceptar os inputs e instanciar os logs com datas no disco sem falhas de escopo.
+- Retificado o *trigger* do Portão Sul em `RastphenCityScene.js`, onde uma verificação prematura e dessincronização de flags (conflito entre `isTransitioning` e `isDialogueOpen/isInteracting`) criavam um softlock na área verde. O gatilho agora possui Fallbacks corretos de Array e trava os inputs adequadamente de acordo com o `QuestManager`.
+
+## [0.16.6] - Correção do Portão Sul e Transição Forest Route
+### Fixed
+- Corrigido travamento ao atravessar o Portão Sul em `RastphenCityScene.js` separando fisicamente o gatilho de diálogo dos guardas da zona de transição de mapa.
+- Adicionada blindagem e fade-in imediatos no carregamento da `ForestRouteScene.js` além de tratamento defensivo nas coordenadas de *spawn*.
+
 ### Added
-- Introduzida a `DungeonScene.js` (Masmorra), estruturada com iluminação sombria, barreiras arquitetônicas e overlay de névoa translúcida.
-- Mecânica de Puzzle "Runas de Pestilência" implantada: purificar três pedestais trancados usando a *hotkey* de interação balança a câmera (`cameras.main.shake`) e destranca o portão do Boss Sul.
-- Fogueira de Checkpoint integrada: ao descansar, recupera HP e ativa o `SaveManager.saveGame()`.
-- Novo arquivo estrutural JSON `dungeon_enemies.json` embutindo dados literais do Corruptor Abissal, Cultista das Sombras e Goblin Emboscador.
+- Módulo `Logger.js` aprimorado com métodos estáticos avançados (`input`, `dialogue`, `transition`, `quest`) para metria e telemetria de componentes em tempo real (teclas pressionadas, transições físicas e avanço semântico da lore).
+- **Acessibilidade de Teclado Total (100% Keyboard Support):** Interfaces de Diálogos (`DialogueBox.js`), Recompensas (`RewardScene.js`) e Loja (`ShopUI.js`) agora contam com binds robustas de [Z], [ENTER], [ESPAÇO] para confirmação e setas (WASD) para fluxo de seleção (foco dinâmico e feedback visual em amarelo), suplantando a necessidade estrita do ponteiro de mouse.
+
+
+## [0.16.10] - Hotfix: Refatoração Física do Portão Sul
+### Fixed
+- Substituição da Zone separada por Rectangle Physics Body diretamente no elemento visual do Portão Sul da `RastphenCityScene.js`, erradicando definitivamente o desalinhamento e a falha na transição para a `ForestRouteScene.js`.
+- Adicionada blindagem com reordenação do fade-in e log de sucesso no topo do `create()` em `ForestRouteScene.js`.
+
+## [0.16.11] - Diagnóstico e Blindagem (Portão Sul)
+### Added
+- Abertura automática do DevTools e captura de exceções não tratadas globais via `window.onerror` e `unhandledrejection` no `Logger.js`, garantindo que exceções ocultas emitam log em disco.
+### Fixed
+- Blindagem e métodos retrocompatíveis de consulta no `QuestManager.js` (`isQuestCompleted`, `isCompleted`, `getQuestStatus`) prevenindo quebras de tipagem (undefined).
+- Refatoração defensiva (try/catch blocks) do trigger do portão sul em `RastphenCityScene.js`. Agora, em caso de falha do QuestManager ou WorldManager, mecanismos de *fallback* disparam a transição de forma direta, garantindo que o jogador sempre chegue na floresta.
+
+## [0.16.12] - Correção do Deadlock de Transição e Import
+### Fixed
+- Eliminado o deadlock na flag de transição entre a cena `RastphenCityScene` e `WorldManager`. Substituído o controle concorrente de flags (`isTransitioning`) por um *lock* restrito local de fade (`_fadeRunning`) e o `WorldManager.transitionTo` remodelado para ser tolerante a chamadas contínuas.
+- Harmonização de export (`ForestRouteScene`) via construtor literal para resolver crash de compatibilidade no import.
+- Gatilho físico do Portão Sul ampliado (80px) em `RastphenCityScene.js` para garantir colisão absoluta e transição em *fade* segura.
+
+## [0.16.16] - Reset de Estado e Transição Temporizada Segura
+### Fixed
+- Reset forçado de variáveis de controle (`isDialogueOpen`, `isInteracting`, `_fadeRunning`) e visibilidade de diálogo no topo do `create()` em `RastphenCityScene.js`.
+- Remoção da trava rígida de `isDialogueOpen` nos triggers de transição (Taverna, Templo e Portão Sul), garantindo transição desobstruída entre as áreas.
+- Refatoração do `WorldManager.transitionTo()` utilizando `time.delayedCall` (220ms) ao invés de depender de eventos de câmera pendentes para inicializar novas cenas.
+
+## [0.16.15] - Padronização do Portão Sul
+### Fixed
+- Adoção da arquitetura de trigger testada na Taverna e no Templo para a Estrada Sul em `RastphenCityScene.js`, expurgando a dependência de listeners locais na caixa de diálogo e delegando a transição blindada unicamente ao `WorldManager`.
+- Ajuste vetorial de spawn final na `ForestRouteScene.js` (X: 800, Y: 100).
+
+## [0.16.14] - Correção Definitiva da Transição de Mapa (Portão Sul)
+### Fixed
+- Realinhamento da hitbox do Portão Sul em `RastphenCityScene.js` (X: 1200, Y: 1750, W: 320, H: 80) para garantir que o jogador penetre na área física.
+- Restauração do fluxo via `WorldManager.transitionTo` com tolerância total a flags residuais.
+
+## [0.16.13] - Matriz Visual Universal e Proteção do WorldManager
+### Added
+- Padronização Visual Universal (Color Palette Matrix) aplicada a todas as cenas de exploração (RastphenCityScene, TavernScene, TempleScene e ForestRouteScene):
+  - Jogador (Rhogar): Retângulo Azul (0x2980b9).
+  - Portas e Zonas de Transição: Retângulos Verdes (0x27ae60).
+  - NPCs (Guardas, Sacerdotisa, Mercadores, Habitantes): Amarelos (0xf1c40f).
+### Fixed
+- Correção definitiva de `ReferenceError: Phaser is not defined` no `WorldManager.js` adicionando a importação estrita.
+- Blindagem de transição na `RewardScene.js` (botão "Continuar"). O fluxo de fade-out e transição foi consolidado, prevenindo repetição de *inputs* via trava interna de estado (`isTransitioning`).
+
+## [0.17.0] - Overhaul Arquitetural: FSM, UIScene, Data-Driven Portals & DevTools
+### Added
+- **Arquitetura Data-Driven para Portais:** Centralização de todas as portas e transições em `public/data/map_transitions.json`, com montagem e colisão automatizadas via `WorldManager.buildTransitions()`.
+- **Cena de Overlay Global de UI (`UIScene`):** Criação de `UIScene.js` rodando em paralelo para gerenciar de forma singleton o `DialogueBox` e HUD de objetivos via EventBus (`game.events`), eliminando duplicações e problemas de câmera/scroll.
+- **Máquina de Estados Finita do Jogador (Player FSM):** Refatoração da classe `Player.js` com `PlayerState` (`IDLE`, `WALKING`, `INTERACTING`, `TRANSITIONING`, `PAUSED`), garantindo cessação atômica de velocidade e travamento unificado de inputs e gatilhos.
+- **Atalhos de Desenvolvedor (`DevShortcuts.js`):** Módulo com hotkeys de diagnóstico: `F1` (toggle physics debug), `F2` (completar quests) e teclas `1` a `5` (teleporte direto entre Taverna, Rastphen, Templo, Fazenda e Masmorra).
+- Introduzida a `DungeonScene.js` (Masmorra), estruturada com iluminação sombria, barreiras arquitetônicas, puzzle das 3 Runas, fogueira de checkpoint e novos monstros em `dungeon_enemies.json`.
+### Fixed
+- Erradicados vazamentos de estado (*state leaks*) e travamentos em cascatas nas transições entre mapas graças à centralização de UI e FSM do Jogador.

@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-
+import Logger from '../utils/Logger.js';
 export default class DialogueBox extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height) {
     super(scene, x, y);
@@ -107,6 +107,7 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
   }
 
   startDialogue(dialogueData) {
+    this.isOpen = true;
     const rawNodes = Array.isArray(dialogueData.nodes) ? dialogueData.nodes : (Array.isArray(dialogueData) ? dialogueData : [dialogueData]);
     
     this.nodes = rawNodes.map(n => ({
@@ -114,6 +115,8 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
       character: n.character || n.name || n.speaker || 'Narrador',
       text: n.text || ''
     }));
+
+    Logger.dialogue('START', this.nodes[0].character, this.nodes[0].text);
 
     this.lineIndex = 0;
     this.tempResponseNode = null;
@@ -240,17 +243,31 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     });
   }
 
+  closeDialogue() {
+    this.isOpen = false;
+    this.isPrinting = false;
+    this.isTyping = false;
+    this.setVisible(false);
+    
+    if (this.scene) {
+      this.scene.isInteracting = false;
+      this.scene.isDialogueOpen = false; 
+    }
+    
+    Logger.dialogue('END', '', null);
+    this.emit('dialogueComplete');
+  }
+
   selectChoice() {
     const choice = this.activeChoices[this.currentChoiceIndex];
+    Logger.dialogue('CHOICE', this.nodes[this.lineIndex].character || '???', choice.text);
     this.clearChoices();
     
     if (choice.response) {
-      // Cria um nó temporário para exibir a resposta imediata
       const speaker = this.nodes[this.lineIndex].character || this.nodes[this.lineIndex].speaker || '???';
       this.tempResponseNode = { speaker: speaker, text: choice.response, portraitKey: this.nodes[this.lineIndex].portraitKey };
       this.showCurrentLine();
     } else if (choice.nextNode) {
-      // Futuro suporte a nextNode (salto de índice)
       this.tempResponseNode = null;
       this.lineIndex++;
       this.showCurrentLine();
@@ -260,8 +277,7 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
       if (this.lineIndex < this.nodes.length) {
         this.showCurrentLine();
       } else {
-        this.setVisible(false);
-        this.emit('dialogueComplete');
+        this.closeDialogue();
       }
     }
   }
@@ -282,10 +298,10 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
       }
 
       if (this.lineIndex < this.nodes.length) {
+        Logger.dialogue('NEXT', this.nodes[this.lineIndex].character || '???', this.nodes[this.lineIndex].text);
         this.showCurrentLine();
       } else {
-        this.setVisible(false);
-        this.emit('dialogueComplete');
+        this.closeDialogue();
       }
     }
   }

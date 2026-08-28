@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
-import DialogueBox from '../ui/DialogueBox.js';
 import ShopUI from '../ui/ShopUI.js';
 import WorldMapUI from '../ui/WorldMapUI.js';
 import QuestManager from '../services/QuestManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
+import Player, { PlayerState } from '../entities/Player.js';
+import DevShortcuts from '../utils/DevShortcuts.js';
 
 /**
  * Cena de Exploração Top-Down da Taverna Cauda do Dragão.
@@ -23,16 +24,15 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   create() {
-    this.isTransitioning = false;
+    Logger.info('TavernScene', 'Renderizando Taverna Cauda do Dragão.');
     this.interactions = this.cache.json.get('tavern_interactions');
     
-    // Inicializar QuestManager
+    // Inicializar QuestManager se necessário
     const questsData = this.cache.json.get('quests');
     if (Object.keys(QuestManager.quests).length === 0) {
       QuestManager.init(questsData);
     }
 
-    // Habilitar controles (reset após transição)
     if (this.input.keyboard) this.input.keyboard.enabled = true;
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -60,10 +60,6 @@ export default class TavernScene extends Phaser.Scene {
     addStatic(200, 300, 80, 80, 0x5c3a21);  // Mesa 1
     addStatic(600, 300, 80, 80, 0x5c3a21);  // Mesa 2
 
-    // Porta Sul (Saída para a Floresta/Rastphen) - Uso de Zone em vez de Render Visual Fixo
-    this.southDoor = this.add.zone(400, 585, 120, 30);
-    this.physics.world.enable(this.southDoor, Phaser.Physics.Arcade.STATIC_BODY);
-
     // NPCs e Entidades de Interação
     this.interactables = [
       { id: 'hilda', x: 400, y: 150 },
@@ -75,74 +71,45 @@ export default class TavernScene extends Phaser.Scene {
       { id: 'joseph_sylven', x: 700, y: 500 }
     ];
 
-    // Renderizar pontos de interesse
+    // Renderizar pontos de interesse (NPCs amarelos)
     this.interactables.forEach(ent => {
-      this.add.circle(ent.x, ent.y, 16, 0x00ff00);
+      this.add.rectangle(ent.x, ent.y, 32, 32, 0xf1c40f);
       this.add.text(ent.x, ent.y - 25, ent.id.replace('_', ' '), { fontSize: '10px', fill: '#fff' }).setOrigin(0.5);
     });
 
-    // Corpo e Física do Jogador (Rhogar) via WorldManager
+    // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 500);
-    this.player = this.add.rectangle(spawnX, spawnY, 32, 32, 0x0055ff);
-    this.physics.add.existing(this.player, false); 
-    this.player.body.setSize(32, 32);
-    this.player.body.setCollideWorldBounds(true);
-    
+    this.player = new Player(this, spawnX, spawnY, 32, 32, 0x2980b9);
     this.physics.add.collider(this.player, this.staticGroup);
 
-    // Colisão com a Porta Sul (Transição Bidirecional e Livre para a Cidade)
-    this.physics.add.overlap(this.player, this.southDoor, () => {
-      if (!this.isDialogueOpen) {
-        if (!QuestManager.isQuestCompleted('quest_01_flashback')) {
-          this.player.y -= 25; // pushback
-          this.player.body.setVelocity(0, 0);
-          this.isDialogueOpen = true;
-          
-          const thoughts = this.cache.json.get('thought_interactions');
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(thoughts['thought_locked_tavern']);
-        } else {
-          WorldManager.transitionTo(this, 'RastphenCityScene', { x: 520, y: 880 }); // fora da porta da caverna
-        }
-      }
-    });
+    // Portas Data-Driven via WorldManager
+    WorldManager.buildTransitions(this);
 
     // Indicador UI Flutuante de Interação
     this.interactPrompt = this.add.text(0, 0, '▼ [Z] Interagir', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#000' }).setOrigin(0.5);
     this.interactPrompt.setVisible(false);
     this.interactPrompt.setDepth(10);
-
-    // Caixa de Diálogos
-    this.dialogueBox = new DialogueBox(this, 50, 420, 700, 140);
-    this.dialogueBox.setVisible(false);
-    this.dialogueBox.setDepth(20);
     
-    // Shop UI
+    // Shop UI e Map UI locais
     this.shopUI = new ShopUI(this, 400, 300);
     this.shopUI.setDepth(30);
-
     this.shopUI.on('shopClosed', () => {
-      this.isDialogueOpen = false;
+      if (this.player.state === PlayerState.INTERACTING) {
+        this.player.setState(PlayerState.IDLE);
+      }
     });
 
-    this.isDialogueOpen = false;
     this.currentInteractable = null;
     this.visitedNPCs = new Set();
 
     InputManager.init(this);
     this.setupInputs();
 
-    // HUD de Missões
-    this.objectiveText = this.add.text(400, 20, '', { fontSize: '14px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5);
-    this.objectiveText.setScrollFactor(0);
-    this.objectiveText.setDepth(50);
     this.updateHUD();
 
-    this.dialogueBox.on('dialogueComplete', () => {
-      this.dialogueBox.setVisible(false);
-      this.isDialogueOpen = false;
-
+    // Listener global para fim de diálogo
+    this._onGlobalDialogueClosed = () => {
       // Controle do Flashback no Joseph Sylven
       if (this.currentInteractable === 'joseph_sylven') {
         if (this.visitedNPCs.size >= 4 && !QuestManager.isQuestCompleted('quest_01_flashback')) {
@@ -153,59 +120,63 @@ export default class TavernScene extends Phaser.Scene {
           });
         }
       }
-      
       this.currentInteractable = null;
+    };
+
+    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
     });
-    
-    Logger.info('TavernScene', 'Ambiente da Taverna criado.');
+
+    // Atalhos de desenvolvedor
+    DevShortcuts.register(this);
   }
 
   setupInputs() {
     InputManager.onAction('CONFIRM', () => {
-      if (this.isDialogueOpen) {
+      if (this.player && !this.player.canInteract()) {
         if (this.currentMapUI) {
           this.currentMapUI.closeMap();
           this.currentMapUI = null;
-          this.isDialogueOpen = false;
+          this.player.setState(PlayerState.IDLE);
         } else {
-          this.dialogueBox.skipOrNext();
+          this.game.events.emit('advanceDialogue');
         }
-      } else if (this.currentInteractable) {
-        this.openDialogue(this.currentInteractable);
+        return;
+      }
+
+      if (this.currentInteractable) {
+        Logger.info('Intent', `Iniciando interação com [${this.currentInteractable}].`);
+        this.openInteraction(this.currentInteractable);
       }
     });
 
     InputManager.onAction('CANCEL', () => {
-      if (this.isDialogueOpen && this.currentMapUI) {
+      if (this.currentMapUI) {
         this.currentMapUI.closeMap();
         this.currentMapUI = null;
-        this.isDialogueOpen = false;
+        this.player.setState(PlayerState.IDLE);
       }
     });
 
     InputManager.onAction('MENU', () => {
-      if (!this.isDialogueOpen) {
-        this.scene.pause();
-        this.scene.launch('PauseScene', { sceneKey: 'TavernScene' });
-      }
+      if (this.player && !this.player.canInteract()) return;
+      this.scene.pause();
+      this.scene.launch('PauseScene', { sceneKey: 'TavernScene' });
     });
   }
 
-  openDialogue(id) {
+  openInteraction(id) {
     if (id === 'hilda') {
-      this.isDialogueOpen = true;
-      this.player.body.setVelocity(0, 0);
+      this.player.setState(PlayerState.INTERACTING);
       this.shopUI.openShop();
       this.visitedNPCs.add('hilda');
       this.updateHUD();
     } else if (id === 'quadro_avisos') {
-      this.isDialogueOpen = true;
-      this.player.body.setVelocity(0, 0);
+      this.player.setState(PlayerState.INTERACTING);
       this.currentMapUI = new WorldMapUI(this, 400, 300);
       this.currentMapUI.setDepth(60);
     } else if (id === 'joseph_sylven') {
-      this.isDialogueOpen = true;
-      this.player.body.setVelocity(0, 0);
       let josephId = 'joseph_initial';
       
       if (QuestManager.isQuestCompleted('quest_01_flashback')) {
@@ -214,22 +185,18 @@ export default class TavernScene extends Phaser.Scene {
         } else if (this.battleOutcome === 'defeat') {
           josephId = 'joseph_defeat';
         } else {
-          josephId = 'joseph_victory'; // default legacy
+          josephId = 'joseph_victory';
         }
       } else if (this.visitedNPCs.size >= 4) {
         josephId = 'joseph_ready';
       }
       
       const dialogue = this.interactions[josephId];
-      this.dialogueBox.setVisible(true);
-      this.dialogueBox.startDialogue(dialogue);
+      this.game.events.emit('openDialogue', dialogue);
     } else {
       const dialogue = this.interactions[id];
       if (dialogue) {
-        this.isDialogueOpen = true;
-        this.dialogueBox.setVisible(true);
-        this.dialogueBox.startDialogue(dialogue);
-        this.player.body.setVelocity(0, 0);
+        this.game.events.emit('openDialogue', dialogue);
         if (['veronica_stinfy', 'traudon_alicia', 'john_bardem'].includes(id)) {
           this.visitedNPCs.add(id);
           this.updateHUD();
@@ -239,13 +206,15 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   updateHUD() {
+    let text = '';
     if (QuestManager.isQuestCompleted('quest_01_flashback')) {
-      this.objectiveText.setText('Objetivo Atual: Saia da Taverna e vá ao Templo de Palmem ao norte de Rastphen');
+      text = 'Objetivo Atual: Saia da Taverna e vá ao Templo de Palmem ao norte de Rastphen';
     } else if (this.visitedNPCs.size >= 4) {
-      this.objectiveText.setText('Objetivo: Fale com Joseph Sylven sobre o passado');
+      text = 'Objetivo: Fale com Joseph Sylven sobre o passado';
     } else {
-      this.objectiveText.setText('Objetivo: Converse com todos os clientes da Taverna (' + this.visitedNPCs.size + '/4)');
+      text = 'Objetivo: Converse com todos os clientes da Taverna (' + this.visitedNPCs.size + '/4)';
     }
+    this.game.events.emit('updateObjective', text);
   }
 
   update() {
@@ -257,32 +226,20 @@ export default class TavernScene extends Phaser.Scene {
       this.updateHUD();
     }
 
-    if (this.isDialogueOpen) {
-      return; 
-    }
-
-    // Leitura contínua das teclas para Movimentação Fluida
     const cursors = this.input.keyboard.createCursorKeys();
-    const w = this.input.keyboard.addKey('W');
-    const a = this.input.keyboard.addKey('A');
-    const s = this.input.keyboard.addKey('S');
-    const d = this.input.keyboard.addKey('D');
+    const wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
 
-    let velX = 0;
-    let velY = 0;
-    const speed = 160;
+    // Controle de movimento via FSM do Player
+    this.player.handleMovement(cursors, wasd, 160);
 
-    if (cursors.left.isDown || a.isDown) velX = -speed;
-    else if (cursors.right.isDown || d.isDown) velX = speed;
-    
-    if (cursors.up.isDown || w.isDown) velY = -speed;
-    else if (cursors.down.isDown || s.isDown) velY = speed;
-
-    this.player.body.setVelocity(velX, velY);
-
-    // Sistema de Gatilhos Espaciais (InteractableTrigger)
+    // Sistema de Gatilhos Espaciais
     let closest = null;
-    let minDist = 50; // Raio de interação
+    let minDist = 50;
 
     this.interactables.forEach(ent => {
       const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, ent.x, ent.y);
@@ -292,7 +249,7 @@ export default class TavernScene extends Phaser.Scene {
       }
     });
 
-    if (closest) {
+    if (closest && this.player.canInteract()) {
       this.currentInteractable = closest.id;
       this.interactPrompt.setPosition(this.player.x, this.player.y - 30);
       this.interactPrompt.setVisible(true);

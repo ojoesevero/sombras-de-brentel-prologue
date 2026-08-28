@@ -13,6 +13,7 @@ import GameOverScene from './scenes/GameOverScene.js';
 import PauseScene from './scenes/PauseScene.js';
 import DemoEndScene from './scenes/DemoEndScene.js';
 import DungeonScene from './scenes/DungeonScene.js';
+import UIScene from './scenes/UIScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -22,7 +23,7 @@ const config = {
     width: 800,
     height: 600
   },
-  scene: [PreloadScene, MenuScene, SettingsScene, TavernScene, RastphenCityScene, TempleScene, ForestRouteScene, DungeonScene, GameScene, BattleScene, RewardScene, GameOverScene, PauseScene, DemoEndScene],
+  scene: [PreloadScene, MenuScene, SettingsScene, TavernScene, RastphenCityScene, TempleScene, ForestRouteScene, DungeonScene, GameScene, BattleScene, RewardScene, GameOverScene, PauseScene, DemoEndScene, UIScene],
   physics: {
     default: 'arcade',
     arcade: {

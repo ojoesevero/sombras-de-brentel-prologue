@@ -1,0 +1,86 @@
+{
+  "TavernScene": [
+    {
+      "id": "door_exit_city",
+      "x": 400,
+      "y": 570,
+      "w": 80,
+      "h": 40,
+      "color": "0x27ae60",
+      "targetScene": "RastphenCityScene",
+      "spawn": { "x": 520, "y": 880 },
+      "requiredQuest": "quest_01_flashback",
+      "lockedThought": "thought_locked_tavern_exit"
+    }
+  ],
+  "RastphenCityScene": [
+    {
+      "id": "door_tavern",
+      "x": 520,
+      "y": 800,
+      "w": 60,
+      "h": 80,
+      "color": "0x27ae60",
+      "targetScene": "TavernScene",
+      "spawn": { "x": 400, "y": 540 }
+    },
+    {
+      "id": "door_temple",
+      "x": 1200,
+      "y": 370,
+      "w": 400,
+      "h": 60,
+      "color": "0x27ae60",
+      "targetScene": "TempleScene",
+      "spawn": { "x": 400, "y": 520 }
+    },
+    {
+      "id": "door_south_gate",
+      "x": 1200,
+      "y": 1750,
+      "w": 320,
+      "h": 80,
+      "color": "0x27ae60",
+      "targetScene": "ForestRouteScene",
+      "spawn": { "x": 800, "y": 100 },
+      "requiredQuest": "quest_02_temple",
+      "lockedThought": "thought_locked_south_gate"
+    }
+  ],
+  "TempleScene": [
+    {
+      "id": "door_exit_temple",
+      "x": 400,
+      "y": 570,
+      "w": 120,
+      "h": 40,
+      "color": "0x27ae60",
+      "targetScene": "RastphenCityScene",
+      "spawn": { "x": 1200, "y": 420 }
+    }
+  ],
+  "ForestRouteScene": [
+    {
+      "id": "door_north_city",
+      "x": 800,
+      "y": 10,
+      "w": 400,
+      "h": 30,
+      "color": "0x27ae60",
+      "targetScene": "RastphenCityScene",
+      "spawn": { "x": 1200, "y": 1700 }
+    },
+    {
+      "id": "door_south_dungeon",
+      "x": 800,
+      "y": 1150,
+      "w": 400,
+      "h": 40,
+      "color": "0x27ae60",
+      "targetScene": "DungeonScene",
+      "spawn": { "x": 800, "y": 150 },
+      "requiredQuest": "quest_03_investigate_farm",
+      "lockedThought": "thought_locked_dungeon_entry"
+    }
+  ]
+}

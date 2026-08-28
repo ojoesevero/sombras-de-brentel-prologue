@@ -85,13 +85,14 @@ export default class MenuScene extends Phaser.Scene {
   startNewGame() {
     Logger.info('MenuScene', 'Ação: Iniciar Novo Jogo (TavernScene)');
     QuestManager.resetQuests();
+    this.scene.launch('UIScene');
     this.scene.start('TavernScene');
   }
 
   continueGame() {
     Logger.info('MenuScene', 'Ação: Continuar progresso salvo');
     const saveData = SaveManager.loadGame();
-    // Injetar dados persistidos para game scene (ou cena de destino via lógica real)
+    this.scene.launch('UIScene');
     this.scene.start('GameScene', { loadedData: saveData });
   }
 

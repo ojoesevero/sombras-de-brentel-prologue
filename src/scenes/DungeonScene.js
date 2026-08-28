@@ -3,6 +3,8 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import SaveManager from '../services/SaveManager.js';
 import Logger from '../utils/Logger.js';
+import Player from '../entities/Player.js';
+import DevShortcuts from '../utils/DevShortcuts.js';
 
 /**
  * Cena da Masmorra do Bosque Cinzento (Ato III).
@@ -18,10 +20,7 @@ export default class DungeonScene extends Phaser.Scene {
   }
 
   create() {
-    this.isTransitioning = false;
-    this.isInteracting = false;
     this.runasPurificadas = 0;
-    
     Logger.info('DungeonScene', 'Iniciando Masmorra do Bosque Cinzento.');
 
     this.cameras.main.resetFX();
@@ -29,7 +28,7 @@ export default class DungeonScene extends Phaser.Scene {
 
     // Layout e Atmosfera (1600x1200)
     this.physics.world.setBounds(0, 0, 1600, 1200);
-    this.add.rectangle(0, 0, 1600, 1200, 0x696969).setOrigin(0); // Piso arenoso acinzentado
+    this.add.rectangle(0, 0, 1600, 1200, 0x696969).setOrigin(0);
 
     // Paredes e Colisões (staticGroup)
     this.staticGroup = this.physics.add.staticGroup();
@@ -46,144 +45,129 @@ export default class DungeonScene extends Phaser.Scene {
     this.staticGroup.add(this.add.circle(400, 800, 30, 0x2a2a2a));
     this.staticGroup.add(this.add.circle(1200, 800, 30, 0x2a2a2a));
 
-    // O Jogador e Spawn
+    // O Jogador e Spawn (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 800);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 150);
-    this.player = this.add.rectangle(spawnX, spawnY, 32, 32, 0x0055ff);
-    this.physics.add.existing(this.player, false);
-    this.player.body.setSize(32, 32);
-    this.player.body.setCollideWorldBounds(true);
+    this.player = new Player(this, spawnX, spawnY, 32, 32, 0x0055ff);
     this.physics.add.collider(this.player, this.staticGroup);
 
     // Câmera Tracking
     this.cameras.main.setBounds(0, 0, 1600, 1200);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-    // Overlay de Névoa Translúcida Arroxeada (fica acima do mapa e do player)
-    const fog = this.add.rectangle(0, 0, 1600, 1200, 0x800080, 0.12).setOrigin(0);
-    fog.setDepth(100);
-
-    // HUD Objetivo
-    this.objectiveText = this.add.text(800, 20, 'Objetivo Atual: Purifique as 3 Runas de Pestilência', { fontSize: '14px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
-    this.objectiveText.setDepth(1900);
-
-    // Zonas Interativas
-    this.interactZones = this.physics.add.group();
-    
-    // Fogueira de Checkpoint (Antecâmara Central)
-    this.fogueira = this.add.circle(800, 600, 25, 0xff4500);
+    // Fogueira (Ponto de Checkpoint)
+    this.fogueira = this.add.circle(800, 600, 24, 0xff4500);
     this.physics.add.existing(this.fogueira, true);
     this.staticGroup.add(this.fogueira);
+    this.add.text(800, 600, 'Fogueira', { fontSize: '10px', fill: '#fff' }).setOrigin(0.5);
+
+    // 3 Pedestais de Runa
+    this.pedestais = this.physics.add.staticGroup();
     
-    const fogoZone = this.add.zone(800, 600, 80, 80);
-    this.physics.add.existing(fogoZone, true);
-    fogoZone.interactId = 'fogueira';
-    fogoZone.targetEntity = this.fogueira;
-    this.interactZones.add(fogoZone);
+    this.runa1 = this.add.rectangle(300, 300, 40, 40, 0x8a2be2);
+    this.physics.add.existing(this.runa1, true);
+    this.runa1.isPurified = false;
+    this.pedestais.add(this.runa1);
 
-    // Puzzle das 3 Runas de Pestilência (Oeste, Leste, Norte)
-    this.runes = [];
-    const createRune = (x, y, id) => {
-      const rune = this.add.rectangle(x, y, 40, 40, 0x8a2be2);
-      this.physics.add.existing(rune, true);
-      this.staticGroup.add(rune);
-      rune.isPurified = false;
-      
-      const zone = this.add.zone(x, y, 100, 100);
-      this.physics.add.existing(zone, true);
-      zone.interactId = 'runa';
-      zone.targetEntity = rune;
-      this.interactZones.add(zone);
-      this.runes.push(rune);
-    };
+    this.runa2 = this.add.rectangle(1300, 300, 40, 40, 0x8a2be2);
+    this.physics.add.existing(this.runa2, true);
+    this.runa2.isPurified = false;
+    this.pedestais.add(this.runa2);
 
-    createRune(300, 600, 'oeste');
-    createRune(1300, 600, 'leste');
-    createRune(800, 300, 'norte');
+    this.runa3 = this.add.rectangle(800, 950, 40, 40, 0x8a2be2);
+    this.physics.add.existing(this.runa3, true);
+    this.runa3.isPurified = false;
+    this.pedestais.add(this.runa3);
 
-    // Indicador Interação
-    this.interactIndicator = this.add.text(0, 0, '[Z]', { fontSize: '14px', fill: '#ffff00', fontStyle: 'bold', backgroundColor: '#000' }).setOrigin(0.5).setVisible(false);
-    this.interactIndicator.setDepth(150);
-    this.currentInteractTarget = null;
-    this.currentInteractEntity = null;
+    this.physics.add.collider(this.player, this.pedestais);
 
-    // Patrulhas Inimigas
+    // Inimigos da Masmorra
     this.enemies = this.physics.add.group();
-    const createEnemy = (x, y, type) => {
-      const e = this.add.rectangle(x, y, 32, 32, 0xff0000);
+    const spawnEnemy = (x, y, type) => {
+      const e = this.add.rectangle(x, y, 32, 32, 0x8b0000);
       this.physics.add.existing(e, false);
       e.body.setImmovable(true);
       e.enemyType = type;
       this.enemies.add(e);
+      return e;
     };
 
-    createEnemy(400, 800, 'goblin_emboscador');
-    createEnemy(1200, 800, 'cultista_sombras');
-    createEnemy(800, 950, 'corruptor_abissal');
+    spawnEnemy(600, 400, 'cultista');
+    spawnEnemy(1000, 400, 'cultista');
+    spawnEnemy(800, 800, 'corruptor');
 
     this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
-      if (this.scene.isPaused() || this.isTransitioning) return;
-      Logger.info('DungeonScene', `Batalha iniciada com ${enemy.enemyType}`);
-      const eType = enemy.enemyType;
+      if (this.scene.isPaused()) return;
+      
+      Logger.info('DungeonScene', `Iniciando combate na Masmorra: ${enemy.enemyType}`);
+      const type = enemy.enemyType;
       enemy.destroy();
       this.scene.pause();
       
+      let enemyData = [{ name: 'Cultista das Sombras', hp: 45, attack: 14 }];
+      if (type === 'corruptor') {
+        enemyData = [{ name: 'Corruptor Abissal', hp: 70, attack: 18 }];
+      }
+
       this.scene.launch('BattleScene', {
-        enemyGroup: eType,
-        isDungeon: true,
+        enemies: enemyData,
         returnScene: 'DungeonScene',
         isOverlay: true,
         isFlashback: false
       });
     });
 
-    // Portões de Transição
-    this.northZone = this.add.rectangle(800, 20, 200, 40, 0x0000ff, 0.5);
-    this.physics.add.existing(this.northZone, true);
-    this.physics.add.overlap(this.player, this.northZone, () => {
-      if (!this.isInteracting && !this.isTransitioning) {
-        WorldManager.transitionTo(this, 'ForestRouteScene', { x: 400, y: 1050 });
-      }
-    });
+    // Zonas Interativas
+    this.interactZones = this.physics.add.group();
+    const addZone = (target, id) => {
+      const zone = this.add.zone(target.x, target.y, 80, 80);
+      this.physics.add.existing(zone, true);
+      zone.interactId = id;
+      zone.targetEntity = target;
+      this.interactZones.add(zone);
+    };
 
-    // DialogueBox instanciada
-    this.dialogueBox = new DialogueBox(this, 50, 440, 700, 140);
-    this.dialogueBox.setDepth(2000);
-    this.dialogueBox.setScrollFactor(0);
-    this.dialogueBox.setVisible(false);
-    
-    this.dialogueBox.on('dialogueComplete', () => {
-      this.isInteracting = false;
-    });
+    addZone(this.fogueira, 'fogueira');
+    addZone(this.runa1, 'runa');
+    addZone(this.runa2, 'runa');
+    addZone(this.runa3, 'runa');
 
+    this.interactIndicator = this.add.text(0, 0, '▼ [Z] Interagir', { fontSize: '14px', fill: '#ffff00', backgroundColor: '#000' }).setOrigin(0.5).setVisible(false);
+    this.currentInteractTarget = null;
+    this.currentInteractEntity = null;
+
+    // Grande Portão Sul (Desbloqueio de Boss)
     this.southGate = this.add.rectangle(800, 1180, 200, 40, 0xff0000, 0.5);
     this.physics.add.existing(this.southGate, true);
-    this.southGateActive = false; // Bloqueado inicialmente
+    this.southGateActive = false;
     
     this.physics.add.overlap(this.player, this.southGate, () => {
-      if (!this.isInteracting && !this.isTransitioning) {
-        if (this.southGateActive) {
-          WorldManager.transitionTo(this, 'BossChamberScene', { x: 400, y: 100 });
-        } else {
-          this.player.y -= 30; // pushback
-          this.player.body.setVelocity(0, 0);
-          this.isInteracting = true;
-          
-          const thoughts = this.cache.json.get('thought_interactions');
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(thoughts['thought_locked_boss_gate']);
-        }
+      if (this.player && !this.player.canInteract()) return;
+
+      if (this.southGateActive) {
+        WorldManager.transitionTo(this, 'BossChamberScene', { x: 400, y: 100 });
+      } else {
+        this.player.y -= 30;
+        this.player.body.setVelocity(0, 0);
+        
+        const thoughts = this.cache.json.get('thought_interactions') || {};
+        const thoughtData = thoughts['thought_locked_boss_gate'] || {
+          character: 'Rhogar (Pensamento)',
+          text: 'O portão está trancado por três selos de pestilência. Devo purificar os três altares de runas da masmorra.'
+        };
+        this.game.events.emit('openDialogue', [thoughtData]);
       }
     });
+
+    this.updateHUD();
 
     // Inputs
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
     InputManager.onAction('CONFIRM', () => {
-      if (this.isTransitioning) return;
-      if (this.isInteracting) {
-        this.dialogueBox.skipOrNext();
+      if (this.player && !this.player.canInteract()) {
+        this.game.events.emit('advanceDialogue');
         return;
       }
 
@@ -217,10 +201,13 @@ export default class DungeonScene extends Phaser.Scene {
     });
 
     InputManager.onAction('MENU', () => {
-      if (this.isInteracting) return;
+      if (this.player && !this.player.canInteract()) return;
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'DungeonScene' });
     });
+
+    // Atalhos de desenvolvedor
+    DevShortcuts.register(this);
   }
 
   openSouthGate() {
@@ -228,29 +215,26 @@ export default class DungeonScene extends Phaser.Scene {
     this.cameras.main.shake(400, 0.015);
     this.southGate.fillColor = 0x00ff00;
     this.southGateActive = true;
-    this.objectiveText.setText('Objetivo Atual: Entre no Covil Abissal através do Portão Sul');
+    this.game.events.emit('updateObjective', 'Objetivo Atual: Entre no Covil Abissal através do Portão Sul');
+  }
+
+  updateHUD() {
+    this.game.events.emit('updateObjective', 'Objetivo: Purifique as 3 Runas da Masmorra para abrir o Portão Sul');
   }
 
   update() {
-    if (this.isInteracting || this.isTransitioning) return;
-    if (!this.input.keyboard.enabled) return;
+    if (!this.input.keyboard || !this.input.keyboard.enabled) return;
 
     const cursors = this.input.keyboard.createCursorKeys();
-    const w = this.input.keyboard.addKey('W');
-    const a = this.input.keyboard.addKey('A');
-    const s = this.input.keyboard.addKey('S');
-    const d = this.input.keyboard.addKey('D');
+    const wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
 
-    let velX = 0;
-    let velY = 0;
-    const speed = 180;
-
-    if (cursors.left.isDown || a.isDown) velX = -speed;
-    else if (cursors.right.isDown || d.isDown) velX = speed;
-    if (cursors.up.isDown || w.isDown) velY = -speed;
-    else if (cursors.down.isDown || s.isDown) velY = speed;
-
-    this.player.body.setVelocity(velX, velY);
+    // Movimentação via FSM
+    this.player.handleMovement(cursors, wasd, 180);
 
     // Zonas Interativas Overlap Manual
     let touching = false;

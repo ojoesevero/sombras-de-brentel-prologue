@@ -4,30 +4,28 @@ import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
 import InventoryManager from '../services/InventoryManager.js';
 import QuestManager from '../services/QuestManager.js';
-import DialogueBox from '../ui/DialogueBox.js';
+import Player from '../entities/Player.js';
+import DevShortcuts from '../utils/DevShortcuts.js';
 
 /**
  * Cena da Estrada Exterior (Ato II - A Floresta Cinzenta).
  */
-export default class ForestRouteScene extends Phaser.Scene {
+export class ForestRouteScene extends Phaser.Scene {
   constructor() {
     super({ key: 'ForestRouteScene' });
   }
 
   init(data) {
-    this.spawnData = data || {};
+    this.spawnX = data?.x || 800;
+    this.spawnY = data?.y || 100;
   }
 
   create() {
-    this.isTransitioning = false;
-    Logger.info('ForestRouteScene', 'Iniciando Rota da Floresta.');
+    Logger.info('ForestRouteScene', 'Cena ForestRouteScene iniciada com sucesso.');
+    this.cameras.main.resetFX();
+    this.cameras.main.fadeIn(300, 0, 0, 0);
 
     if (this.input.keyboard) this.input.keyboard.enabled = true;
-    this.cameras.main.fadeIn(800, 0, 0, 0);
-
-    // HUD de Objetivo
-    this.objectiveText = this.add.text(800, 20, '', { fontSize: '14px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
-    this.objectiveText.setDepth(1900);
 
     // Limites do Mundo Expandido (1600x1200)
     this.physics.world.setBounds(0, 0, 1600, 1200);
@@ -66,18 +64,13 @@ export default class ForestRouteScene extends Phaser.Scene {
 
     // NPC: Fazendeiro
     this.staticGroupNPCs = this.physics.add.staticGroup();
-    this.fazendeiro = this.add.circle(200, 530, 15, 0xffa500);
+    this.fazendeiro = this.add.rectangle(200, 530, 32, 32, 0xf1c40f);
     this.physics.add.existing(this.fazendeiro, true);
     this.staticGroupNPCs.add(this.fazendeiro);
     this.add.text(200, 530, 'Fazendeiro', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
 
-    // O Jogador e Spawn
-    const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 800);
-    const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 100);
-    this.player = this.add.rectangle(spawnX, spawnY, 32, 32, 0x0055ff);
-    this.physics.add.existing(this.player, false);
-    this.player.body.setSize(32, 32);
-    this.player.body.setCollideWorldBounds(true);
+    // O Jogador e Spawn (Player com FSM)
+    this.player = new Player(this, this.spawnX, this.spawnY, 32, 32, 0x2980b9);
     
     this.physics.add.collider(this.player, this.staticGroup);
     this.physics.add.collider(this.player, this.staticGroupNPCs);
@@ -103,7 +96,7 @@ export default class ForestRouteScene extends Phaser.Scene {
       chest.destroy();
     });
 
-    // Inimigos de Campo (Encontros Aleatórios ou Fixos)
+    // Inimigos de Campo (Emboscada)
     this.enemies = this.physics.add.group();
     const patrol1 = this.add.rectangle(800, 500, 32, 32, 0xff0000);
     this.physics.add.existing(patrol1, false);
@@ -116,10 +109,10 @@ export default class ForestRouteScene extends Phaser.Scene {
     this.enemies.add(patrol2);
 
     this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
-      if (this.scene.isPaused()) return; // Previne invocação simultânea múltipla
+      if (this.scene.isPaused()) return;
       
       Logger.info('ForestRouteScene', 'Emboscada da floresta engatilhada!');
-      enemy.destroy(); // Remove do mapa após a colisão
+      enemy.destroy();
       this.scene.pause();
       
       this.scene.launch('BattleScene', {
@@ -130,93 +123,76 @@ export default class ForestRouteScene extends Phaser.Scene {
       });
     });
 
-    // Zonas de Transição (Norte -> Taverna, Sul -> Fim da Demo)
-    this.northZone = this.add.rectangle(800, 10, 400, 20, 0x0000ff, 0.5);
-    this.physics.add.existing(this.northZone, true);
-    
-    this.southZone = this.add.rectangle(800, 1150, 400, 40, 0xff00ff, 0.5);
-    this.physics.add.existing(this.southZone, true);
-
-    this.physics.add.overlap(this.player, this.northZone, () => {
-      if (!this.isInteracting) {
-        WorldManager.transitionTo(this, 'RastphenCityScene', { x: 1200, y: 1720 });
-      }
-    });
-
-    this.physics.add.overlap(this.player, this.southZone, () => {
-      if (!this.isInteracting) {
-        if (!QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
-          this.player.y -= 35; // pushback
-          this.player.body.setVelocity(0, 0);
-          this.isInteracting = true;
-          
-          const thoughts = this.cache.json.get('thought_interactions');
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(thoughts['thought_locked_dungeon_entry']);
-        } else {
-          WorldManager.transitionTo(this, 'DungeonScene', { x: 800, y: 150 });
-        }
-      }
-    });
+    // Portas e Triggers Data-Driven
+    WorldManager.buildTransitions(this);
 
     // Interações e Diálogos
-    this.dialogueBox = new DialogueBox(this, 50, 440, 700, 140);
-    this.dialogueBox.setDepth(2000);
-    this.dialogueBox.setScrollFactor(0);
-    this.dialogueBox.setVisible(false);
-    
-    this.isInteracting = false;
     this.interactionsData = this.cache.json.get('act2_interactions');
-
     this.interactIndicator = this.add.text(0, 0, '[Z]', { fontSize: '16px', fill: '#ffff00', fontStyle: 'bold' }).setOrigin(0.5).setVisible(false);
     this.currentInteractTarget = null;
     
     this.setupInteractions();
+    this.updateHUD();
 
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
     InputManager.onAction('CONFIRM', () => {
-      if (this.isInteracting) {
-        this.dialogueBox.skipOrNext();
+      if (this.player && !this.player.canInteract()) {
+        Logger.info('Intent', 'Input Z/ESPAÇO recebido: Avançando diálogo na UIScene.');
+        this.game.events.emit('advanceDialogue');
         return;
       }
 
       if (this.currentInteractTarget) {
-        this.isInteracting = true;
-        this.player.body.setVelocity(0, 0);
-        this.interactIndicator.setVisible(false);
-        
-        let data = this.interactionsData[this.currentInteractTarget];
+        let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
-          Logger.info('ForestRouteScene', `Iniciando diálogo: ${this.currentInteractTarget}`);
-          this.dialogueBox.setVisible(true);
-          this.dialogueBox.startDialogue(data);
+          Logger.info('Intent', `Iniciando interação com alvo [${this.currentInteractTarget}].`);
+          this.interactIndicator.setVisible(false);
+          this.game.events.emit('openDialogue', data);
         } else {
-          this.isInteracting = false;
+          Logger.warn('ForestRouteScene', `Nenhum dado de diálogo encontrado para ${this.currentInteractTarget}`);
         }
       }
     });
 
     InputManager.onAction('MENU', () => {
-      if (this.isInteracting) return;
+      if (this.player && !this.player.canInteract()) return;
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'ForestRouteScene' });
     });
 
-    this.dialogueBox.on('dialogueComplete', () => {
-      this.isInteracting = false;
-      // Lógica Narrativa (Quest) ao Inspecionar o Celeiro
+    // Ouvinte para conclusão de diálogos (avanço de missão)
+    this._onGlobalDialogueClosed = () => {
       if (this.currentInteractTarget === 'celeiro_pistas') {
         if (!QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
           QuestManager.advanceQuest('quest_03_investigate_farm', 'completed');
           QuestManager.advanceQuest('quest_04_forest_trail', 'active');
           Logger.info('ForestRouteScene', 'Quest "Rastros na Névoa" concluída! Nova Quest Ativa.');
         }
-        this.objectiveText.setText('Objetivo Atual: Siga os rastros do Minotauro até a Masmorra do Bosque Cinzento (Sul)');
+        this.updateHUD();
       }
+      this.currentInteractTarget = null;
+    };
+
+    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
     });
+
+    // Atalhos de desenvolvedor
+    DevShortcuts.register(this);
+  }
+
+  updateHUD() {
+    let text = '';
+    if (QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
+      text = 'Objetivo Atual: Siga os rastros do Minotauro até a Masmorra do Bosque Cinzento (Sul)';
+    } else {
+      text = 'Objetivo Atual: Investigue o celeiro destruído na Fazenda dos Halflings';
+    }
+    this.game.events.emit('updateObjective', text);
   }
 
   setupInteractions() {
@@ -235,26 +211,18 @@ export default class ForestRouteScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isInteracting) return;
-    if (!this.input.keyboard.enabled) return;
+    if (!this.input.keyboard || !this.input.keyboard.enabled) return;
 
     const cursors = this.input.keyboard.createCursorKeys();
-    const w = this.input.keyboard.addKey('W');
-    const a = this.input.keyboard.addKey('A');
-    const s = this.input.keyboard.addKey('S');
-    const d = this.input.keyboard.addKey('D');
+    const wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
 
-    let velX = 0;
-    let velY = 0;
-    const speed = 200;
-
-    if (cursors.left.isDown || a.isDown) velX = -speed;
-    else if (cursors.right.isDown || d.isDown) velX = speed;
-    
-    if (cursors.up.isDown || w.isDown) velY = -speed;
-    else if (cursors.down.isDown || s.isDown) velY = speed;
-
-    this.player.body.setVelocity(velX, velY);
+    // Movimentação via FSM
+    this.player.handleMovement(cursors, wasd, 200);
 
     // Checar zonas de interação
     let touching = false;
@@ -271,3 +239,5 @@ export default class ForestRouteScene extends Phaser.Scene {
     }
   }
 }
+
+export default ForestRouteScene;
