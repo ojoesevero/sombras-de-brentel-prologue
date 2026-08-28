@@ -145,6 +145,7 @@ export class ForestRouteScene extends Phaser.Scene {
       }
 
       if (this.currentInteractTarget) {
+        this.activeDialogueTarget = this.currentInteractTarget;
         let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
@@ -165,7 +166,9 @@ export class ForestRouteScene extends Phaser.Scene {
 
     // Ouvinte para conclusão de diálogos (avanço de missão)
     this._onGlobalDialogueClosed = () => {
-      if (this.currentInteractTarget === 'celeiro_pistas') {
+      const target = this.activeDialogueTarget || this.currentInteractTarget;
+      this.activeDialogueTarget = null;
+      if (target === 'celeiro_pistas') {
         if (!QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
           QuestManager.advanceQuest('quest_03_investigate_farm', 'completed');
           QuestManager.advanceQuest('quest_04_forest_trail', 'active');
@@ -173,7 +176,6 @@ export class ForestRouteScene extends Phaser.Scene {
         }
         this.updateHUD();
       }
-      this.currentInteractTarget = null;
     };
 
     this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);

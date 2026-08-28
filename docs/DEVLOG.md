@@ -174,3 +174,13 @@ Adicionalmente, injetamos uma camada de instrumentação de telemetria refinada 
   4. **DevShortcuts:** Utilitário global com hotkeys (`F1` para depuração física, `F2` para destravar quests e teclas `1-5` para teletransporte direto entre os cenários).
   5. **Higienização Geral:** Expurgados códigos legados e instâncias repetidas em todas as cenas de exploração (`TavernScene`, `RastphenCityScene`, `TempleScene`, `ForestRouteScene` e `DungeonScene`).
 
+## Game Juice, Mitigação Tática e Suíte de Testes Unitários (v0.17.1)
+- **Status:** Concluído
+- **Detalhes:** Implementado o pacote integral de melhorias de Game Feel, balanceamento tático e automação de testes:
+  1. **Mitigação de Defesa e Variância:** Implementado método `calculateDamage(rawAttack, targetDefense, variance = 0.1)` com garantia mínima de 1 de dano. Aplicado no ataque básico de Rhogar, nas investidas das tropas inimigas e no Sopro Elétrico (com 50% de penetração de armadura).
+  2. **Screen Shake Escalonado & Hit-Stop:** `FXManager` aprimorado com `applyScreenShake(scene, damage)` em 3 camadas de intensidade (<20, 20-50, >=50) e `playHitStop(scene, duration, callback)` gerando micro-congelamentos de 80ms~90ms para dar peso e impacto cinético aos golpes.
+  3. **Emissores de Partículas:** Implementados `createSlashParticles` e `createLightningParticles` que instanciam emissores temporários (`particle_star` e `particle_lightning`) com auto-destruição para golpes físicos e mágicos.
+  4. **Ciclo de Vida do InputManager:** Método `cleanListeners()` integrado ao `init()` e acoplado aos eventos `SHUTDOWN` e `DESTROY` das cenas Phaser, eliminando permanentemente memory leaks e listeners pendentes.
+  5. **Testes Unitários Automatizados:** Configurado o test runner nativo do Node.js (`node --test`) via `npm test` e criados os arquivos `tests/QuestManager.test.js` e `tests/InventoryManager.test.js`, com 100% de aprovação (9/9 testes passando) de forma desacoplada do DOM.
+
+

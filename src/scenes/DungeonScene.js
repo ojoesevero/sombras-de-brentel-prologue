@@ -145,7 +145,7 @@ export default class DungeonScene extends Phaser.Scene {
       if (this.player && !this.player.canInteract()) return;
 
       if (this.southGateActive) {
-        WorldManager.transitionTo(this, 'BossChamberScene', { x: 400, y: 100 });
+        WorldManager.transitionTo(this, 'DemoEndScene');
       } else {
         this.player.y -= 30;
         this.player.body.setVelocity(0, 0);

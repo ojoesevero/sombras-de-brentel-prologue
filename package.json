@@ -1,10 +1,12 @@
 {
   "name": "sombras-de-brentel-prologue",
   "version": "1.0.0",
+  "type": "module",
   "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "test": "node --test",
     "electron:dev": "concurrently -k \"npm run dev\" \"wait-on tcp:3000 && electron .\"",
     "electron:build": "npm run build && electron-builder --dir"
   },

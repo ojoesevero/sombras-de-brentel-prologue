@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
+import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';

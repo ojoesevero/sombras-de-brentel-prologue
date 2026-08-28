@@ -1,9 +1,15 @@
-const { defineConfig } = require('vite');
+import { defineConfig } from 'vite';
 
-module.exports = defineConfig({
+export default defineConfig({
+  root: './',
   base: './',
   server: {
     port: 3000,
-    strictPort: true
-  }
+    strictPort: true,
+  },
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    sourcemap: true,
+  },
 });

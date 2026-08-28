@@ -42,8 +42,6 @@ export default class BattleScene extends Phaser.Scene {
       });
     }
 
-    this.player = new Player();
-    
     this.isPlayerTurn = true;
     this.battleState = 'SELECTING_ACTION'; // Estados: SELECTING_ACTION, SELECTING_TARGET, EXECUTING, ENEMY_TURN
     this.pendingActionType = null;
@@ -61,7 +59,7 @@ export default class BattleScene extends Phaser.Scene {
     this.add.rectangle(0, 450, 800, 150, 0x2a2a2a).setOrigin(0);
 
     // Jogador
-    this.add.rectangle(150, 350, 60, 100, 0x0055ff);
+    this.player = new Player(this, 150, 350, 60, 100, 0x0055ff);
     this.add.text(150, 280, this.player.name, { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
     this.playerHpText = this.add.text(150, 300, `HP: ${this.player.hp}/${this.player.maxHp}`, { fontSize: '12px', fill: '#0f0' }).setOrigin(0.5);
     this.playerFuryText = this.add.text(150, 315, `Fúria: ${this.player.fury}/100`, { fontSize: '12px', fill: '#ffaa00' }).setOrigin(0.5);
@@ -314,8 +312,14 @@ export default class BattleScene extends Phaser.Scene {
       const target = this.enemies[this.selectedEnemyIndex];
       const damage = this.player.basicAttack(target);
       const targetVisual = this.enemyVisuals[this.selectedEnemyIndex];
+      
       FXManager.createSlashEffect(this, targetVisual.x, targetVisual.y);
-      FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, false);
+      FXManager.createSlashParticles(this, targetVisual.x, targetVisual.y);
+      FXManager.applyScreenShake(this, damage);
+      
+      FXManager.playHitStop(this, 80, () => {
+        FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, false);
+      });
     } else if (action === 'breath') {
       const target = this.enemies[this.selectedEnemyIndex];
       const damage = this.player.electricBreath(target);
@@ -323,13 +327,18 @@ export default class BattleScene extends Phaser.Scene {
       
       FXManager.flashScreen(this, 0x00ffff, 200);
       FXManager.createLightningBreathFX(this, 150, 350, targetVisual.x, targetVisual.y);
-      FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, true);
+      FXManager.createLightningParticles(this, targetVisual.x, targetVisual.y);
+      FXManager.applyScreenShake(this, damage);
+      
+      FXManager.playHitStop(this, 90, () => {
+        FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, true);
+      });
     } else if (action === 'defend') {
-      Logger.info('BattleScene', `${this.player.name} defendeu.`);
-      this.player.fury += 5;
+      Logger.info('BattleScene', `${this.player.name} assumiu postura defensiva.`);
+      this.player.fury = Math.min(this.player.fury + 15, this.player.maxFury);
+      FXManager.createDamageNumber(this, 150, 350, 'Defesa +Fúria', false);
     }
 
-    this.cameras.main.shake(100, 0.01);
     this.pendingActionType = null;
     this.updateUI();
 
@@ -344,15 +353,21 @@ export default class BattleScene extends Phaser.Scene {
   enemyTurn() {
     Logger.info('BattleScene', 'Turno dos Inimigos.');
     
+    let totalEnemyDamage = 0;
     this.enemies.forEach(enemy => {
       if (enemy.hp > 0 && this.player.isAlive()) {
         const damage = this.player.takeDamage(enemy.attack);
+        totalEnemyDamage += damage;
         FXManager.createSlashEffect(this, 150, 350);
+        FXManager.createSlashParticles(this, 150, 350);
         FXManager.createDamageNumber(this, 150, 350, damage, false);
       }
     });
     
-    this.cameras.main.shake(150, 0.015);
+    if (totalEnemyDamage > 0) {
+      FXManager.applyScreenShake(this, totalEnemyDamage);
+    }
+    
     this.updateUI();
 
     if (!this.player.isAlive()) {

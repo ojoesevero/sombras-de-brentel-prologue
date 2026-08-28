@@ -1,10 +1,49 @@
 import Logger from '../utils/Logger.js';
-import Phaser from 'phaser';
+
+/**
+ * Emissor de eventos agnóstico de ambiente (funciona no Browser e em Node.js puro).
+ */
+class BaseEventEmitter {
+  constructor() {
+    this._events = {};
+  }
+
+  on(event, fn) {
+    (this._events[event] = this._events[event] || []).push(fn);
+    return this;
+  }
+
+  once(event, fn) {
+    const wrapped = (...args) => {
+      this.off(event, wrapped);
+      fn(...args);
+    };
+    return this.on(event, wrapped);
+  }
+
+  off(event, fn) {
+    if (!this._events[event]) return this;
+    if (!fn) delete this._events[event];
+    else this._events[event] = this._events[event].filter(cb => cb !== fn);
+    return this;
+  }
+
+  emit(event, ...args) {
+    if (!this._events[event]) return false;
+    this._events[event].forEach(cb => cb(...args));
+    return true;
+  }
+
+  removeAllListeners() {
+    this._events = {};
+    return this;
+  }
+}
 
 /**
  * Singleton Gerenciador de Missões (Quests).
  */
-class QuestManager extends Phaser.Events.EventEmitter {
+class QuestManager extends BaseEventEmitter {
   constructor() {
     super();
     if (QuestManager.instance) {

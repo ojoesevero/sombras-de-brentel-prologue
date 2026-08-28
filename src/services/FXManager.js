@@ -79,6 +79,102 @@ class FXManager {
   }
 
   /**
+   * Aplica Screen Shake escalonado proporcionalmente à intensidade do dano.
+   * - Dano < 20: Leve (80ms, 0.005)
+   * - 20 <= Dano < 50: Médio (120ms, 0.012)
+   * - Dano >= 50: Crítico/Pesado (200ms, 0.025)
+   * @param {Phaser.Scene} scene - A cena do combate.
+   * @param {number} damage - Dano causado.
+   */
+  applyScreenShake(scene, damage) {
+    if (!scene || !scene.cameras || !scene.cameras.main) return;
+    
+    if (damage < 20) {
+      scene.cameras.main.shake(80, 0.005);
+    } else if (damage < 50) {
+      scene.cameras.main.shake(120, 0.012);
+    } else {
+      scene.cameras.main.shake(200, 0.025);
+    }
+  }
+
+  /**
+   * Micro-pausa de impacto (Hit-Stop) para gerar peso e feedback físico nos golpes.
+   * @param {Phaser.Scene} scene 
+   * @param {number} [duration=80] - Duração da pausa em milissegundos.
+   * @param {Function} [callback] - Função chamada após a pausa.
+   */
+  playHitStop(scene, duration = 80, callback = null) {
+    if (!scene || !scene.time) {
+      if (callback) callback();
+      return;
+    }
+    
+    // Congela tweens e timers da cena temporariamente
+    scene.tweens.pauseAll();
+    scene.time.delayedCall(duration, () => {
+      scene.tweens.resumeAll();
+      if (callback) callback();
+    });
+  }
+
+  /**
+   * Instancia um emissor de partículas de faíscas/estrelas para acertos cortantes físicos.
+   * @param {Phaser.Scene} scene 
+   * @param {number} targetX 
+   * @param {number} targetY 
+   */
+  createSlashParticles(scene, targetX, targetY) {
+    const tex = (scene.textures && scene.textures.exists('fx_star')) ? 'fx_star' : (scene.textures && scene.textures.exists('particle_star') ? 'particle_star' : null);
+    if (!tex || !scene.add.particles) return;
+
+    try {
+      const emitter = scene.add.particles(targetX, targetY, tex, {
+        speed: { min: 50, max: 160 },
+        scale: { start: 0.8, end: 0 },
+        alpha: { start: 1, end: 0 },
+        lifespan: 350,
+        quantity: 8,
+        emitting: false
+      });
+      emitter.explode(8);
+      scene.time.delayedCall(500, () => {
+        if (emitter && emitter.active) emitter.destroy();
+      });
+    } catch (e) {
+      // Fallback gracioso se o renderizador não suportar
+    }
+  }
+
+  /**
+   * Instancia um emissor de partículas elétricas para o Sopro Elétrico.
+   * @param {Phaser.Scene} scene 
+   * @param {number} targetX 
+   * @param {number} targetY 
+   */
+  createLightningParticles(scene, targetX, targetY) {
+    const tex = (scene.textures && scene.textures.exists('fx_lightning')) ? 'fx_lightning' : (scene.textures && scene.textures.exists('particle_lightning') ? 'particle_lightning' : null);
+    if (!tex || !scene.add.particles) return;
+
+    try {
+      const emitter = scene.add.particles(targetX, targetY, tex, {
+        speed: { min: 80, max: 220 },
+        scale: { start: 1, end: 0.1 },
+        alpha: { start: 1, end: 0 },
+        lifespan: 400,
+        quantity: 12,
+        emitting: false
+      });
+      emitter.explode(12);
+      scene.time.delayedCall(500, () => {
+        if (emitter && emitter.active) emitter.destroy();
+      });
+    } catch (e) {
+      // Fallback gracioso se o renderizador não suportar
+    }
+  }
+
+  /**
    * Instancia um Floating Combat Text para denotar dano numérico visual subindo.
    * @param {Phaser.Scene} scene 
    * @param {number} x 

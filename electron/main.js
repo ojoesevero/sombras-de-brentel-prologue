@@ -1,6 +1,10 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
-const path = require('path');
-const fs = require('fs');
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Garante que o diretório logs/ exista
 const logsDir = path.join(process.cwd(), 'logs');
@@ -19,28 +23,43 @@ ipcMain.on('write-log', (event, logEntry) => {
   }
 });
 
+const isDev = process.env.NODE_ENV !== 'production' || process.argv.includes('--dev') || !app.isPackaged;
+
 function createWindow() {
+  const preloadPath = fs.existsSync(path.join(__dirname, 'preload.cjs')) 
+    ? path.join(__dirname, 'preload.cjs') 
+    : path.join(__dirname, 'preload.js');
+
   const mainWindow = new BrowserWindow({
     width: 1024,
     height: 768,
     useContentSize: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false
     }
   });
 
   mainWindow.setMenu(null);
-  
-  // Forçar aspect ratio de 4:3
   mainWindow.setAspectRatio(4 / 3);
 
-  // Checa se está em dev ou produção
-  const isDev = process.argv.includes('--dev') || process.env.NODE_ENV === 'development' || !app.isPackaged;
-
   if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
+    const devServerUrl = 'http://localhost:3000';
+    
+    // Tratamento de retry resiliente para o loadURL durante o boot do Vite
+    const loadWithRetry = (retries = 10, delay = 500) => {
+      mainWindow.loadURL(devServerUrl).catch((err) => {
+        if (retries > 0) {
+          console.log(`[Electron] Vite dev server ainda não respondeu, tentando novamente em ${delay}ms... (${retries} tentativas restantes)`);
+          setTimeout(() => loadWithRetry(retries - 1, delay), delay);
+        } else {
+          console.error('[Electron] Falha persistente ao conectar ao servidor Vite:', err);
+        }
+      });
+    };
+
+    loadWithRetry();
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));

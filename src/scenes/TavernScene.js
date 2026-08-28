@@ -110,9 +110,14 @@ export default class TavernScene extends Phaser.Scene {
 
     // Listener global para fim de diálogo
     this._onGlobalDialogueClosed = () => {
+      const target = this.activeDialogueTarget;
+      const josephType = this.activeDialogueJosephType;
+      this.activeDialogueTarget = null;
+      this.activeDialogueJosephType = null;
+
       // Controle do Flashback no Joseph Sylven
-      if (this.currentInteractable === 'joseph_sylven') {
-        if (this.visitedNPCs.size >= 4 && !QuestManager.isQuestCompleted('quest_01_flashback')) {
+      if (target === 'joseph_sylven' && (josephType === 'joseph_ready' || this.visitedNPCs.size >= 4)) {
+        if (!QuestManager.isQuestCompleted('quest_01_flashback')) {
           Logger.info('TavernScene', 'Rhogar lembrou do passado. Iniciando Flashback...');
           this.cameras.main.fadeOut(500, 255, 255, 255);
           this.time.delayedCall(550, () => {
@@ -120,7 +125,6 @@ export default class TavernScene extends Phaser.Scene {
           });
         }
       }
-      this.currentInteractable = null;
     };
 
     this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
@@ -167,6 +171,7 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   openInteraction(id) {
+    this.activeDialogueTarget = id;
     if (id === 'hilda') {
       this.player.setState(PlayerState.INTERACTING);
       this.shopUI.openShop();
@@ -191,6 +196,7 @@ export default class TavernScene extends Phaser.Scene {
         josephId = 'joseph_ready';
       }
       
+      this.activeDialogueJosephType = josephId;
       const dialogue = this.interactions[josephId];
       this.game.events.emit('openDialogue', dialogue);
     } else {

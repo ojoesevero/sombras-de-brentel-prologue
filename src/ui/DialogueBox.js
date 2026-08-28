@@ -3,15 +3,13 @@ import Logger from '../utils/Logger.js';
 export default class DialogueBox extends Phaser.GameObjects.Container {
   constructor(scene, x, y, width, height) {
     super(scene, x, y);
+    this.baseY = y;
     this.boxWidth = width;
     this.boxHeight = height;
 
     // Background
     this.graphics = scene.add.graphics();
-    this.graphics.fillStyle(0x000000, 0.85);
-    this.graphics.fillRoundedRect(0, 0, width, height, 10);
-    this.graphics.lineStyle(3, 0xd4af37, 1);
-    this.graphics.strokeRoundedRect(0, 0, width, height, 10);
+    this.updateBackgroundSize(this.boxHeight);
     this.add(this.graphics);
 
     // Retrato dinâmico
@@ -179,6 +177,32 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     });
   }
 
+  /**
+   * Atualiza a altura do fundo e da borda dourada com base na quantidade de conteúdo/opções.
+   * @param {number} targetHeight - Altura alvo em pixels.
+   */
+  updateBackgroundSize(targetHeight) {
+    const h = targetHeight || this.boxHeight;
+    const extraHeight = h - this.boxHeight;
+    
+    // Desloca suavemente para cima caso a caixa aumente, garantindo que não estoure a tela
+    if (this.baseY !== undefined) {
+      this.setY(this.baseY - extraHeight);
+    }
+
+    if (this.graphics) {
+      this.graphics.clear();
+      this.graphics.fillStyle(0x000000, 0.85);
+      this.graphics.fillRoundedRect(0, 0, this.boxWidth, h, 10);
+      this.graphics.lineStyle(3, 0xd4af37, 1);
+      this.graphics.strokeRoundedRect(0, 0, this.boxWidth, h, 10);
+    }
+
+    if (this.promptText) {
+      this.promptText.setY(h - 25);
+    }
+  }
+
   completeDialogue() {
     this.isTyping = false;
     this.dialogueText.setText(this.fullText);
@@ -200,6 +224,7 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     this.hasChoices = false;
     this.activeChoices = [];
     this.choicesContainer.removeAll(true);
+    this.updateBackgroundSize(this.boxHeight);
   }
 
   renderChoices(choices) {
@@ -208,8 +233,16 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     this.activeChoices = choices;
     this.choicesTextObjects = [];
 
+    const baseHeight = this.boxHeight; // 140
+    const extraHeightPerChoice = 35;
+    const totalChoices = choices ? choices.length : 0;
+    const dynamicHeight = baseHeight + (totalChoices > 1 ? (totalChoices - 1) * extraHeightPerChoice : 0);
+
+    // Redimensiona o background e a borda dinamicamente
+    this.updateBackgroundSize(dynamicHeight);
+
     choices.forEach((choice, index) => {
-      const t = this.scene.add.text(0, index * 25, choice.text, {
+      const t = this.scene.add.text(0, index * 30, choice.text, {
         fontFamily: 'Arial',
         fontSize: '14px',
         color: '#ffffff'

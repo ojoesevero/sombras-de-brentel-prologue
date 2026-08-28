@@ -180,3 +180,16 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Introduzida a `DungeonScene.js` (Masmorra), estruturada com iluminação sombria, barreiras arquitetônicas, puzzle das 3 Runas, fogueira de checkpoint e novos monstros em `dungeon_enemies.json`.
 ### Fixed
 - Erradicados vazamentos de estado (*state leaks*) e travamentos em cascatas nas transições entre mapas graças à centralização de UI e FSM do Jogador.
+
+## [0.17.1] - Game Juice, Mitigação Tática e Suíte de Testes Unitários
+### Added
+- **Mitigação de Dano e Variância Tática:** Novo cálculo de dano com mitigação por Defesa (`Ataque - Defesa`, mínimo garantido de 1) e variância de 10% aplicado uniformemente em `Player.js` e `BattleScene.js`. O Sopro Elétrico agora penetra 50% da armadura do alvo.
+- **Game Feel & VFX Aprimorado:**
+  - **Screen Shake Escalonado:** Tremor dinâmico de câmera calibrado por faixas de intensidade de dano (<20 leve, 20-50 médio, >=50 crítico).
+  - **Hit-Stop (Micro-pausa de Impacto):** Efeito de congelamento transitório (80ms-90ms) disparado antes da ejeção numérica de dano e recuo para impacto físico e peso tátil.
+  - **Emissores de Partículas Reais:** Implementados `createSlashParticles` e `createLightningParticles` com auto-destruição para golpes cortantes e mágicos.
+- **Suíte de Testes Unitários Nativos:** Setup de testes automatizados via Node Test Runner (`node --test`), com suítes dedicadas para `QuestManager.test.js` e `InventoryManager.test.js` executadas via `npm test`.
+### Fixed
+- **Gestão de Ciclo de Vida no `InputManager.js`:** Adicionado método `cleanListeners()` e hooks automáticos nos eventos `SHUTDOWN` e `DESTROY` das cenas Phaser, eliminando acúmulo de listeners e memory leaks entre transições.
+- **Agnosticismo de Ambiente no `QuestManager.js` e `Logger.js`:** Desacoplado o `QuestManager` de instâncias de DOM/Canvas e blindadas checagens globais de `typeof window !== 'undefined'` no `Logger.js`.
+

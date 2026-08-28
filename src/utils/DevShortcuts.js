@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import Logger from './Logger.js';
 import QuestManager from '../services/QuestManager.js';
 import WorldManager from '../services/WorldManager.js';

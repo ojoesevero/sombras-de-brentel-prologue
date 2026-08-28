@@ -90,6 +90,7 @@ export default class TempleScene extends Phaser.Scene {
       }
 
       if (this.currentInteractTarget) {
+        this.activeDialogueTarget = this.currentInteractTarget;
         let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
@@ -110,7 +111,9 @@ export default class TempleScene extends Phaser.Scene {
 
     // Ouvinte para conclusão de diálogos
     this._onGlobalDialogueClosed = () => {
-      if (this.currentInteractTarget === 'sacerdotisa_palmem' || this.currentInteractTarget === 'gruther_leito') {
+      const target = this.activeDialogueTarget || this.currentInteractTarget;
+      this.activeDialogueTarget = null;
+      if (target === 'sacerdotisa_palmem' || target === 'gruther_leito') {
         if (!QuestManager.isQuestCompleted('quest_02_temple')) {
           QuestManager.advanceQuest('quest_02_temple', 'completed');
           QuestManager.advanceQuest('quest_03_investigate_farm', 'active');
@@ -118,7 +121,6 @@ export default class TempleScene extends Phaser.Scene {
           this.updateHUD();
         }
       }
-      this.currentInteractTarget = null;
     };
 
     this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);

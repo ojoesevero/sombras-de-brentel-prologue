@@ -36,7 +36,7 @@ class Logger {
    * @private
    */
   _writeToFile(logEntry) {
-    if (ENABLE_FILE_LOGGING && window && window.electronAPI && window.electronAPI.writeLog) {
+    if (ENABLE_FILE_LOGGING && typeof window !== 'undefined' && window.electronAPI && window.electronAPI.writeLog) {
       window.electronAPI.writeLog(logEntry + '\n');
     }
   }

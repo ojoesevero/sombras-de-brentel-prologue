@@ -18,40 +18,65 @@ class InputManager extends Phaser.Events.EventEmitter {
   }
 
   /**
+   * Limpa todos os ouvintes de teclado, eventos e polling de update vinculados à cena atual.
+   */
+  cleanListeners() {
+    this.removeAllListeners();
+    if (this.scene) {
+      if (this.scene.input && this.scene.input.keyboard) {
+        this.scene.input.keyboard.off('keydown', this.handleKeyboard, this);
+      }
+      if (this.scene.events) {
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.update, this);
+      }
+    }
+  }
+
+  /**
    * Inicializa o input listener na cena atual.
    * @param {Phaser.Scene} scene - A cena ativa.
    */
   init(scene) {
-    // Remove listeners lógicos antigos se houver
-    this.removeAllListeners();
+    if (!scene) return;
     
-    // Desvincula o evento de teclado da cena anterior para evitar Memory Leaks
-    if (this.scene && this.scene.input && this.scene.input.keyboard) {
-      this.scene.input.keyboard.off('keydown', this.handleKeyboard, this);
-    }
+    // Desvincula listeners da cena anterior para erradicar vazamentos de memória (State Leaks)
+    this.cleanListeners();
     
     this.scene = scene;
 
     // Configurar Teclado
-    this.keys = scene.input.keyboard.addKeys({
-      UP: Phaser.Input.Keyboard.KeyCodes.UP,
-      DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
-      LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
-      RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT,
-      W: Phaser.Input.Keyboard.KeyCodes.W,
-      S: Phaser.Input.Keyboard.KeyCodes.S,
-      A: Phaser.Input.Keyboard.KeyCodes.A,
-      D: Phaser.Input.Keyboard.KeyCodes.D,
-      CONFIRM1: Phaser.Input.Keyboard.KeyCodes.SPACE,
-      CONFIRM2: Phaser.Input.Keyboard.KeyCodes.ENTER,
-      CONFIRM3: Phaser.Input.Keyboard.KeyCodes.Z,
-      CANCEL1: Phaser.Input.Keyboard.KeyCodes.X,
-      CANCEL2: Phaser.Input.Keyboard.KeyCodes.ESC,
-      MENU: Phaser.Input.Keyboard.KeyCodes.ESC
-    });
+    if (scene.input && scene.input.keyboard) {
+      this.keys = scene.input.keyboard.addKeys({
+        UP: Phaser.Input.Keyboard.KeyCodes.UP,
+        DOWN: Phaser.Input.Keyboard.KeyCodes.DOWN,
+        LEFT: Phaser.Input.Keyboard.KeyCodes.LEFT,
+        RIGHT: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+        W: Phaser.Input.Keyboard.KeyCodes.W,
+        S: Phaser.Input.Keyboard.KeyCodes.S,
+        A: Phaser.Input.Keyboard.KeyCodes.A,
+        D: Phaser.Input.Keyboard.KeyCodes.D,
+        CONFIRM1: Phaser.Input.Keyboard.KeyCodes.SPACE,
+        CONFIRM2: Phaser.Input.Keyboard.KeyCodes.ENTER,
+        CONFIRM3: Phaser.Input.Keyboard.KeyCodes.Z,
+        CANCEL1: Phaser.Input.Keyboard.KeyCodes.X,
+        CANCEL2: Phaser.Input.Keyboard.KeyCodes.ESC,
+        MENU: Phaser.Input.Keyboard.KeyCodes.ESC
+      });
 
-    scene.input.keyboard.on('keydown', this.handleKeyboard, this);
-    scene.events.on('update', this.update, this);
+      scene.input.keyboard.on('keydown', this.handleKeyboard, this);
+    }
+    
+    if (scene.events) {
+      scene.events.on(Phaser.Scenes.Events.UPDATE, this.update, this);
+      
+      // Auto-limpeza ao desligar ou destruir a cena
+      scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        this.cleanListeners();
+      });
+      scene.events.once(Phaser.Scenes.Events.DESTROY, () => {
+        this.cleanListeners();
+      });
+    }
     
     Logger.info('InputManager', 'InputManager acoplado à cena atual.');
   }
