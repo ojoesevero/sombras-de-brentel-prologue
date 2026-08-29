@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
 import SaveManager from '../services/SaveManager.js';
+import InventoryManager from '../services/InventoryManager.js';
+import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
 
 /**
@@ -88,13 +90,38 @@ export default class GameOverScene extends Phaser.Scene {
 
   retry() {
     Logger.info('GameOverScene', 'Reiniciando a jornada.');
-    this.scene.start('GameScene'); 
+    this.scene.launch('UIScene');
+    if (this.previousScene && this.previousScene !== 'GameOverScene' && this.previousScene !== 'BattleScene') {
+      this.scene.start(this.previousScene);
+    } else {
+      this.scene.start('TavernScene');
+    }
   }
 
   loadSave() {
     Logger.info('GameOverScene', 'Carregando save.');
     const saveData = SaveManager.loadGame();
-    this.scene.start('GameScene', { loadedData: saveData });
+    if (!saveData) {
+      this.retry();
+      return;
+    }
+
+    if (saveData.inventory) {
+      InventoryManager.loadFromStorage(saveData.inventory);
+    }
+    if (saveData.quests) {
+      QuestManager.init(saveData.quests);
+    }
+
+    const targetScene = saveData.player?.scene || saveData.player?.checkpoint || 'TavernScene';
+    const spawnData = {
+      x: saveData.player?.x,
+      y: saveData.player?.y,
+      loadedData: saveData
+    };
+
+    this.scene.launch('UIScene');
+    this.scene.start(targetScene, spawnData);
   }
 
   goToMenu() {

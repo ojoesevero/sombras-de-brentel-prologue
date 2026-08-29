@@ -49,6 +49,9 @@ export default class DungeonScene extends Phaser.Scene {
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 800);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 150);
     this.player = new Player(this, spawnX, spawnY, 32, 32, 0x0055ff);
+    if (this.spawnData.loadedData?.player) {
+      this.player.loadState(this.spawnData.loadedData.player);
+    }
     this.physics.add.collider(this.player, this.staticGroup);
 
     // Câmera Tracking
@@ -173,9 +176,12 @@ export default class DungeonScene extends Phaser.Scene {
 
       if (this.currentInteractTarget === 'fogueira') {
         Logger.info('DungeonScene', 'Fogueira ativada: Salvando o jogo e curando.');
-        if (SaveManager && SaveManager.saveGame) {
-           SaveManager.saveGame();
+        if (this.player) {
+          this.player.hp = this.player.maxHp;
+          this.player.checkpoint = 'DungeonScene';
+          this.player.currentScene = 'DungeonScene';
         }
+        SaveManager.saveGame(this.player);
         
         const floatText = this.add.text(this.player.x, this.player.y - 40, 'HP Restaurado!\nJogo Salvo', { fontSize: '14px', fill: '#00ff00', align: 'center', backgroundColor: '#000' }).setOrigin(0.5);
         floatText.setDepth(200);

@@ -16,6 +16,7 @@ export class ForestRouteScene extends Phaser.Scene {
   }
 
   init(data) {
+    this.spawnData = data || {};
     this.spawnX = data?.x || 800;
     this.spawnY = data?.y || 100;
   }
@@ -71,6 +72,9 @@ export class ForestRouteScene extends Phaser.Scene {
 
     // O Jogador e Spawn (Player com FSM)
     this.player = new Player(this, this.spawnX, this.spawnY, 32, 32, 0x2980b9);
+    if (this.spawnData?.loadedData?.player) {
+      this.player.loadState(this.spawnData.loadedData.player);
+    }
     
     this.physics.add.collider(this.player, this.staticGroup);
     this.physics.add.collider(this.player, this.staticGroupNPCs);

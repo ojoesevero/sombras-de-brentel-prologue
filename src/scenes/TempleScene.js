@@ -63,6 +63,9 @@ export default class TempleScene extends Phaser.Scene {
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 520);
     this.player = new Player(this, spawnX, spawnY, 32, 32, 0x2980b9);
+    if (this.spawnData?.loadedData?.player) {
+      this.player.loadState(this.spawnData.loadedData.player);
+    }
     
     this.physics.add.collider(this.player, this.staticGroup);
     this.physics.add.collider(this.player, this.staticGroupNPCs);

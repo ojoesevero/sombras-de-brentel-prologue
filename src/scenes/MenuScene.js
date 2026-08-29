@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import SaveManager from '../services/SaveManager.js';
 import QuestManager from '../services/QuestManager.js';
+import InventoryManager from '../services/InventoryManager.js';
 import InputManager from '../services/InputManager.js';
 import Logger from '../utils/Logger.js';
 
@@ -92,8 +93,28 @@ export default class MenuScene extends Phaser.Scene {
   continueGame() {
     Logger.info('MenuScene', 'Ação: Continuar progresso salvo');
     const saveData = SaveManager.loadGame();
+    if (!saveData) {
+      Logger.warn('MenuScene', 'Nenhum save válido encontrado para continuar.');
+      return;
+    }
+
+    if (saveData.inventory) {
+      InventoryManager.loadFromStorage(saveData.inventory);
+    }
+    if (saveData.quests) {
+      QuestManager.init(saveData.quests);
+    }
+
+    const targetScene = saveData.player?.scene || saveData.player?.checkpoint || 'TavernScene';
+    const spawnData = {
+      x: saveData.player?.x,
+      y: saveData.player?.y,
+      loadedData: saveData
+    };
+
+    Logger.info('MenuScene', `Restaurando sessão para ${targetScene}`, spawnData);
     this.scene.launch('UIScene');
-    this.scene.start('GameScene', { loadedData: saveData });
+    this.scene.start(targetScene, spawnData);
   }
 
   openSettings() {

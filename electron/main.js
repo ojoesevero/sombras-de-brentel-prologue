@@ -23,6 +23,41 @@ ipcMain.on('write-log', (event, logEntry) => {
   }
 });
 
+const savePath = path.join(process.cwd(), 'savegame.dat');
+
+// Handlers IPC para Persistência
+ipcMain.on('save-game-sync', (event, encodedData) => {
+  try {
+    fs.writeFileSync(savePath, encodedData, 'utf8');
+    event.returnValue = { success: true };
+  } catch (err) {
+    console.error('Erro ao salvar jogo:', err);
+    event.returnValue = { success: false, error: err.message };
+  }
+});
+
+ipcMain.on('load-game-sync', (event) => {
+  try {
+    if (fs.existsSync(savePath)) {
+      const data = fs.readFileSync(savePath, 'utf8');
+      event.returnValue = { success: true, data };
+    } else {
+      event.returnValue = { success: true, data: null };
+    }
+  } catch (err) {
+    console.error('Erro ao carregar jogo:', err);
+    event.returnValue = { success: false, error: err.message, data: null };
+  }
+});
+
+ipcMain.on('has-save-sync', (event) => {
+  try {
+    event.returnValue = fs.existsSync(savePath);
+  } catch (err) {
+    event.returnValue = false;
+  }
+});
+
 const isDev = process.env.NODE_ENV !== 'production' || process.argv.includes('--dev') || !app.isPackaged;
 
 function createWindow() {

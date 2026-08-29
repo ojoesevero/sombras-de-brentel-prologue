@@ -76,6 +76,41 @@ export default class Player extends Phaser.GameObjects.Rectangle {
   }
 
   /**
+   * Restaura o estado de atributos a partir de um objeto salvo.
+   * @param {Object} state 
+   */
+  loadState(state) {
+    if (!state) return;
+    if (state.name) this.name = state.name;
+    if (state.maxHp !== undefined) this.maxHp = state.maxHp;
+    if (state.hp !== undefined) this.hp = Math.min(state.hp, this.maxHp);
+    if (state.attack !== undefined) this.attack = state.attack;
+    if (state.defense !== undefined) this.defense = state.defense;
+    if (state.fury !== undefined) this.fury = state.fury;
+    if (state.maxFury !== undefined) this.maxFury = state.maxFury;
+    if (state.equippedWeapon) this.equippedWeapon = state.equippedWeapon;
+    if (state.checkpoint) this.checkpoint = state.checkpoint;
+  }
+
+  /**
+   * Retorna os atributos vitais do jogador.
+   * @returns {Object}
+   */
+  getState() {
+    return {
+      name: this.name,
+      hp: this.hp,
+      maxHp: this.maxHp,
+      attack: this.attack,
+      defense: this.defense,
+      fury: this.fury,
+      maxFury: this.maxFury,
+      equippedWeapon: this.equippedWeapon,
+      checkpoint: this.checkpoint
+    };
+  }
+
+  /**
    * Define o estado atual do jogador.
    * @param {string} newState - Membro de PlayerState
    */
