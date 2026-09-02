@@ -20,11 +20,13 @@ class WorldManager {
 
   /**
    * Realiza a transição segura entre cenas com fade-out e cleanup.
+   * Suporta cena intermediária de transição de ato narrativo (ActTransitionScene).
    * @param {Phaser.Scene} currentScene 
    * @param {string} targetSceneKey 
    * @param {object} spawnData 
+   * @param {object} [actTransition]
    */
-  transitionTo(currentScene, targetSceneKey, spawnData = {}) {
+  transitionTo(currentScene, targetSceneKey, spawnData = {}, actTransition = null) {
     if (!currentScene || !currentScene.scene) return;
     if (currentScene._fadeRunning) return;
     currentScene._fadeRunning = true;
@@ -38,12 +40,20 @@ class WorldManager {
       }
     }
 
-    Logger.info('WorldManager', `Transicionando: ${currentScene.scene.key} -> ${targetSceneKey}`, spawnData);
+    Logger.info('WorldManager', `Transicionando: ${currentScene.scene.key} -> ${targetSceneKey}`, { spawnData, actTransition });
 
-    currentScene.cameras.main.fadeOut(200, 0, 0, 0);
-    currentScene.time.delayedCall(220, () => {
+    currentScene.cameras.main.fadeOut(250, 0, 0, 0);
+    currentScene.time.delayedCall(270, () => {
       currentScene._fadeRunning = false;
-      currentScene.scene.start(targetSceneKey, spawnData);
+      if (actTransition) {
+        currentScene.scene.start('ActIntroScene', {
+          ...actTransition,
+          nextScene: targetSceneKey,
+          spawnData: spawnData
+        });
+      } else {
+        currentScene.scene.start(targetSceneKey, spawnData);
+      }
     });
   }
 
@@ -105,8 +115,8 @@ class WorldManager {
             }
           }
 
-          // Transição direta
-          this.transitionTo(scene, tData.targetScene, tData.spawn || {});
+          // Transição direta ou com Ato Narrativo intermediário
+          this.transitionTo(scene, tData.targetScene, tData.spawn || {}, tData.actTransition || null);
         });
       }
     });

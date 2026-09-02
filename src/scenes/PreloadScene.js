@@ -40,6 +40,6 @@ export default class PreloadScene extends Phaser.Scene {
     gp.generateTexture(AssetsConfig.fx.particle_lightning, 16, 4);
 
     Logger.info('PreloadScene', 'Assets procedurais provisórios gerados com sucesso.');
-    this.scene.start('MenuScene');
+    this.scene.start('IntroSplashScene');
   }
 }

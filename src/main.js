@@ -1,6 +1,10 @@
 import Phaser from 'phaser';
 import PreloadScene from './scenes/PreloadScene.js';
+import IntroSplashScene from './scenes/IntroSplashScene.js';
 import MenuScene from './scenes/MenuScene.js';
+import IntroStoryScene from './scenes/IntroStoryScene.js';
+import ActIntroScene from './scenes/ActIntroScene.js';
+import ActTransitionScene from './scenes/ActTransitionScene.js';
 import SettingsScene from './scenes/SettingsScene.js';
 import TavernScene from './scenes/TavernScene.js';
 import RastphenCityScene from './scenes/RastphenCityScene.js';
@@ -23,7 +27,27 @@ const config = {
     width: 800,
     height: 600
   },
-  scene: [PreloadScene, MenuScene, SettingsScene, TavernScene, RastphenCityScene, TempleScene, ForestRouteScene, DungeonScene, GameScene, BattleScene, RewardScene, GameOverScene, PauseScene, DemoEndScene, UIScene],
+  scene: [
+    PreloadScene,
+    IntroSplashScene,
+    MenuScene,
+    IntroStoryScene,
+    ActIntroScene,
+    ActTransitionScene,
+    SettingsScene,
+    TavernScene,
+    RastphenCityScene,
+    TempleScene,
+    ForestRouteScene,
+    DungeonScene,
+    GameScene,
+    BattleScene,
+    RewardScene,
+    GameOverScene,
+    PauseScene,
+    DemoEndScene,
+    UIScene
+  ],
   physics: {
     default: 'arcade',
     arcade: {

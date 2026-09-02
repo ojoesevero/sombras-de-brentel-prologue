@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import Logger from '../utils/Logger.js';
+import InputManager from '../services/InputManager.js';
 
 /**
  * Estados da Máquina de Estados Finita (FSM) do Jogador.
@@ -141,10 +142,10 @@ export default class Player extends Phaser.GameObjects.Rectangle {
     let velX = 0;
     let velY = 0;
 
-    const left = (cursors?.left?.isDown) || (wasd?.a?.isDown);
-    const right = (cursors?.right?.isDown) || (wasd?.d?.isDown);
-    const up = (cursors?.up?.isDown) || (wasd?.w?.isDown);
-    const down = (cursors?.down?.isDown) || (wasd?.s?.isDown);
+    const left = (cursors?.left?.isDown) || (wasd?.a?.isDown) || InputManager.isVirtualDown('left');
+    const right = (cursors?.right?.isDown) || (wasd?.d?.isDown) || InputManager.isVirtualDown('right');
+    const up = (cursors?.up?.isDown) || (wasd?.w?.isDown) || InputManager.isVirtualDown('up');
+    const down = (cursors?.down?.isDown) || (wasd?.s?.isDown) || InputManager.isVirtualDown('down');
 
     if (left) velX = -speed;
     else if (right) velX = speed;

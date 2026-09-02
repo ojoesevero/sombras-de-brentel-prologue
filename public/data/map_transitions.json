@@ -10,7 +10,13 @@
       "targetScene": "RastphenCityScene",
       "spawn": { "x": 520, "y": 880 },
       "requiredQuest": "quest_01_flashback",
-      "lockedThought": "thought_locked_tavern_exit"
+      "lockedThought": "thought_locked_tavern_exit",
+      "actTransition": {
+        "actNumber": "ATO II",
+        "actRoman": "II",
+        "actTitle": "Os Segredos de Rastphen",
+        "loreText": "A imponência do Templo de Palmem contrasta com a tensão que toma conta da região sul. O Portão de Rastphen revela estradas assoladas por ameaças ocultas. Na Estrada da Fazenda, celeiros arrombados e rastros de criaturas sombrias exigem que Rhogar investigue a origem da corrupção que assola os arredores."
+      }
     }
   ],
   "RastphenCityScene": [
@@ -80,7 +86,13 @@
       "targetScene": "DungeonScene",
       "spawn": { "x": 800, "y": 150 },
       "requiredQuest": "quest_03_investigate_farm",
-      "lockedThought": "thought_locked_dungeon_entry"
+      "lockedThought": "thought_locked_dungeon_entry",
+      "actTransition": {
+        "actNumber": "ATO III",
+        "actRoman": "III",
+        "actTitle": "A Masmorra do Bosque Cinzento",
+        "loreText": "Entre a névoa densa e árvores seculares de troncos avermelhados, repousa a entrada da Masmorra do Bosque Cinzento. O Grande Portão encontra-se lacrado por feitiçaria abissal. Guiado pela honra e pela sobrevivência, o herói deve purificar os altares rúnicos de pestilência para romper o selo e enfrentar o perigo iminente."
+      }
     }
   ]
 }

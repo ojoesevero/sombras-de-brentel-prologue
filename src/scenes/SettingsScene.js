@@ -5,6 +5,7 @@ import Logger from '../utils/Logger.js';
 
 /**
  * Cena de Configurações (Settings).
+ * Permite ajustar modo de controle (PC/Mobile), volumes e alternar tela cheia.
  */
 export default class SettingsScene extends Phaser.Scene {
   constructor() {
@@ -13,9 +14,18 @@ export default class SettingsScene extends Phaser.Scene {
 
   create() {
     this.add.rectangle(0, 0, 800, 600, 0x111111).setOrigin(0);
-    this.add.text(400, 100, 'Opções Gerais', { fontSize: '36px', fill: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
+    this.add.text(400, 80, 'OPÇÕES GERAIS', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '34px',
+      fill: '#ffffff',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    const currentMode = this.registry.get('controlMode') || localStorage.getItem('controlMode') || 'pc';
+    this.controlMode = currentMode;
 
     this.options = [
+      { text: `Controles: ${this.controlMode === 'mobile' ? 'Mobile (Touch)' : 'PC (Teclado)'}`, action: () => this.toggleControlMode() },
       { text: 'Volume BGM: 100%', action: () => this.toggleBGM() },
       { text: 'Volume SFX: 100%', action: () => this.toggleSFX() },
       { text: 'Tela Cheia / Janela', action: () => this.toggleFullscreen() },
@@ -28,10 +38,14 @@ export default class SettingsScene extends Phaser.Scene {
     this.menuTexts = [];
 
     this.options.forEach((opt, index) => {
-      const y = 250 + index * 60;
-      const t = this.add.text(400, y, opt.text, { fontSize: '24px', fill: '#aaa' })
+      const y = 180 + index * 60;
+      const t = this.add.text(400, y, opt.text, {
+        fontFamily: 'Georgia, serif',
+        fontSize: '22px',
+        fill: '#aaaaaa'
+      })
         .setOrigin(0.5)
-        .setInteractive();
+        .setInteractive({ useHandCursor: true });
 
       t.on('pointerdown', opt.action);
       t.on('pointerover', () => this.setSelection(index));
@@ -43,15 +57,31 @@ export default class SettingsScene extends Phaser.Scene {
     InputManager.onAction('DOWN', () => this.moveSelection(1));
     InputManager.onAction('UP', () => this.moveSelection(-1));
     InputManager.onAction('CONFIRM', () => this.options[this.selectedIndex].action());
+    InputManager.onAction('CANCEL', () => this.goBack());
 
     this.updateSelectionVisuals();
     Logger.info('SettingsScene', 'Opções renderizadas.');
   }
 
+  toggleControlMode() {
+    this.controlMode = this.controlMode === 'pc' ? 'mobile' : 'pc';
+    this.registry.set('controlMode', this.controlMode);
+    try {
+      localStorage.setItem('controlMode', this.controlMode);
+    } catch (e) {
+      Logger.warn('SettingsScene', 'Falha ao salvar no localStorage', e);
+    }
+
+    this.game.events.emit('controlModeChanged', this.controlMode);
+    this.options[0].text = `Controles: ${this.controlMode === 'mobile' ? 'Mobile (Touch)' : 'PC (Teclado)'}`;
+    this.updateSelectionVisuals();
+    Logger.info('SettingsScene', `Modo de controle alterado para: ${this.controlMode}`);
+  }
+
   toggleBGM() {
     this.bgmVol = this.bgmVol >= 1.0 ? 0 : this.bgmVol + 0.25;
     AudioManager.setBGMVolume(this.bgmVol);
-    this.options[0].text = `Volume BGM: ${Math.round(this.bgmVol * 100)}%`;
+    this.options[1].text = `Volume BGM: ${Math.round(this.bgmVol * 100)}%`;
     this.updateSelectionVisuals();
     Logger.info('SettingsScene', `BGM alterado para ${this.bgmVol}`);
   }
@@ -59,7 +89,7 @@ export default class SettingsScene extends Phaser.Scene {
   toggleSFX() {
     this.sfxVol = this.sfxVol >= 1.0 ? 0 : this.sfxVol + 0.25;
     AudioManager.setSFXVolume(this.sfxVol);
-    this.options[1].text = `Volume SFX: ${Math.round(this.sfxVol * 100)}%`;
+    this.options[2].text = `Volume SFX: ${Math.round(this.sfxVol * 100)}%`;
     this.updateSelectionVisuals();
     Logger.info('SettingsScene', `SFX alterado para ${this.sfxVol}`);
   }

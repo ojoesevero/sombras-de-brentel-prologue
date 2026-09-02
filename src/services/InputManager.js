@@ -15,12 +15,49 @@ class InputManager extends Phaser.Events.EventEmitter {
     InputManager.instance = this;
     this.scene = null;
     this.lastGamepadState = {};
+    this.virtualKeys = {
+      up: false,
+      down: false,
+      left: false,
+      right: false
+    };
+  }
+
+  /**
+   * Define o estado contínuo de uma tecla virtual (Touch/D-Pad).
+   * @param {string} key - 'up' | 'down' | 'left' | 'right'
+   * @param {boolean} isDown
+   */
+  setVirtualKey(key, isDown) {
+    if (this.virtualKeys[key] !== undefined) {
+      this.virtualKeys[key] = !!isDown;
+    }
+  }
+
+  /**
+   * Retorna se a tecla virtual está pressionada.
+   * @param {string} key
+   * @returns {boolean}
+   */
+  isVirtualDown(key) {
+    return !!this.virtualKeys[key];
+  }
+
+  /**
+   * Reseta todas as teclas virtuais pressionadas.
+   */
+  resetVirtualKeys() {
+    this.virtualKeys.up = false;
+    this.virtualKeys.down = false;
+    this.virtualKeys.left = false;
+    this.virtualKeys.right = false;
   }
 
   /**
    * Limpa todos os ouvintes de teclado, eventos e polling de update vinculados à cena atual.
    */
   cleanListeners() {
+    this.resetVirtualKeys();
     this.removeAllListeners();
     if (this.scene) {
       if (this.scene.input && this.scene.input.keyboard) {
