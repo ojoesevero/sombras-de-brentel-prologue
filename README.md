@@ -1,280 +1,370 @@
 <div align="center">
 
 # ⚔️ Sombras de Brentel: Prólogo
-### *Os Seis Contra o Abismo: A Floresta Cinzenta*
+### *Baseado no livro: "Os Seis Contra o Abismo — A Floresta Cinzenta"*
+#### *Escrito por Thiago Schardosin | Produzido por Velhos Games*
 
-[![Engine](https://img.shields.io/badge/Engine-Phaser%203%20%2F%204-blue.svg?style=for-the-badge&logo=phaser)](https://phaser.io/)
-[![Runtime](https://img.shields.io/badge/Platform-Electron%20Desktop-47848F.svg?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
-[![Bundler](https://img.shields.io/badge/Bundler-Vite-646CFF.svg?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![Language](https://img.shields.io/badge/Language-JavaScript%20(ES6%2B)-F7DF1E.svg?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/)
-[![Testing](https://img.shields.io/badge/Tests-Node%20Test%20Runner-339933.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
-[![Publisher](https://img.shields.io/badge/Producer-Velhos%20Games-red.svg?style=for-the-badge)](#-equipe--créditos)
+<br>
+
+<!-- BADGES PRINCIPAIS -->
+[![Jogar Online no Vercel](https://img.shields.io/badge/🎮%20JOGAR%20ONLINE-Vercel%20Web-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://sombras-de-brentel.vercel.app/)
+[![Engine Phaser 3](https://img.shields.io/badge/Engine-Phaser%203%20%2F%204-blue.svg?style=for-the-badge&logo=phaser)](https://phaser.io/)
+[![Runtime Desktop](https://img.shields.io/badge/Platform-Electron%20Desktop-47848F.svg?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
+[![Bundler Vite](https://img.shields.io/badge/Bundler-Vite-646CFF.svg?style=for-the-badge&logo=vite)](https://vitejs.dev/)
+[![JavaScript ES6+](https://img.shields.io/badge/Language-JavaScript%20(ES6%2B)-F7DF1E.svg?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/)
+[![Testes Automatizados](https://img.shields.io/badge/Tests-12%20Passing%20(100%25)-brightgreen.svg?style=for-the-badge&logo=node.js)](https://nodejs.org/)
+
+<br>
+
+<!-- HERO CARD / CTA DE JOGO ONLINE -->
+<table>
+  <tr>
+    <td align="center" style="background: linear-gradient(135deg, #16161d 0%, #0d0d12 100%); border: 2px solid #d4af37; border-radius: 12px; padding: 24px;">
+      <h2 style="color: #ffd700; margin-bottom: 8px;">🌐 Versão Web Oficial Disponível!</h2>
+      <p style="color: #e0e0e0; font-size: 16px; line-height: 1.6; max-width: 680px;">
+        Jogue agora mesmo direto pelo navegador do seu <strong>computador, tablet ou smartphone</strong> sem necessidade de download ou instalação. Suporte completo a <strong>Teclado</strong> e <strong>Controles Virtuais Touch (Mobile)</strong>!
+      </p>
+      <a href="https://sombras-de-brentel.vercel.app/" target="_blank">
+        <img src="https://img.shields.io/badge/▶%20CLIQUE%20AQUI%20PARA%20JOGAR%20NO%20NAVEGADOR-ffd700?style=for-the-badge&labelColor=1a1a24&color=d4af37" alt="Jogar no Vercel" />
+      </a>
+      <br><br>
+      <sub>🔗 <code>https://sombras-de-brentel.vercel.app/</code></sub>
+    </td>
+  </tr>
+</table>
+
+<br>
 
 <p align="center">
-  <strong>Um RPG 2D clássico em turnos e exploração top-down imersiva com arquitetura Data-Driven.</strong><br>
-  Uma jornada tática de vingança, honra e confronto contra a pestilência abissal.
+  <strong>Um RPG 2D tático em turnos com exploração top-down imersiva e arquitetura 100% Data-Driven.</strong><br>
+  Uma jornada implacável de honra, vingança e confronto contra as forças profanas do Abismo.
 </p>
 
 ---
 
 </div>
 
-## 📖 Sobre o Jogo
+<br>
 
-**Sombras de Brentel - Prologue** é um RPG tático e narrativo em 2D desenvolvido pela **Velhos Games**. Inspirado nos clássicos de 16-bits da era de ouro dos JRPGs, o jogo serve como o prelúdio épico do conto de fantasia sombria **"Os Seis Contra o Abismo: A Floresta Cinzenta"**, escrito por **Thiago Schardosin**.
+## 📖 Sobre a Obra e o Universo
 
-Na pele de **Rhogar Tordan**, um guerreiro draconato meio-sangue empunhando a lendária lâmina de sua mãe, os jogadores exploram a metrópole amuralhada de **Rastphen**, investigam horrores arcanos no **Templo de Palmem**, seguem rastros de rapto na **Estrada da Floresta** e adentram as ruínas amaldiçoadas da **Masmorra do Bosque Cinzento** para confrontar cultistas e o temível Minotauro Abissal.
+**Sombras de Brentel - Prologue** é um RPG tático desenvolvido pela **Velhos Games** e concebido por **Joe Severo**, servindo como introdução interativa oficial do livro **"Os Seis Contra o Abismo: A Floresta Cinzenta"**, de autoria de **Thiago Schardosin**.
 
----
+Ambientado no continente de **Brentel** no ano de **312 D.I.**, o enredo acompanha os passos de **Rhogar Tordan**, um vigoroso bárbaro draconato que empunha a lâmina de sua mãe falecida, e **Joseph Sylven**, um acólito meio-elfo devoto de Lízan. Unidos pela necessidade brutal de sobrevivência após escaparem da emboscada dos guardas da Casa Estayler, a dupla busca refúgio na amuralhada metrópole de **Rastphen**.
 
-## 🎮 Funcionalidades Principais
-
-* **⚔️ Sistema de Combate Tático em Turnos:** 
-  - Controle 100% por teclado ou Gamepad.
-  - Seleção estratégica de alvos múltiplos com retículo visual.
-  - Sistema dinâmico de **Fúria** para habilidades devastadoras.
-  - Mitigação realista de dano baseada em Defesa e penetração de armadura.
-* **💥 Game Juice & Impacto Cinético:**
-  - **Hit-Stop (Micro-pausas de 80ms~90ms)** para transmitir o peso real de cada golpe.
-  - **Screen Shake Escalonado** calibrado por faixas de dano (Leve, Médio e Crítico).
-  - Emissores de partículas para cortes físicos e descargas elétricas.
-* **🗺️ Exploração Top-Down & Zonas Interativas:**
-  - Câmera suave com tracking de coordenadas.
-  - Baús de itens com espólio e notificações flutuantes.
-  - Emboscadas de inimigos no mapa sem transições desnecessárias.
-* **📜 Diálogos com Retratos Dinâmicos & Escolhas Múltiplas:**
-  - Interface baseada em máquina de escrever (*Typewriter effect*).
-  - Retratos expressivos e caixas de diálogo auto-expansíveis.
-  - Ramificações de escolhas com respostas reativas dos NPCs.
-* **🗃️ Arquitetura 100% Data-Driven:**
-  - Missões, diálogos, inimigos e portais configurados via arquivos JSON desacoplados.
-* **💾 Persistência Multi-Ambiente:**
-  - Salvamento automático de progresso (Ouro, Itens, Quests e Checkpoints) em disco local e LocalStorage.
-* **⚡ Overlay Global de Interface (UIScene):**
-  - Gerenciamento desacoplado de HUD e caixas de texto via EventBus central.
+Por trás das paredes de pedra e das mesas da **Taverna Cauda do Dragão**, sussurros sombrios revelam que uma misteriosa pestilência mágica está corrompendo as matas vizinhas, sequestrando inocentes e abrindo caminhos para horrores ancestrais que repousam na esquecida **Masmorra do Bosque Cinzento**.
 
 ---
 
-## 🧙 Classes de Heróis
+## 🌟 Novidades & Destaques da Versão 1.0
+
+<div align="center">
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">📱 Experiência Mobile Completa</h3>
+      <ul>
+        <li><strong>Seletor de Modo no Boot:</strong> Escolha entre <code>PC (Teclado)</code> ou <code>Mobile (Touch)</code> logo no início, com detecção automática do dispositivo.</li>
+        <li><strong>D-Pad Virtual Integrado:</strong> Setas direcionais táteis responsivas no canto inferior esquerdo com suporte a toque contínuo.</li>
+        <li><strong>Botões de Ação e Menu:</strong> Interaja, dialogue e acesse o menu de pausa diretamente pela tela touch.</li>
+        <li><strong>Alternância em Tempo Real:</strong> Mude de modo a qualquer momento na tela de <em>Opções</em>.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">📜 Apresentação Cinematográfica</h3>
+      <ul>
+        <li><strong>Sequência de Abertura:</strong> Apresentação da produtora <em>Velhos Games</em>, do desenvolvedor <em>Joe Severo</em> e dos créditos da obra de <em>Thiago Schardosin</em>.</li>
+        <li><strong>Prólogo Narrativo de Novo Jogo:</strong> Cena atmosférica com partículas de brasas e leitura das crônicas do livro.</li>
+        <li><strong>Telas de Ato Canônicas (ActIntroScene):</strong> Textos de abertura temáticos com estética de pergaminho clássico antes de cada capítulo da história.</li>
+        <li><strong>Menu "Como Jogar":</strong> Guia visual acessível com instruções completas para desktop e mobile.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+</div>
+
+---
+
+## 🎮 Funcionalidades do Gameplay
+
+* **⚔️ Combate Tático em Turnos Dinâmico:**
+  - Sistema de **Fúria**: Gere energia arcana ao desferir golpes ou resistir a danos.
+  - Habilidade **Sopro Elétrico**: Descarga tempestuosa que penetra **50% da defesa** dos inimigos.
+  - **Mitigação Realista de Armadura**: Cálculo matemático de redução de dano baseado na Defesa do alvo com variação orgânica.
+  - Seleção livre de alvos múltiplos com retículo visual inteligente.
+* **💥 Game Juice & Sensação de Impacto (Hit-Stop & Partículas):**
+  - **Hit-stop de 80ms~90ms** para conferir peso visceral a acertos físicos e críticos.
+  - **Screen Shake Escalonado** calibrado conforme a severidade do golpe recebido.
+  - Clarões de tela (*Flash Screen*) e arcos de corte com rastros de partículas.
+* **🗺️ Exploração de Mundo Aberto com Câmera Suave:**
+  - Malha urbana expansiva de **Rastphen (2400x1800)** e mapas da **Floresta (1600x1200)**.
+  - Portais e transições data-driven carregados dinamicamente via `map_transitions.json`.
+  - Baús de exploração com saques de ouro e consumíveis.
+* **📜 Diálogos com Retratos Expressivos & Ramificações:**
+  - Efeito máquina de escrever (*Typewriter*) com avanço rápido e caixas responsivas.
+  - Sistema de escolhas múltiplas com respostas reativas de NPCs e pensamentos internos.
+* **💾 Persistência Híbrida Blindada:**
+  - Suporte trifásico a salvamento: **Electron IPC seguro (`userData`)** $\rightarrow$ **LocalStorage (Navegador)** $\rightarrow$ **Memória Volátil**.
+  - Codificação em Base64 com suporte integral a UTF-8 e acentuação da língua portuguesa.
+
+---
+
+## 🗺️ Mapa de Progressão da Campanha
+
+```mermaid
+flowchart TD
+    Intro["🎬 Sequência de Abertura & Seleção de Modo (PC/Mobile)"] --> Menu["🏰 Menu Principal (Novo Jogo / Continuar / Como Jogar)"]
+    Menu --> LoreIntro["📜 Prólogo da História (Crônicas de Brentel)"]
+    LoreIntro --> AtoI["📖 ATO I: A Taverna Cauda do Dragão"]
+    
+    AtoI --> Flashback["⚔️ Flashback: Emboscada dos Guardas de Estayler"]
+    Flashback -->|Vitória ou Derrota| RetornoTaverna["🍺 Investigação na Taverna & Diálogos com Clientes"]
+    RetornoTaverna -->|Saída da Taverna| AtoII["📖 ATO II: Os Segredos de Rastphen"]
+    
+    AtoII --> Cidade["🏙️ Pátio de Rastphen & Comerciantes"]
+    Cidade --> Templo["⛪ Templo de Palmem (Gruther Febril & Sacerdotisa)"]
+    Templo --> Estrada["🌲 Estrada da Floresta Cinzenta (Emboscada & Fazenda)"]
+    Estrada --> Fazenda["🏚️ Celeiro Arrombado (Pistas do Minotauro)"]
+    Fazenda -->|Portão Sul| AtoIII["📖 ATO III: A Masmorra do Bosque Cinzento"]
+    
+    AtoIII --> Masmorra["🕯️ Ruínas Subterrâneas & 3 Altares Rúnicos"]
+    Masmorra -->|Purificação das Runas| BossGate["🚪 Grande Portão Sul do Abismo"]
+    BossGate --> Encerramento["⭐ Encerramento do Prólogo & Steam Wishlist"]
+```
+
+---
+
+## 📚 Crônicas dos Atos
 
 <table>
   <thead>
     <tr>
-      <th>Herói</th>
-      <th>Classe / Arquétipo</th>
-      <th>Descrição & Mecânicas</th>
+      <th align="center">Ato</th>
+      <th>Título Oficial</th>
+      <th>Sinopse Canônica</th>
+      <th align="center">Cenário Principal</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <td><strong>Rhogar Tordan</strong><br><em>(Protagonista)</em></td>
-      <td><strong>Cavaleiro Draconato (Guerreiro / Mago Tempestuoso)</strong></td>
-      <td>Especialista em combate corpo a corpo e geração de Fúria ao receber ou causar impacto. Desfere cortes pesados com a <em>Lâmina de Brentel</em> e invoca o devastador <strong>Sopro Elétrico</strong>, que ignora 50% da armadura inimiga.</td>
+      <td align="center"><strong>ATO I</strong></td>
+      <td><strong>A Taverna Cauda do Dragão</strong></td>
+      <td><em>"No continente de Brentel, no ano de 312 D.I., caminhos imprevisíveis cruzam a vida de heróis marcados pelo destino. O acólito meio-elfo Joseph Sylven e o draconato Rhogar encontram-se na Taverna Cauda do Dragão, onde segredos e sussurros dão início a uma jornada implacável."</em></td>
+      <td align="center"><code>TavernScene</code></td>
     </tr>
     <tr>
-      <td><strong>Gruther</strong></td>
-      <td><strong>Campeão Protetor (Paladino)</strong></td>
-      <td>Guerreiro de vanguarda que caiu vítima de feitiçaria abissal ao defender a fazenda. Seu destino e leito no Templo representam o estopim da caçada de Rhogar.</td>
+      <td align="center"><strong>ATO II</strong></td>
+      <td><strong>Os Segredos de Rastphen</strong></td>
+      <td><em>"A imponência do Templo de Palmem contrasta com a tensão que toma conta da região sul. Na Estrada da Fazenda, celeiros arrombados e rastros de criaturas sombrias exigem que Rhogar investigue a origem da corrupção que assola os arredores."</em></td>
+      <td align="center"><code>RastphenCityScene</code><br><code>TempleScene</code><br><code>ForestRouteScene</code></td>
     </tr>
     <tr>
-      <td><strong>Traudon</strong></td>
-      <td><strong>Druida da Colina (Shifter / Suporte)</strong></td>
-      <td>Druida anão beberrão da Taverna Cauda do Dragão. Manipula energias da terra e fornece conhecimento das rotas selvagens.</td>
-    </tr>
-    <tr>
-      <td><strong>Verônica Stinfy</strong></td>
-      <td><strong>Arcanista Abissal (Maga / Necromante)</strong></td>
-      <td>Estudiosa de manuscritos arcanos sombrios que monitora a distorção da trama mágica em Brentel.</td>
-    </tr>
-    <tr>
-      <td><strong>John Bardem</strong></td>
-      <td><strong>Caçador de Recompensas (Ladino / Rastreador)</strong></td>
-      <td>Perito em emboscadas, rastreamento de alvos fugitivos e exploração de pontos fracos.</td>
+      <td align="center"><strong>ATO III</strong></td>
+      <td><strong>A Masmorra do Bosque Cinzento</strong></td>
+      <td><em>"Entre a névoa densa e árvores seculares de troncos avermelhados, repousa a entrada da masmorra. O Grande Portão encontra-se lacrado por feitiçaria abissal. O herói deve purificar os altares rúnicos de pestilência para romper o selo e enfrentar o horror iminente."</em></td>
+      <td align="center"><code>DungeonScene</code></td>
     </tr>
   </tbody>
 </table>
 
 ---
 
-## 🗺️ Mundo & Pontos de Interesse
-
-```mermaid
-graph TD
-    Taverna["Taverna Cauda do Dragão (Início)"] -->|Porta Principal| Cidade["Pátio de Rastphen (Metrópole)"]
-    Cidade -->|Norte| Templo["Templo de Palmem (Bênção & Lore)"]
-    Templo -->|Retorno| Cidade
-    Cidade -->|Portão Sul| Estrada["Estrada da Fazenda (Emboscadas & Pistas)"]
-    Estrada -->|Oeste| Fazenda["Fazenda dos Halflings (Celeiro Arrombado)"]
-    Fazenda -->|Pistas do Rapto| Estrada
-    Estrada -->|Extremo Sul| Masmorra["Masmorra do Bosque Cinzento (Ruínas & 3 Altares)"]
-    Masmorra -->|Grande Portão Selado| FimDemo["Encerramento da Demo (Steam Wishlist)"]
-```
-
-* **🍺 Taverna Cauda do Dragão:** Ponto de encontro de aventureiros, comércio de suprimentos com a anã Hilda e o gatilho narrativo do Flashback de Estayler com Joseph Sylven.
-* **🏰 Pátio da Cidade de Rastphen:** Centro fortificado da metrópole (2400x1800) guardado pela milícia armada, ligando as rotas da Taverna, do Templo e do Portão Sul.
-* **⛪ Templo de Palmem:** Santuário sagrado onde repousa Gruther convalescente sob os cuidados e profecias da Sacerdotisa de Palmem.
-* **🌾 Fazenda dos Halflings & Estrada do Bosque:** Caminho ladeado por névoa densa, baús de espólio, patrulhas de goblins e o celeiro despedaçado onde pistas de icor negro revelam o rastro da besta.
-* **🕯️ Masmorra do Bosque Cinzento:** Ruínas subterrâneas infestadas por horrores e 3 altares rúnicos de purificação que trancam a câmara do pesadelo.
-
----
-
-## ⚔️ Arsenal & Equipamentos
-
-| Item / Habilidade | Tipo | Efeito & Descrição |
-| :--- | :--- | :--- |
-| **Lâmina de Brentel** | Arma Lendária | Espada herdada da mãe de Rhogar. Causa dano físico padrão mitigado pela defesa. |
-| **Sopro Elétrico** | Magia Dracônica | Consome 50 de Fúria. Dispara relâmpagos em arco que **perfuram 50% da defesa do alvo**. |
-| **Postura Defensiva** | Tática | Reduz o dano recebido no próximo turno e restaura **+15 de Fúria**. |
-| **Poção de Vida** | Consumível | Restaura instantaneamente **+50 Pontos de Vida (HP)** até o limite máximo. |
-| **Cerveja Anã de Colina** | Consumível | Cerveja forte artesanal. Restaura **+30 de Fúria** de combate imediatamente. |
-
----
-
-## 🎯 Modos de Dificuldade
-
-* **🗡️ Normal (História & Tática):** A experiência narrativa balanceada com gerenciamento de fúria e uso pontual de poções.
-* **🔥 Difícil (Veterano de Brentel):** Inimigos com dano ampliado e defesas elevadas, exigindo posicionamento e postura defensiva constante.
-* **💀 Modo Pesadelo (Morte Permanente / Permadeath):** A derrota em qualquer masmorra apaga os checkpoints salvos.
-
----
-
-## 🕹️ Controles do Jogo
+## 🧙 Heróis & Personagens Principais
 
 <div align="center">
 
-| Ação | Teclado Primário | Teclado Secundário | Gamepad |
-| :---: | :---: | :---: | :---: |
-| **Mover para Cima** | `W` | `Seta Acima (↑)` | `D-Pad Cima / Analógico` |
-| **Mover para Baixo** | `S` | `Seta Abaixo (↓)` | `D-Pad Baixo / Analógico` |
-| **Mover para Esquerda** | `A` | `Seta Esquerda (←)` | `D-Pad Esquerda / Analógico` |
-| **Mover para Direita** | `D` | `Seta Direita (→)` | `D-Pad Direita / Analógico` |
-| **Confirmar / Interagir / Avançar** | `Z` | `Espaço` / `Enter` | `Botão A (Xbox) / ✕ (PS)` |
-| **Cancelar / Fechar Mapa** | `X` | `ESC` | `Botão B (Xbox) / ○ (PS)` |
-| **Menu de Pausa** | `ESC` | `ESC` | `Botão Start` |
-
-### 🛠️ Atalhos de Desenvolvedor (Debug Mode)
-`F1` Alternar Hitboxes de Física | `F2` Completar Todas as Missões | `1` a `5` Teletransporte de Cenas
+| Personagem | Arquétipo / Função | Descrição & Papel no Enredo |
+| :--- | :--- | :--- |
+| **Rhogar Tordan** | **Bárbaro Draconato (Guerreiro Tempestuoso)** | Protagonista. Guerreiro implacável que acumula Fúria em batalha para invocar o devastador *Sopro Elétrico*. Luta pela memória de sua família e pela libertação dos povos oprimidos. |
+| **Joseph Sylven** | **Acólito Meio-Elfo (Devoto de Lízan / Clérigo)** | Elo entre Rhogar e os mistérios sagrados. Suas visões e fé guiam a busca por respostas sobre a corrupção abissal que infecta o clero e os soldados. |
+| **Gruther** | **Paladino / Defensor** | Campeão tombado na defesa das fazendas do sul. Convalescente no Templo de Palmem sob feitiçaria sombria, seu sofrimento impulsiona a missão de Rhogar. |
+| **Hilda Barba-de-Ferro** | **Comerciante Anã** | Proprietária e negociante de suprimentos da Taverna Cauda do Dragão. Fornece poções de cura vitais e canecas da famosa cerveja anã revigorante. |
+| **Sacerdotisa de Palmem** | **Guardiã Sagrada** | Mantenedora das bênçãos do templo. Revela a Rhogar os rituais necessários para expurgar a pestilência que emana das ruínas do bosque. |
 
 </div>
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 🕹️ Guia de Controles
+
+### 💻 No Computador (PC / Desktop)
+| Comando | Tecla Primária | Tecla Alternativa | Ação |
+| :--- | :---: | :---: | :--- |
+| **Mover Personagem** | <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> | <kbd>▲</kbd> <kbd>◄</kbd> <kbd>▼</kbd> <kbd>►</kbd> | Movimentação 8-direções com velocidade diagonal normalizada. |
+| **Interagir / Ação** | <kbd>Z</kbd> | <kbd>ESPAÇO</kbd> / <kbd>ENTER</kbd> | Falar com NPCs, examinar objetos, confirmar golpes e avançar diálogos. |
+| **Cancelar / Fechar** | <kbd>X</kbd> | <kbd>ESC</kbd> | Fechar mapa múndi, fechar janelas e cancelar alvos no combate. |
+| **Menu de Pausa** | <kbd>ESC</kbd> | — | Pausar o gameplay e abrir o menu de opções. |
+
+### 📱 No Celular / Tablet (Mobile Touch)
+| Controle Tátil | Localização na Tela | Ação |
+| :--- | :---: | :--- |
+| **D-Pad Virtual** | Canto Inferior Esquerdo | Toque contínuo nas setas (▲ ▼ ◄ ►) para movimentação suave. |
+| **Botão de Ação `[ A / Z ]`** | Canto Inferior Direito | Interagir com o cenário, falar com personagens e avançar crônicas. |
+| **Botão de Menu `[ MENU ]`** | Canto Inferior Direito (Topo) | Pausar a sessão de jogo e alterar configurações. |
+| **Toque na Caixa de Diálogo** | Área Central Inferior | Toque direto na caixa de texto para avançar frases e falas. |
+
+---
+
+## 🛠️ Tecnologias & Engenharia de Software
+
+<div align="center">
+
+| Tecnologia | Versão | Emprego na Arquitetura |
+| :--- | :---: | :--- |
+| **Phaser 3 / 4** | `^4.2.1` | Renderização via WebGL/Canvas, Arcade Physics, ciclo de vida de cenas e containers. |
+| **Vite** | `^8.2.2` | Ferramenta de build, Hot Module Replacement (HMR) e empacotamento web otimizado. |
+| **Electron** | `^44.0.0` | Container desktop Chromium com isolamento de contexto (`contextIsolation: true`) e IPC seguro. |
+| **Node.js Test Runner** | `v20+` | Testes unitários puros com asserções nativas (`node:test` e `node:assert`). |
+| **Vercel** | — | Plataforma de deployment e hospedagem contínua da versão Web/Mobile. |
+
+</div>
+
+---
+
+## 🚀 Como Executar o Projeto Localmente
 
 ### Pré-requisitos
 * [Node.js](https://nodejs.org/) versão 18 ou superior instalada.
-* [Git](https://git-scm.com/) instalado.
+* [Git](https://git-scm.com/) instalado no sistema.
 
-### 1. Clonar o Repositório
 ```bash
+# 1. Clonar o repositório oficial
 git clone https://github.com/ojoesevero/sombras-de-brentel-prologue.git
-cd sombras-de-brentel-prologue
-```
 
-### 2. Instalar as Dependências
-```bash
+# 2. Entrar na pasta do projeto
+cd sombras-de-brentel-prologue
+
+# 3. Instalar os módulos de dependências
 npm install
 ```
 
-### 3. Executar o Jogo
-* **Modo Desktop (Electron + Vite):**
-  ```bash
-  npm run electron:dev
-  ```
-* **Modo Web Browser (Vite Server):**
-  ```bash
-  npm run dev
-  ```
-* **Executar Suíte de Testes Automatizados:**
-  ```bash
-  npm test
-  ```
-* **Gerar Build de Produção (.EXE / Distribuição):**
-  ```bash
-  npm run electron:build
-  ```
+### Comandos Disponíveis
 
----
+```bash
+# Iniciar o jogo no modo Web (Abre em http://localhost:3000)
+npm run dev
 
-## 📁 Estrutura de Arquivos
+# Iniciar o jogo no modo Desktop (Electron)
+npm run electron:dev
 
-```text
-sombras-de-brentel-prologue/
-├── docs/                       # Governança viva e documentação técnica
-│   ├── CHANGELOG.md            # Histórico de versões (Keep a Changelog)
-│   └── DEVLOG.md               # Diário de arquitetura e decisões de engenharia
-├── electron/                   # Processo principal Desktop (Electron)
-│   ├── main.js                 # Boot de janela Chromium nativa e retry de servidor
-│   └── preload.cjs             # Bridge IPC segura (contextIsolation)
-├── public/                     # Assets estáticos e base Data-Driven
-│   ├── assets/                 # Imagens, sprites e áudios
-│   └── data/                   # Repositório de dados em JSON puro
-│       ├── map_transitions.json # Mapeamento de portais e triggers espaciais
-│       ├── quests.json          # Banco de missões e objetivos
-│       ├── act2_interactions.json # Diálogos de NPCs de Rastphen e da Fazenda
-│       └── tavern_interactions.json # Diálogos ramificados da Taverna
-├── src/                        # Código-fonte da aplicação (ES Modules)
-│   ├── entities/               # Modelos e FSM de Entidades (Player.js)
-│   ├── scenes/                 # Cenas do Phaser (Tavern, Battle, Temple, etc.)
-│   │   └── UIScene.js          # Overlay global para diálogos e HUD
-│   ├── services/               # Singletons de orquestração de sistemas
-│   │   ├── WorldManager.js     # Transições e spawn de mapa
-│   │   ├── QuestManager.js     # Máquina de estados de missões
-│   │   ├── InputManager.js     # Padronização de comandos e ciclo de vida
-│   │   ├── InventoryManager.js # Economia e gestão de inventário
-│   │   └── FXManager.js        # Efeitos visuais, Hit-Stop e partículas
-│   ├── ui/                     # Componentes de interface (DialogueBox, ShopUI)
-│   ├── utils/                  # Utilitários globais (Logger, DevShortcuts)
-│   └── main.js                 # Inicializador e configurações do Phaser
-├── tests/                      # Testes unitários puros (Node Test Runner)
-│   ├── QuestManager.test.js    # Testes de regras de negócio de missões
-│   └── InventoryManager.test.js # Testes de economia e consumo de itens
-├── package.json                # Manifesto de dependências e scripts npm
-├── vite.config.js              # Configurações do bundler Vite
-└── README.md                   # Documentação principal do projeto
+# Executar a suíte de testes unitários automatizados
+npm test
+
+# Gerar o build otimizado para produção Web (/dist)
+npm run build
+
+# Gerar o instalador executável do Electron para Desktop
+npm run electron:build
 ```
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📁 Arquitetura de Diretórios
 
-<div align="center">
-
-| Tecnologia | Finalidade no Projeto |
-| :--- | :--- |
-| **Phaser 3 / 4** | Motor de renderização 2D WebGL/Canvas, Arcade Physics, Tilemaps e Cenas. |
-| **Electron** | Executável Desktop nativo multiplataforma com janela desacoplada. |
-| **Vite** | Bundler de última geração com Hot Module Replacement (HMR) ultrarrápido. |
-| **Node.js (v20+)** | Runtime de execução, gerenciamento de pacotes e test runner nativo (`node:test`). |
-| **EventBus (EventEmitter)** | Arquitetura desacoplada e reativa para comunicação entre UI, Mundo e Combate. |
-
-</div>
+```text
+sombras-de-brentel-prologue/
+├── docs/                             # Documentação viva de engenharia
+│   ├── CHANGELOG.md                  # Histórico de alterações e releases
+│   └── DEVLOG.md                     # Registros técnicos e decisões arquiteturais
+├── electron/                         # Camada de runtime nativo Desktop
+│   ├── main.js                       # Processo principal, ciclo de vida da janela e IPC
+│   ├── preload.cjs                   # Ponte IPC exposta com contextBridge segura
+│   └── preload.js                    # Script de pré-carregamento auxiliar
+├── public/                           # Recursos estáticos e bancos data-driven
+│   ├── assets/                       # Sprites, texturas, ícones e efeitos sonoros
+│   └── data/                         # Arquivos de dados puros em JSON
+│       ├── act2_interactions.json   # Diálogos do Ato II (Rastphen e Fazenda)
+│       ├── dialogues.json            # Diálogos do prólogo de combate
+│       ├── map_transitions.json     # Portais, triggers e metadados dos Atos
+│       ├── quests.json               # Banco central de objetivos de missão
+│       ├── tavern_interactions.json  # Diálogos e escolhas da Taverna (Ato I)
+│       └── thought_interactions.json # Monólogos e pensamentos de bloqueio de Rhogar
+├── src/                              # Código-fonte da aplicação (ES Modules)
+│   ├── audio/                        # Gerenciamento sonoro
+│   │   └── AudioManager.js           # BGM, efeitos SFX e fades de volume
+│   ├── config/                       # Constantes de configuração
+│   │   └── assets.js                 # Manifesto central de IDs de texturas e portraits
+│   ├── entities/                     # Entidades físicas e mecânicas
+│   │   └── Player.js                 # FSM de exploração e atributos de combate
+│   ├── scenes/                       # Cenas orquestradas pelo Phaser
+│   │   ├── ActIntroScene.js          # Introdução narrativa com lore oficial de cada Ato
+│   │   ├── ActTransitionScene.js     # Transição cinematográfica entre grandes capítulos
+│   │   ├── BattleScene.js            # Combate tático em turnos multi-alvo com Fúria
+│   │   ├── DemoEndScene.js           # Conclusão do prólogo e link da Steam
+│   │   ├── DungeonScene.js           # Ato III: Masmorra, altares rúnicos e fogueira
+│   │   ├── ForestRouteScene.js       # Ato II: Estrada, emboscadas e celeiro
+│   │   ├── GameOverScene.js          # Tela de derrota e recarregamento de save
+│   │   ├── GameScene.js              # Cena introdutória de combate do flashback
+│   │   ├── IntroSplashScene.js       # Telas de abertura e seletor PC/Mobile
+│   │   ├── IntroStoryScene.js        # Prólogo narrativo do livro antes do gameplay
+│   │   ├── MenuScene.js              # Menu inicial com opção "Como Jogar"
+│   │   ├── PauseScene.js             # Overlay de pausa e navegação de opções
+│   │   ├── PreloadScene.js           # Pré-carregamento e texturas procedurais
+│   │   ├── RastphenCityScene.js      # Ato II: Hub da cidade fortificada
+│   │   ├── RewardScene.js            # Vitória em combate, experiência e itens
+│   │   ├── SettingsScene.js          # Ajustes de áudio, fullscreen e modo de controle
+│   │   ├── TavernScene.js            # Ato I: Exploração da Taverna Cauda do Dragão
+│   │   ├── TempleScene.js            # Ato II: Santuário sagrado e leito de Gruther
+│   │   └── UIScene.js                # Overlay global (HUD, diálogos e D-Pad touch)
+│   ├── services/                     # Singletons e serviços desacoplados
+│   │   ├── FXManager.js              # Screen shake, hit-stop e efeitos de partículas
+│   │   ├── InputManager.js           # Orquestrador de teclado, gamepad e virtual touch
+│   │   ├── InventoryManager.js       # Gestão de itens consumíveis e moedas de ouro
+│   │   ├── QuestManager.js           # Máquina de estados finita de missões
+│   │   ├── SaveManager.js            # Persistência tolerante a falhas (Disk/Web)
+│   │   └── WorldManager.js           # Transições de cena e orquestração de Atos
+│   ├── ui/                           # Componentes visuais dedicados
+│   │   ├── DialogueBox.js            # Caixa de diálogo dinâmica com retratos e opções
+│   │   ├── ShopUI.js                 # Loja de compras de consumíveis
+│   │   └── WorldMapUI.js             # Exibição gráfica do mapa-múndi
+│   ├── utils/                        # Utilitários de diagnóstico e depuração
+│   │   ├── DevShortcuts.js           # Atalhos de depuração (blindados para modo DEV)
+│   │   └── Logger.js                 # Sistema unificado de logs com escrita em arquivo
+│   └── main.js                       # Instanciação da engine e registros de cenas
+├── tests/                            # Testes de unidade automatizados
+│   ├── InventoryManager.test.js      # Validações de economia e consumíveis
+│   ├── QuestManager.test.js          # Validações de progressão de missões
+│   └── SaveManager.test.js           # Validações de persistência UTF-8
+├── package.json                      # Scripts de execução e dependências
+├── vite.config.js                    # Configurações de compilação do Vite
+└── README.md                         # Documentação oficial do projeto
+```
 
 ---
 
-## 👥 Equipe & Créditos
+## 👥 Equipe & Créditos Oficiais
 
 <div align="center">
 
-| Papel | Nome | Contato / Perfil |
-| :--- | :--- | :--- |
-| **Produtora** | **Velhos Games** | [GitHub Organização](https://github.com/ojoesevero) |
-| **Desenvolvimento & Engenharia** | **Joe Severo** | [@ojoesevero](https://github.com/ojoesevero) |
-| **História, Roteiro & Lore** | **Thiago Schardosin** | *Autor Original do Universo* |
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <h3>🎮 Produtora</h3>
+      <p><strong>Velhos Games</strong></p>
+      <p><a href="https://github.com/ojoesevero">GitHub Organização</a></p>
+    </td>
+    <td align="center" width="33%">
+      <h3>💻 Engenharia & Código</h3>
+      <p><strong>Joe Severo</strong></p>
+      <p><a href="https://github.com/ojoesevero">@ojoesevero</a></p>
+    </td>
+    <td align="center" width="33%">
+      <h3>📚 Obra Original & Lore</h3>
+      <p><strong>Thiago Schardosin</strong></p>
+      <p><em>Autor de "Os Seis Contra o Abismo"</em></p>
+    </td>
+  </tr>
+</table>
 
 <br>
 
-> *Baseado no conto original:*<br>
-> **"Os Seis Contra o Abismo: A Floresta Cinzenta"** — Criado por Thiago Schardosin.
+> *Baseado no livro:*<br>
+> **"Os Seis Contra o Abismo: A Floresta Cinzenta"** — Escrito por Thiago Schardosin.
 
-</div>
+<br>
 
 ---
 
-## 📜 Licença
+<sub>Distribuído sob licença proprietária <strong>Velhos Games © 2026</strong>. Todos os direitos reservados.</sub>
 
-Distribuído sob a licença proprietária **Velhos Games © 2026**. Todos os direitos narrativos, conceituais e artísticos reservados.
-
-<div align="center">
-  <sub>Desenvolvido com dedicação e paixão por jogos clássicos pela equipe da <strong>Velhos Games</strong>.</sub>
 </div>
