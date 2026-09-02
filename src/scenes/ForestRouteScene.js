@@ -141,6 +141,51 @@ export class ForestRouteScene extends Phaser.Scene {
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
+    // Caching de teclado para prevenir Garbage Collection per-frame
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
+
+    this.setupInputs();
+
+    // Restaurar listeners de input ao retomar da pausa/batalha overlay
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupInputs === 'function') {
+        this.setupInputs();
+      }
+    });
+
+    // Ouvinte para conclusão de diálogos (avanço de missão)
+    this._onGlobalDialogueClosed = () => {
+      const target = this.activeDialogueTarget || this.currentInteractTarget;
+      this.activeDialogueTarget = null;
+      if (target === 'celeiro_pistas') {
+        if (!QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
+          QuestManager.advanceQuest('quest_03_investigate_farm', 'completed');
+          QuestManager.advanceQuest('quest_04_forest_trail', 'active');
+          Logger.info('ForestRouteScene', 'Quest "Rastros na Névoa" concluída! Nova Quest Ativa.');
+        }
+        this.updateHUD();
+      }
+    };
+
+    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
+    });
+
+    // Atalhos de desenvolvedor protegidos por ambiente DEV
+    if (import.meta.env?.DEV) {
+      DevShortcuts.register(this);
+    }
+  }
+
+  setupInputs() {
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         Logger.info('Intent', 'Input Z/ESPAÇO recebido: Avançando diálogo na UIScene.');
@@ -167,28 +212,6 @@ export class ForestRouteScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'ForestRouteScene' });
     });
-
-    // Ouvinte para conclusão de diálogos (avanço de missão)
-    this._onGlobalDialogueClosed = () => {
-      const target = this.activeDialogueTarget || this.currentInteractTarget;
-      this.activeDialogueTarget = null;
-      if (target === 'celeiro_pistas') {
-        if (!QuestManager.isQuestCompleted('quest_03_investigate_farm')) {
-          QuestManager.advanceQuest('quest_03_investigate_farm', 'completed');
-          QuestManager.advanceQuest('quest_04_forest_trail', 'active');
-          Logger.info('ForestRouteScene', 'Quest "Rastros na Névoa" concluída! Nova Quest Ativa.');
-        }
-        this.updateHUD();
-      }
-    };
-
-    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
-    });
-
-    // Atalhos de desenvolvedor
-    DevShortcuts.register(this);
   }
 
   updateHUD() {
@@ -219,16 +242,8 @@ export class ForestRouteScene extends Phaser.Scene {
   update() {
     if (!this.input.keyboard || !this.input.keyboard.enabled) return;
 
-    const cursors = this.input.keyboard.createCursorKeys();
-    const wasd = {
-      w: this.input.keyboard.addKey('W'),
-      a: this.input.keyboard.addKey('A'),
-      s: this.input.keyboard.addKey('S'),
-      d: this.input.keyboard.addKey('D')
-    };
-
-    // Movimentação via FSM
-    this.player.handleMovement(cursors, wasd, 200);
+    // Movimentação via FSM (usando instâncias em cache)
+    this.player.handleMovement(this.cursors, this.wasd, 200);
 
     // Checar zonas de interação
     let touching = false;

@@ -135,8 +135,27 @@ export default class TavernScene extends Phaser.Scene {
       this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
     });
 
-    // Atalhos de desenvolvedor
-    DevShortcuts.register(this);
+    // Caching de teclado para prevenir Garbage Collection per-frame
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
+
+    // Restaurar listeners de input ao retomar da pausa/overlay
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupInputs === 'function') {
+        this.setupInputs();
+      }
+    });
+
+    // Atalhos de desenvolvedor protegidos por ambiente DEV
+    if (import.meta.env?.DEV) {
+      DevShortcuts.register(this);
+    }
   }
 
   setupInputs() {
@@ -235,16 +254,8 @@ export default class TavernScene extends Phaser.Scene {
       this.updateHUD();
     }
 
-    const cursors = this.input.keyboard.createCursorKeys();
-    const wasd = {
-      w: this.input.keyboard.addKey('W'),
-      a: this.input.keyboard.addKey('A'),
-      s: this.input.keyboard.addKey('S'),
-      d: this.input.keyboard.addKey('D')
-    };
-
-    // Controle de movimento via FSM do Player
-    this.player.handleMovement(cursors, wasd, 160);
+    // Controle de movimento via FSM do Player (usando instâncias em cache)
+    this.player.handleMovement(this.cursors, this.wasd, 160);
 
     // Sistema de Gatilhos Espaciais
     let closest = null;

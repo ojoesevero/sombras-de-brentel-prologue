@@ -80,6 +80,13 @@ export default class BattleScene extends Phaser.Scene {
 
     this.createUI();
     this.setupKeyboardInput();
+
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupKeyboardInput === 'function') {
+        this.setupKeyboardInput();
+      }
+    });
   }
 
   createUI() {

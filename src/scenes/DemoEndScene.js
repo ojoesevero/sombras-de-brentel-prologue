@@ -16,12 +16,11 @@ export default class DemoEndScene extends Phaser.Scene {
     this.add.text(400, 380, 'Adicione à Lista de Desejos na Steam', { fontSize: '18px', fill: '#fff' }).setOrigin(0.5);
 
     wishlistBtn.on('pointerdown', () => {
-      console.log('Abrindo link da Steam...');
-      try {
-        const { shell } = window.require('electron');
-        shell.openExternal('https://store.steampowered.com/');
-      } catch (e) {
-        window.open('https://store.steampowered.com/', '_blank');
+      const steamUrl = 'https://store.steampowered.com/';
+      if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.openExternal === 'function') {
+        window.electronAPI.openExternal(steamUrl);
+      } else {
+        window.open(steamUrl, '_blank');
       }
     });
 

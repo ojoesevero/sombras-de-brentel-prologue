@@ -16,10 +16,23 @@ import WorldManager from '../services/WorldManager.js';
  */
 export default class DevShortcuts {
   /**
-   * Registra os atalhos de desenvolvedor na cena atual.
+   * Alias de conveniência para register.
+   * @param {Phaser.Scene} scene 
+   */
+  static init(scene) {
+    this.register(scene);
+  }
+
+  /**
+   * Registra os atalhos de desenvolvedor na cena atual exclusivamente em ambiente DEV.
    * @param {Phaser.Scene} scene - A cena do Phaser ativa.
    */
   static register(scene) {
+    // Blindagem de segurança: só ativar em ambiente de desenvolvimento
+    if (typeof import.meta !== 'undefined' && import.meta.env && !import.meta.env.DEV) {
+      return;
+    }
+
     if (!scene || !scene.input || !scene.input.keyboard) return;
 
     // F1 - Toggle Debug Physics
@@ -73,6 +86,16 @@ export default class DevShortcuts {
     key5.on('down', () => {
       Logger.info('DevShortcuts', 'Teletransporte Dev -> DungeonScene (Masmorra)');
       WorldManager.transitionTo(scene, 'DungeonScene', { x: 800, y: 150 });
+    });
+
+    // Limpeza de teclas ao desmontar/desligar a cena
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (scene.input && scene.input.keyboard) {
+        [f1Key, f2Key, key1, key2, key3, key4, key5].forEach(k => {
+          k.removeAllListeners();
+          scene.input.keyboard.removeKey(k.keyCode);
+        });
+      }
     });
   }
 }

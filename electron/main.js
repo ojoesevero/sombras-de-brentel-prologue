@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -6,8 +6,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Garante que o diretório logs/ exista
-const logsDir = path.join(process.cwd(), 'logs');
+// Garante que o diretório de dados do usuário e logs/ existam
+const userDataDir = app.getPath('userData');
+const logsDir = path.join(userDataDir, 'logs');
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
@@ -23,7 +24,18 @@ ipcMain.on('write-log', (event, logEntry) => {
   }
 });
 
-const savePath = path.join(process.cwd(), 'savegame.dat');
+const savePath = path.join(userDataDir, 'savegame.dat');
+
+// Migração graciosa de save anterior em process.cwd() se ainda não existir no userData
+const legacySavePath = path.join(process.cwd(), 'savegame.dat');
+if (fs.existsSync(legacySavePath) && !fs.existsSync(savePath)) {
+  try {
+    fs.copyFileSync(legacySavePath, savePath);
+    console.log('[Electron] Save legado migrado com sucesso para userData:', savePath);
+  } catch (err) {
+    console.warn('[Electron] Falha ao migrar save legado:', err);
+  }
+}
 
 // Handlers IPC para Persistência
 ipcMain.on('save-game-sync', (event, encodedData) => {
@@ -55,6 +67,17 @@ ipcMain.on('has-save-sync', (event) => {
     event.returnValue = fs.existsSync(savePath);
   } catch (err) {
     event.returnValue = false;
+  }
+});
+
+// Handler IPC para Abertura Segura de URLs Externas
+ipcMain.on('open-external', (event, url) => {
+  try {
+    if (url && (url.startsWith('https://') || url.startsWith('http://'))) {
+      shell.openExternal(url);
+    }
+  } catch (err) {
+    console.error('Erro ao abrir URL externa:', err);
   }
 });
 

@@ -99,6 +99,32 @@ export default class RastphenCityScene extends Phaser.Scene {
       this.input.keyboard.enabled = true;
     }
 
+    // Caching de teclado para prevenir Garbage Collection per-frame
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
+
+    this.setupInputs();
+
+    // Restaurar listeners de input ao retomar da pausa/overlay
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupInputs === 'function') {
+        this.setupInputs();
+      }
+    });
+
+    // Atalhos de Desenvolvedor protegidos por ambiente DEV
+    if (import.meta.env?.DEV) {
+      DevShortcuts.register(this);
+    }
+  }
+
+  setupInputs() {
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         Logger.info('Intent', 'Input Z/ESPAÇO: Avançando diálogo na UIScene.');
@@ -124,9 +150,6 @@ export default class RastphenCityScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'RastphenCityScene' });
     });
-
-    // Atalhos de Desenvolvedor
-    DevShortcuts.register(this);
   }
 
   setupInteractions() {
@@ -148,16 +171,8 @@ export default class RastphenCityScene extends Phaser.Scene {
   update() {
     if (!this.input.keyboard || !this.input.keyboard.enabled) return;
     
-    const cursors = this.input.keyboard.createCursorKeys();
-    const wasd = {
-      w: this.input.keyboard.addKey('W'),
-      a: this.input.keyboard.addKey('A'),
-      s: this.input.keyboard.addKey('S'),
-      d: this.input.keyboard.addKey('D')
-    };
-
-    // Controle de movimento delegado ao Player (FSM)
-    this.player.handleMovement(cursors, wasd, 250);
+    // Controle de movimento delegado ao Player (FSM com instâncias em cache)
+    this.player.handleMovement(this.cursors, this.wasd, 250);
 
     // Checar zonas de interação
     let touching = false;

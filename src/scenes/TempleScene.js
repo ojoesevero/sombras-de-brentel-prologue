@@ -85,6 +85,51 @@ export default class TempleScene extends Phaser.Scene {
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
+    // Caching de teclado para prevenir Garbage Collection per-frame
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
+
+    this.setupInputs();
+
+    // Restaurar listeners de input ao retomar da pausa/overlay
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupInputs === 'function') {
+        this.setupInputs();
+      }
+    });
+
+    // Ouvinte para conclusão de diálogos
+    this._onGlobalDialogueClosed = () => {
+      const target = this.activeDialogueTarget || this.currentInteractTarget;
+      this.activeDialogueTarget = null;
+      if (target === 'sacerdotisa_palmem' || target === 'gruther_leito') {
+        if (!QuestManager.isQuestCompleted('quest_02_temple')) {
+          QuestManager.advanceQuest('quest_02_temple', 'completed');
+          QuestManager.advanceQuest('quest_03_investigate_farm', 'active');
+          Logger.info('TempleScene', 'Quest "O Templo de Palmem" concluída! Nova Missão: Investigar a Fazenda.');
+          this.updateHUD();
+        }
+      }
+    };
+
+    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
+    });
+
+    // Atalhos de desenvolvedor protegidos por ambiente DEV
+    if (import.meta.env?.DEV) {
+      DevShortcuts.register(this);
+    }
+  }
+
+  setupInputs() {
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         Logger.info('Intent', 'Input Z/ESPAÇO recebido: Avançando diálogo na UIScene.');
@@ -111,28 +156,6 @@ export default class TempleScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'TempleScene' });
     });
-
-    // Ouvinte para conclusão de diálogos
-    this._onGlobalDialogueClosed = () => {
-      const target = this.activeDialogueTarget || this.currentInteractTarget;
-      this.activeDialogueTarget = null;
-      if (target === 'sacerdotisa_palmem' || target === 'gruther_leito') {
-        if (!QuestManager.isQuestCompleted('quest_02_temple')) {
-          QuestManager.advanceQuest('quest_02_temple', 'completed');
-          QuestManager.advanceQuest('quest_03_investigate_farm', 'active');
-          Logger.info('TempleScene', 'Quest "O Templo de Palmem" concluída! Nova Missão: Investigar a Fazenda.');
-          this.updateHUD();
-        }
-      }
-    };
-
-    this.game.events.on('dialogueClosed', this._onGlobalDialogueClosed);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off('dialogueClosed', this._onGlobalDialogueClosed);
-    });
-
-    // Atalhos de desenvolvedor
-    DevShortcuts.register(this);
   }
 
   updateHUD() {
@@ -167,16 +190,8 @@ export default class TempleScene extends Phaser.Scene {
   update() {
     if (!this.input.keyboard || !this.input.keyboard.enabled) return;
     
-    const cursors = this.input.keyboard.createCursorKeys();
-    const wasd = {
-      w: this.input.keyboard.addKey('W'),
-      a: this.input.keyboard.addKey('A'),
-      s: this.input.keyboard.addKey('S'),
-      d: this.input.keyboard.addKey('D')
-    };
-
-    // Controle de movimentação delegado ao Player (FSM)
-    this.player.handleMovement(cursors, wasd, 180);
+    // Controle de movimentação delegado ao Player (FSM com instâncias em cache)
+    this.player.handleMovement(this.cursors, this.wasd, 180);
 
     let touching = false;
     this.physics.overlap(this.player, this.interactZones, (player, zone) => {

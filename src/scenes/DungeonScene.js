@@ -168,6 +168,32 @@ export default class DungeonScene extends Phaser.Scene {
     InputManager.init(this);
     if (this.input.keyboard) this.input.keyboard.enabled = true;
 
+    // Caching de teclado para prevenir Garbage Collection per-frame
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = {
+      w: this.input.keyboard.addKey('W'),
+      a: this.input.keyboard.addKey('A'),
+      s: this.input.keyboard.addKey('S'),
+      d: this.input.keyboard.addKey('D')
+    };
+
+    this.setupInputs();
+
+    // Restaurar listeners de input ao retomar da pausa/batalha overlay
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      InputManager.init(this);
+      if (typeof this.setupInputs === 'function') {
+        this.setupInputs();
+      }
+    });
+
+    // Atalhos de desenvolvedor protegidos por ambiente DEV
+    if (import.meta.env?.DEV) {
+      DevShortcuts.register(this);
+    }
+  }
+
+  setupInputs() {
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         this.game.events.emit('advanceDialogue');
@@ -211,9 +237,6 @@ export default class DungeonScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'DungeonScene' });
     });
-
-    // Atalhos de desenvolvedor
-    DevShortcuts.register(this);
   }
 
   openSouthGate() {
@@ -231,16 +254,8 @@ export default class DungeonScene extends Phaser.Scene {
   update() {
     if (!this.input.keyboard || !this.input.keyboard.enabled) return;
 
-    const cursors = this.input.keyboard.createCursorKeys();
-    const wasd = {
-      w: this.input.keyboard.addKey('W'),
-      a: this.input.keyboard.addKey('A'),
-      s: this.input.keyboard.addKey('S'),
-      d: this.input.keyboard.addKey('D')
-    };
-
-    // Movimentação via FSM
-    this.player.handleMovement(cursors, wasd, 180);
+    // Movimentação via FSM (usando instâncias em cache)
+    this.player.handleMovement(this.cursors, this.wasd, 180);
 
     // Zonas Interativas Overlap Manual
     let touching = false;
