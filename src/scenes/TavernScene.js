@@ -8,6 +8,7 @@ import Logger from '../utils/Logger.js';
 import Player, { PlayerState } from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
 import { AssetsConfig } from '../config/assets.js';
+import NPCWalker from '../entities/NPCWalker.js';
 
 /**
  * Cena de Exploração Top-Down da Taverna Cauda do Dragão.
@@ -157,6 +158,21 @@ export default class TavernScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(4);
     });
 
+    // 7. Garçonete Ambulante (NPCWalker com waypoints de atendimento)
+    this.waitress = new NPCWalker(this, 350, 180, AssetsConfig.sprites.waitress, {
+      name: 'Gisela',
+      speed: 40,
+      depth: 3,
+      waypoints: [
+        { x: 350, y: 180, waitTime: 3000 },
+        { x: 260, y: 280, waitTime: 3500 },
+        { x: 400, y: 320, waitTime: 2000 },
+        { x: 540, y: 280, waitTime: 3500 },
+        { x: 450, y: 180, waitTime: 2500 }
+      ]
+    });
+    this.interactables.push({ id: 'gisela_waitress', x: 350, y: 180, isWalker: true });
+
     // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
     const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 500);
@@ -197,6 +213,11 @@ export default class TavernScene extends Phaser.Scene {
       const josephType = this.activeDialogueJosephType;
       this.activeDialogueTarget = null;
       this.activeDialogueJosephType = null;
+
+      // Retomar patrulha da garçonete se estava conversando
+      if (this.waitress) {
+        this.waitress.resumePatrol();
+      }
 
       // Controle do Flashback no Joseph Sylven
       if (target === 'joseph_sylven' && (josephType === 'joseph_ready' || this.visitedNPCs.size >= 4)) {
@@ -301,6 +322,16 @@ export default class TavernScene extends Phaser.Scene {
       this.activeDialogueJosephType = josephId;
       const dialogue = this.interactions[josephId];
       this.game.events.emit('openDialogue', dialogue);
+    } else if (id === 'gisela_waitress') {
+      this.player.setState(PlayerState.INTERACTING);
+      if (this.waitress) this.waitress.pauseForDialogue(this.player.x);
+      this.game.events.emit('openDialogue', [
+        {
+          character: 'Gisela (Garçonete)',
+          portrait: 'port_ilidiz_worried',
+          text: 'Mais uma caneca de cerveja anã fresquinha? Os viajantes que chegaram do sul estavam tremendo... Dizem que o celeiro da fazenda foi partido ao meio e rastros negros cobrem a estrada.'
+        }
+      ]);
     } else {
       const dialogue = this.interactions[id];
       if (dialogue) {
@@ -336,6 +367,13 @@ export default class TavernScene extends Phaser.Scene {
 
     // Controle de movimento via FSM do Player (usando instâncias em cache)
     this.player.handleMovement(this.cursors, this.wasd, 160);
+
+    // Sincronizar coordenadas móveis da garçonete
+    const giselaEntry = this.interactables.find(e => e.id === 'gisela_waitress');
+    if (giselaEntry && this.waitress) {
+      giselaEntry.x = this.waitress.x;
+      giselaEntry.y = this.waitress.y;
+    }
 
     // Sistema de Gatilhos Espaciais
     let closest = null;

@@ -5,6 +5,7 @@ import InputManager from '../services/InputManager.js';
 import FXManager from '../services/FXManager.js';
 import InventoryManager from '../services/InventoryManager.js';
 import WorldManager from '../services/WorldManager.js';
+import { AssetsConfig } from '../config/assets.js';
 
 /**
  * Cena de Combate em Turnos Refatorada (Máquina de Estados de Teclado e Multi-Alvo).
@@ -58,20 +59,98 @@ export default class BattleScene extends Phaser.Scene {
     this.add.rectangle(0, 0, 800, 600, 0x111111).setOrigin(0);
     this.add.rectangle(0, 450, 800, 150, 0x2a2a2a).setOrigin(0);
 
-    // Jogador
-    this.player = new Player(this, 150, 350, 60, 100, 0x0055ff);
-    this.add.text(150, 280, this.player.name, { fontSize: '14px', fill: '#fff' }).setOrigin(0.5);
-    this.playerHpText = this.add.text(150, 300, `HP: ${this.player.hp}/${this.player.maxHp}`, { fontSize: '12px', fill: '#0f0' }).setOrigin(0.5);
-    this.playerFuryText = this.add.text(150, 315, `Fúria: ${this.player.fury}/100`, { fontSize: '12px', fill: '#ffaa00' }).setOrigin(0.5);
+    // Jogador (Rhogar em Pixel Art Chibi com sombra e respiração)
+    this.player = new Player(this, 150, 350, 32, 32, 0x0055ff);
+    this.player.setVisible(false);
+    if (this.player.sprite) this.player.sprite.setVisible(false);
+    if (this.player.shadow) this.player.shadow.setVisible(false);
 
-    // Inimigos
+    this.playerBattleShadow = this.add.ellipse(150, 388, 48, 14, 0x000000, 0.45);
+    this.playerVisual = this.add.sprite(150, 345, AssetsConfig.sprites.rhogar || 'spr_rhogar')
+      .setScale(2.5)
+      .setDepth(2);
+
+    this.tweens.add({
+      targets: this.playerVisual,
+      y: 339,
+      duration: 1100,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    this.add.text(150, 260, this.player.name, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '13px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(0,0,0,0.6)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5);
+    this.playerHpText = this.add.text(150, 285, `HP: ${this.player.hp}/${this.player.maxHp}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '12px',
+      color: '#2ecc71',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+    this.playerFuryText = this.add.text(150, 302, `Fúria: ${this.player.fury}/100`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '11px',
+      color: '#ff9f1a',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Inimigos em Pixel Art Chibi com Armadura, Sombras e Flutuação/Respiração
     this.enemyVisuals = [];
-    this.enemies.forEach((enemy) => {
-      const visual = this.add.rectangle(enemy.x, enemy.y, 60, 100, enemy.color).setOrigin(0.5);
-      const nameText = this.add.text(enemy.x, enemy.y - 70, enemy.name, { fontSize: '12px', fill: '#fff' }).setOrigin(0.5);
-      const hpText = this.add.text(enemy.x, enemy.y - 50, `HP: ${enemy.hp}/${enemy.maxHp}`, { fontSize: '12px', fill: '#0f0' }).setOrigin(0.5);
+    this.enemies.forEach((enemy, idx) => {
+      let textureKey = AssetsConfig.sprites.guard;
+      const lowerName = enemy.name.toLowerCase();
+      const isGoblin = lowerName.includes('goblin');
+
+      if (lowerName.includes('cultista')) textureKey = AssetsConfig.sprites.cultist;
+      else if (lowerName.includes('corruptor') || lowerName.includes('minotaur')) textureKey = AssetsConfig.sprites.iksar;
+      else if (isGoblin) textureKey = AssetsConfig.sprites.goblin;
+
+      // Sombra oval preta translúcida sob os pés para profundidade
+      const shadow = this.add.ellipse(enemy.x, enemy.y + 40, 50, 14, 0x000000, 0.45);
       
-      this.enemyVisuals.push({ visual, nameText, hpText, x: enemy.x, y: enemy.y });
+      const visual = this.add.sprite(enemy.x, enemy.y, textureKey)
+        .setScale(2.5)
+        .setDepth(2)
+        .setFlipX(true); // Voltado para a esquerda (encarando Rhogar)
+
+      // Suporte a animação de spritesheet customizada se presente no cache
+      if (isGoblin && this.anims.exists('anim_goblin_idle')) {
+        visual.play('anim_goblin_idle');
+      }
+
+      // Oscilação vertical contínua suave (efeito de respiração / flutuação)
+      const idleTween = this.tweens.add({
+        targets: visual,
+        y: '+=4',
+        duration: 1200,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+
+      const nameText = this.add.text(enemy.x, enemy.y - 70, enemy.name, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '12px',
+        color: '#ffd700',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5);
+
+      const hpText = this.add.text(enemy.x, enemy.y - 48, `HP: ${enemy.hp}/${enemy.maxHp}`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '11px',
+        color: '#2ecc71',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      
+      this.enemyVisuals.push({ visual, shadow, idleTween, nameText, hpText, x: enemy.x, y: enemy.y, enemyId: enemy.id });
     });
 
     // Indicador de Alvo
@@ -327,6 +406,21 @@ export default class BattleScene extends Phaser.Scene {
       FXManager.playHitStop(this, 80, () => {
         FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, false);
       });
+
+      // Efeito de recuo físico (recoil) e piscar vermelho de dano no monstro
+      this.tweens.add({
+        targets: targetVisual.visual,
+        x: targetVisual.x + 18,
+        duration: 80,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      });
+      targetVisual.visual.setTint(0xff4757);
+      this.time.delayedCall(160, () => {
+        if (targetVisual.visual && targetVisual.visual.active) {
+          targetVisual.visual.clearTint();
+        }
+      });
     } else if (action === 'breath') {
       const target = this.enemies[this.selectedEnemyIndex];
       const damage = this.player.electricBreath(target);
@@ -339,6 +433,21 @@ export default class BattleScene extends Phaser.Scene {
       
       FXManager.playHitStop(this, 90, () => {
         FXManager.createDamageNumber(this, targetVisual.x, targetVisual.y, damage, true);
+      });
+
+      // Efeito de choque e recuo de dano elétrico
+      this.tweens.add({
+        targets: targetVisual.visual,
+        x: targetVisual.x + 22,
+        duration: 90,
+        yoyo: true,
+        ease: 'Quad.easeOut'
+      });
+      targetVisual.visual.setTint(0x00ffff);
+      this.time.delayedCall(200, () => {
+        if (targetVisual.visual && targetVisual.visual.active) {
+          targetVisual.visual.clearTint();
+        }
       });
     } else if (action === 'defend') {
       Logger.info('BattleScene', `${this.player.name} assumiu postura defensiva.`);
@@ -363,6 +472,24 @@ export default class BattleScene extends Phaser.Scene {
     let totalEnemyDamage = 0;
     this.enemies.forEach(enemy => {
       if (enemy.hp > 0 && this.player.isAlive()) {
+        // Animação de investida/ataque do monstro
+        const visualObj = this.enemyVisuals.find(ev => ev.enemyId === enemy.id || ev.x === enemy.x);
+        if (visualObj && visualObj.visual) {
+          if (this.anims.exists('anim_goblin_attack') && enemy.name.toLowerCase().includes('goblin')) {
+            visualObj.visual.play('anim_goblin_attack');
+            visualObj.visual.once('animationcomplete', () => {
+              if (this.anims.exists('anim_goblin_idle')) visualObj.visual.play('anim_goblin_idle');
+            });
+          }
+          this.tweens.add({
+            targets: visualObj.visual,
+            x: visualObj.x - 38,
+            duration: 130,
+            yoyo: true,
+            ease: 'Back.easeIn'
+          });
+        }
+
         const damage = this.player.takeDamage(enemy.attack);
         totalEnemyDamage += damage;
         FXManager.createSlashEffect(this, 150, 350);
@@ -398,7 +525,9 @@ export default class BattleScene extends Phaser.Scene {
     this.enemies.forEach((enemy, i) => {
       this.enemyVisuals[i].hpText.setText(`HP: ${enemy.hp}/${enemy.maxHp}`);
       if (enemy.hp <= 0) {
-        this.enemyVisuals[i].visual.setAlpha(0.3);
+        this.enemyVisuals[i].visual.setAlpha(0.25);
+        if (this.enemyVisuals[i].idleTween) this.enemyVisuals[i].idleTween.stop();
+        if (this.enemyVisuals[i].shadow) this.enemyVisuals[i].shadow.setAlpha(0.1);
       }
     });
   }

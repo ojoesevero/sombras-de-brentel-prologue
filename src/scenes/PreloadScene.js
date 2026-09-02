@@ -92,10 +92,32 @@ export default class PreloadScene extends Phaser.Scene {
       fontSize: '11px',
       color: '#666666'
     }).setOrigin(0.5);
+
+    // Suporte extensível a spritesheets customizadas na pasta public/assets/images/sprites/
+    this.load.spritesheet('goblin_idle', 'assets/images/sprites/goblin_idle.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('goblin_attack', 'assets/images/sprites/goblin_attack.png', { frameWidth: 32, frameHeight: 32 });
   }
 
   create() {
     Logger.info('PreloadScene', 'Bancos carregados. Construindo texturas procedurais Pixel Art...');
+
+    // Registro de animações de spritesheets customizadas se os arquivos existirem
+    if (this.textures.exists('goblin_idle') && this.textures.get('goblin_idle').frameTotal > 1) {
+      this.anims.create({
+        key: 'anim_goblin_idle',
+        frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: -1 }),
+        frameRate: 6,
+        repeat: -1
+      });
+    }
+    if (this.textures.exists('goblin_attack') && this.textures.get('goblin_attack').frameTotal > 1) {
+      this.anims.create({
+        key: 'anim_goblin_attack',
+        frames: this.anims.generateFrameNumbers('goblin_attack', { start: 0, end: -1 }),
+        frameRate: 8,
+        repeat: 0
+      });
+    }
 
     // 1. Cenário Detalhado da Taverna (bg_tavern)
     this.generateTavernBackgroundTexture();
@@ -107,12 +129,28 @@ export default class PreloadScene extends Phaser.Scene {
     this.generateCharacterPixelSprites();
 
     // 4. Retratos e Molduras de UI
+    // 4. Retratos e Molduras de UI
     this.generatePortraitAndUITextures();
 
     // 5. Efeitos de Partículas
     this.generateFXTextures();
 
-    Logger.info('PreloadScene', 'Pipeline de Pixel Art inicializado com sucesso.');
+    // 6. Efeitos Ambientais (Folhas, Pássaros, Névoa)
+    this.generateEnvironmentalTextures();
+
+    // 7. Cenários e Adereços do Ato II (Estrada da Fazenda)
+    this.generateAct2Textures();
+
+    // 8. Cenários e Adereços do Ato III (Masmorra do Bosque Cinzento)
+    this.generateAct3Textures();
+
+    // 9. Cenários e Adereços do Templo de Palmem
+    this.generateTempleTextures();
+
+    // 10. Baús de Tesouro e Partículas de Moeda
+    this.generateChestAndCoinTextures();
+
+    Logger.info('PreloadScene', 'Pipeline de Pixel Art, Templo e Baús inicializado.');
     this.scene.start('IntroSplashScene');
   }
 
@@ -427,7 +465,99 @@ export default class PreloadScene extends Phaser.Scene {
       g.fillRect(17, 26, 5, 6);
     });
 
-    // 9. NPC Default
+    // 9. Garçonete da Taverna (spr_waitress)
+    makeSprite(AssetsConfig.sprites.waitress, (g) => {
+      g.fillStyle(0x8b2626, 1); // Vestido vinho/bordô
+      g.fillRect(8, 14, 16, 13);
+      g.fillStyle(0xffffff, 0.95); // Avental de renda branco
+      g.fillRect(10, 16, 12, 10);
+      g.fillStyle(0xd35400, 1); // Cabelos castanhos avermelhados
+      g.fillRect(9, 6, 14, 8);
+      g.fillStyle(0xf5cd79, 1); // Rosto
+      g.fillRect(11, 8, 10, 7);
+      // Bandeja de servir com canecas
+      g.fillStyle(0x7f8c8d, 1);
+      g.fillRect(20, 17, 10, 3);
+      g.fillStyle(0xf1c40f, 1); // Caneca dourada na bandeja
+      g.fillRect(22, 12, 4, 5);
+      g.fillStyle(0x2f3542, 1); // Sapatos
+      g.fillRect(11, 27, 4, 5);
+      g.fillRect(17, 27, 4, 5);
+    });
+
+    // 10. Cultista Abissal (spr_cultist)
+    makeSprite(AssetsConfig.sprites.cultist, (g) => {
+      g.fillStyle(0x2d132c, 1); // Manto negro-púrpura
+      g.fillRect(8, 7, 16, 20);
+      g.fillStyle(0x801336, 1); // Detalhes de borda em carmesim
+      g.fillRect(6, 12, 3, 14);
+      g.fillRect(23, 12, 3, 14);
+      // Olhos arcanos brilhantes nas sombras do capuz
+      g.fillStyle(0x9b59b6, 1);
+      g.fillRect(11, 10, 3, 2);
+      g.fillRect(18, 10, 3, 2);
+      // Talismã profano
+      g.fillStyle(0xe74c3c, 1);
+      g.fillRect(15, 18, 3, 4);
+    });
+
+    // 11. Goblin Chibi em Pixel Art (spr_goblin: 32x32)
+    makeSprite(AssetsConfig.sprites.goblin, (g) => {
+      // Orelhas pontudas largas características de goblin
+      g.fillStyle(0x1e824c, 1);
+      g.fillTriangle(2, 12, 10, 8, 10, 15); // Orelha esquerda
+      g.fillTriangle(30, 12, 22, 8, 22, 15); // Orelha direita
+
+      // Cabeça grande desproporcional Chibi (tom verde musgo escuro)
+      g.fillStyle(0x27ae60, 1);
+      g.fillRect(8, 6, 16, 13);
+      g.fillStyle(0x1e824c, 1); // Sombra sob o maxilar e testa
+      g.fillRect(8, 16, 16, 3);
+      g.fillRect(10, 6, 12, 2);
+
+      // Nariz pontudo
+      g.fillStyle(0x166038, 1);
+      g.fillRect(15, 12, 2, 3);
+
+      // Olhos vermelhos brilhantes característicos
+      g.fillStyle(0xff4757, 1);
+      g.fillRect(11, 10, 3, 3);
+      g.fillRect(18, 10, 3, 3);
+      // Brilho da pupila
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(11, 10, 1, 1);
+      g.fillRect(18, 10, 1, 1);
+
+      // Boca com presas inferiores afiadas
+      g.fillStyle(0x145a32, 1);
+      g.fillRect(12, 16, 8, 2);
+      g.fillStyle(0xffffff, 1); // Presas brancas
+      g.fillRect(13, 15, 2, 2);
+      g.fillRect(17, 15, 2, 2);
+
+      // Corpo com trapos de couro marrom
+      g.fillStyle(0x5d4037, 1);
+      g.fillRect(10, 19, 12, 8);
+      g.fillStyle(0x795548, 1); // Cinto de couro com fivela
+      g.fillRect(9, 23, 14, 2);
+      g.fillStyle(0xd4af37, 1); // Fivela de latão
+      g.fillRect(15, 23, 2, 2);
+
+      // Braço segurando adaga de ferro dentada
+      g.fillStyle(0x27ae60, 1);
+      g.fillRect(5, 20, 5, 4);
+      g.fillStyle(0xbdc3c7, 1); // Lâmina de ferro
+      g.fillRect(2, 17, 4, 7);
+      g.fillStyle(0x7f8c8d, 1);
+      g.fillRect(2, 17, 2, 7);
+
+      // Pernas curtas com pés de garra
+      g.fillStyle(0x1e824c, 1);
+      g.fillRect(11, 27, 4, 5);
+      g.fillRect(17, 27, 4, 5);
+    });
+
+    // 12. NPC Default
     makeSprite('spr_npc_default', (g) => {
       g.fillStyle(0x34495e, 1);
       g.fillRect(10, 6, 12, 10);
@@ -491,6 +621,407 @@ export default class PreloadScene extends Phaser.Scene {
       g.fillStyle(0xffda79, 1);
       g.fillCircle(4, 4, 2);
       g.generateTexture(AssetsConfig.fx.particle_ember, 8, 8);
+      g.destroy();
+    }
+  }
+
+  /**
+   * Gera texturas para os efeitos ambientais (folhas caídas, pássaros voando e névoa).
+   */
+  generateEnvironmentalTextures() {
+    // 1. Folha de Outono / Vento (fx_leaf: 8x6)
+    if (!this.textures.exists('fx_leaf')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xe67e22, 1); // Âmbar alaranjado
+      g.fillEllipse(4, 3, 4, 2);
+      g.fillStyle(0xd35400, 1); // Nervura da folha
+      g.fillRect(1, 3, 6, 1);
+      g.fillStyle(0x795548, 1); // Caule
+      g.fillRect(7, 3, 2, 1);
+      g.generateTexture('fx_leaf', 10, 6);
+      g.destroy();
+    }
+
+    // 2. Pássaro em Voo (tex_bird: 12x8)
+    if (!this.textures.exists('tex_bird')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x1e272e, 1); // Silhueta escura
+      // Corpo
+      g.fillRect(4, 3, 5, 2);
+      // Asa esquerda
+      g.fillRect(1, 1, 4, 2);
+      // Asa direita
+      g.fillRect(7, 1, 4, 2);
+      // Bico
+      g.fillStyle(0xf39c12, 1);
+      g.fillRect(9, 4, 2, 1);
+      g.generateTexture('tex_bird', 12, 8);
+      g.destroy();
+    }
+
+    // 3. Névoa Translúcida Horizontal (tex_fog: 256x256)
+    if (!this.textures.exists('tex_fog')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x718093, 0.4);
+      g.fillCircle(64, 64, 60);
+      g.fillCircle(192, 80, 70);
+      g.fillCircle(128, 180, 80);
+      g.fillStyle(0x2f3640, 0.25);
+      g.fillRect(0, 0, 256, 256);
+      g.generateTexture('tex_fog', 256, 256);
+      g.destroy();
+    }
+  }
+
+  /**
+   * Gera texturas do Ato II: Estrada da Fazenda, cercas, celeiro arrombado e rastros.
+   */
+  generateAct2Textures() {
+    // 1. Estrada de Terra com ranhuras (tex_dirt_road: 64x64)
+    if (!this.textures.exists('tex_dirt_road')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0x4a301a, 1);
+      g.fillRect(0, 0, 64, 64);
+      g.fillStyle(0x5c3c21, 1);
+      g.fillRect(8, 0, 18, 64);
+      g.fillRect(38, 0, 18, 64);
+      // Pedregulhos e ranhuras
+      g.fillStyle(0x2d1c0e, 0.7);
+      g.fillRect(14, 12, 4, 40);
+      g.fillRect(44, 8, 4, 46);
+      g.fillStyle(0x78532f, 0.8);
+      g.fillCircle(20, 25, 2);
+      g.fillCircle(50, 45, 3);
+      g.generateTexture('tex_dirt_road', 64, 64);
+      g.destroy();
+    }
+
+    // 2. Cerca de Madeira Rústica (tex_fence: 64x24)
+    if (!this.textures.exists('tex_fence')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Postes verticais
+      g.fillStyle(0x54321d, 1);
+      g.fillRect(4, 2, 8, 20);
+      g.fillRect(52, 2, 8, 20);
+      // Travessas horizontais
+      g.fillStyle(0x6e4125, 1);
+      g.fillRect(0, 6, 64, 5);
+      g.fillRect(0, 15, 64, 5);
+      // Pregos de ferro
+      g.fillStyle(0x111111, 0.9);
+      g.fillRect(8, 8, 2, 2);
+      g.fillRect(56, 8, 2, 2);
+      g.fillRect(8, 17, 2, 2);
+      g.fillRect(56, 17, 2, 2);
+      g.generateTexture('tex_fence', 64, 24);
+      g.destroy();
+    }
+
+    // 3. Celeiro Arrombado (tex_barn: 120x100)
+    if (!this.textures.exists('tex_barn')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Parede de tábuas de madeira avermelhada envelhecida
+      g.fillStyle(0x59251f, 1);
+      g.fillRect(0, 20, 120, 80);
+      // Telhado rústico com cumeeira
+      g.fillStyle(0x2d1310, 1);
+      g.fillTriangle(0, 22, 60, 0, 120, 22);
+      // Porta esburacada / arrombada
+      g.fillStyle(0x150b09, 1);
+      g.fillRect(40, 45, 40, 55);
+      // Tábuas quebradas e lascas
+      g.fillStyle(0x8a3a2f, 1);
+      g.fillRect(36, 48, 12, 6);
+      g.fillRect(72, 70, 14, 5);
+      // Marcas de garras monstruosas na lateral
+      g.fillStyle(0x111111, 0.9);
+      g.fillRect(88, 38, 3, 22);
+      g.fillRect(94, 40, 3, 20);
+      g.fillRect(100, 39, 3, 21);
+      g.generateTexture('tex_barn', 120, 100);
+      g.destroy();
+    }
+
+    // 4. Rastros de Criatura / Sangue Negro (tex_beast_tracks: 32x32)
+    if (!this.textures.exists('tex_beast_tracks')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Pegadas pesadas de besta de 3 dedos com garras
+      g.fillStyle(0x190d18, 0.85); // Icor negro
+      g.fillEllipse(16, 20, 12, 8);
+      g.fillCircle(11, 10, 3);
+      g.fillCircle(16, 8, 3);
+      g.fillCircle(21, 10, 3);
+      // Manchas de arranhão
+      g.fillStyle(0x401020, 0.7);
+      g.fillRect(6, 24, 4, 3);
+      g.fillRect(22, 26, 5, 2);
+      g.generateTexture('tex_beast_tracks', 32, 32);
+      g.destroy();
+    }
+  }
+
+  /**
+   * Gera texturas do Ato III: Masmorra, pilares de madeira avermelhada, altares rúnicos e portão lacrado.
+   */
+  generateAct3Textures() {
+    // 1. Pilar de Pedra e Tronco Avermelhado (tex_redwood_pillar: 60x60)
+    if (!this.textures.exists('tex_redwood_pillar')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Base de pedra esculpida
+      g.fillStyle(0x232429, 1);
+      g.fillRect(4, 4, 52, 52);
+      g.lineStyle(3, 0x111215, 1);
+      g.strokeRect(4, 4, 52, 52);
+      // Núcleo de cerne avermelhado antigo (Redwood antigo de Brentel)
+      g.fillStyle(0x4a1818, 1);
+      g.fillRect(12, 12, 36, 36);
+      g.fillStyle(0x6e2424, 1);
+      g.fillCircle(30, 30, 12);
+      // Runa cravada na pedra
+      g.fillStyle(0x9b59b6, 0.8);
+      g.fillRect(28, 18, 4, 24);
+      g.fillRect(22, 28, 16, 4);
+      g.generateTexture('tex_redwood_pillar', 60, 60);
+      g.destroy();
+    }
+
+    // 2. Altar Rúnico de Purificação (tex_altar_rune: 40x40)
+    if (!this.textures.exists('tex_altar_rune')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Pedestal de basalto
+      g.fillStyle(0x1e1e24, 1);
+      g.fillRect(2, 2, 36, 36);
+      g.lineStyle(2, 0xd4af37, 0.7);
+      g.strokeRect(4, 4, 32, 32);
+      // Runa central mágica (Violeta/Púrpura)
+      g.fillStyle(0x8e44ad, 1);
+      g.fillCircle(20, 20, 10);
+      g.fillStyle(0xffffff, 0.9);
+      g.fillRect(18, 14, 4, 12);
+      g.fillRect(14, 18, 12, 4);
+      g.generateTexture('tex_altar_rune', 40, 40);
+      g.destroy();
+    }
+
+    // 3. Grande Portão Sul Lacrado (tex_sealed_gate: 120x60)
+    if (!this.textures.exists('tex_sealed_gate')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Arco de pedra gótico
+      g.fillStyle(0x16161b, 1);
+      g.fillRect(0, 0, 120, 60);
+      g.lineStyle(3, 0x2c2c36, 1);
+      g.strokeRect(2, 2, 116, 56);
+      // Grades de ferro forjado
+      g.fillStyle(0x353b48, 1);
+      for (let gx = 16; gx < 110; gx += 14) {
+        g.fillRect(gx, 10, 4, 44);
+      }
+      // Selo arcano colossal central com correntes mágicas
+      g.fillStyle(0x8e44ad, 0.9);
+      g.fillCircle(60, 30, 16);
+      g.lineStyle(2, 0x00d2d3, 1);
+      g.strokeCircle(60, 30, 20);
+      // Cristal do selo
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(60, 30, 6);
+      g.generateTexture('tex_sealed_gate', 120, 60);
+      g.destroy();
+    }
+  }
+
+  /**
+   * Gera texturas para o Templo de Palmem (piso marmorizado, pilares com capitéis, altar solene e leito).
+   */
+  generateTempleTextures() {
+    // 1. Piso de Mármore Envelhecido com detalhes dourados (tex_temple_floor: 64x64)
+    if (!this.textures.exists('tex_temple_floor')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xe8ecef, 1); // Mármore claro
+      g.fillRect(0, 0, 64, 64);
+      // Ranhuras dos ladrilhos
+      g.lineStyle(1, 0xb0bec5, 0.8);
+      g.strokeRect(0, 0, 32, 32);
+      g.strokeRect(32, 0, 32, 32);
+      g.strokeRect(0, 32, 32, 32);
+      g.strokeRect(32, 32, 32, 32);
+      // Mosaico central dourado
+      g.fillStyle(0xd4af37, 0.4);
+      g.fillRect(14, 14, 4, 4);
+      g.fillRect(46, 14, 4, 4);
+      g.fillRect(14, 46, 4, 4);
+      g.fillRect(46, 46, 4, 4);
+      g.generateTexture('tex_temple_floor', 64, 64);
+      g.destroy();
+    }
+
+    // 2. Pilar de Mármore e Ouro (tex_temple_pillar: 40x60)
+    if (!this.textures.exists('tex_temple_pillar')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Base quadrada de pedra
+      g.fillStyle(0xcfd8dc, 1);
+      g.fillRect(4, 48, 32, 12);
+      g.fillStyle(0xd4af37, 1); // Anel de ouro na base
+      g.fillRect(4, 46, 32, 2);
+      // Fuste do pilar com caneluras
+      g.fillStyle(0xf5f6fa, 1);
+      g.fillRect(8, 10, 24, 36);
+      g.fillStyle(0xdcdde1, 1);
+      g.fillRect(12, 10, 3, 36);
+      g.fillRect(19, 10, 3, 36);
+      g.fillRect(26, 10, 3, 36);
+      // Capitel superior entalhado
+      g.fillStyle(0xd4af37, 1);
+      g.fillRect(4, 8, 32, 2);
+      g.fillStyle(0xcfd8dc, 1);
+      g.fillRect(2, 0, 36, 8);
+      g.generateTexture('tex_temple_pillar', 40, 60);
+      g.destroy();
+    }
+
+    // 3. Altar Sagrado de Palmem com Velas e Tecido Branco/Dourado (tex_temple_altar: 120x60)
+    if (!this.textures.exists('tex_temple_altar')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Pedestal de mármore branco
+      g.fillStyle(0xdfe6e9, 1);
+      g.fillRect(10, 10, 100, 48);
+      // Toalha sagrada com acabamento dourado
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(6, 14, 108, 20);
+      g.fillStyle(0xd4af37, 1);
+      g.fillRect(6, 32, 108, 4);
+      // Símbolo sagrado do Sol de Palmem entalhado
+      g.fillStyle(0xf1c40f, 1);
+      g.fillCircle(60, 24, 7);
+      g.fillStyle(0xd4af37, 1);
+      g.fillRect(58, 12, 4, 24);
+      g.fillRect(48, 22, 24, 4);
+      // Velas votivas acesas nos dois lados
+      g.fillStyle(0xf5f6fa, 1); // Vela esquerda
+      g.fillRect(18, 4, 6, 12);
+      g.fillStyle(0xff793f, 1); // Chama esquerda
+      g.fillCircle(21, 2, 3);
+      g.fillStyle(0xf5f6fa, 1); // Vela direita
+      g.fillRect(96, 4, 6, 12);
+      g.fillStyle(0xff793f, 1); // Chama direita
+      g.fillCircle(99, 2, 3);
+      g.generateTexture('tex_temple_altar', 120, 60);
+      g.destroy();
+    }
+
+    // 4. Sacerdotisa de Palmem (spr_sacerdotisa: 32x32)
+    if (!this.textures.exists('spr_sacerdotisa')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Manto branco imaculado e véu
+      g.fillStyle(0xf5f6fa, 1);
+      g.fillRect(8, 12, 16, 16);
+      // Faixas douradas sacerdotais
+      g.fillStyle(0xd4af37, 1);
+      g.fillRect(14, 12, 4, 16);
+      g.fillRect(8, 26, 16, 2);
+      // Rosto sereno
+      g.fillStyle(0xf5cd79, 1);
+      g.fillRect(11, 6, 10, 7);
+      // Véu sagrado na cabeça com tiara prateada
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(9, 3, 14, 4);
+      g.fillStyle(0x74b9ff, 1); // Gema na tiara
+      g.fillRect(15, 3, 2, 2);
+      g.generateTexture('spr_sacerdotisa', 32, 32);
+      g.destroy();
+    }
+
+    // 5. Leito de Enfermaria com Gruther (spr_gruther_bed: 80x100)
+    if (!this.textures.exists('spr_gruther_bed')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Estrutura da cama de carvalho
+      g.fillStyle(0x54321d, 1);
+      g.fillRect(4, 4, 72, 92);
+      // Cabeceira
+      g.fillStyle(0x3e2312, 1);
+      g.fillRect(4, 4, 72, 14);
+      // Lençóis brancos dobrados
+      g.fillStyle(0xecf0f1, 1);
+      g.fillRect(10, 24, 60, 68);
+      // Travesseiro
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(16, 12, 48, 12);
+      // Gruther (halfling adormecido com febre)
+      g.fillStyle(0xd2b48c, 1);
+      g.fillCircle(40, 20, 7);
+      g.fillStyle(0x8b4513, 1); // Cabelos castanhos
+      g.fillRect(34, 14, 12, 4);
+      // Pano úmido na testa para a febre
+      g.fillStyle(0x74b9ff, 1);
+      g.fillRect(36, 17, 8, 3);
+      g.generateTexture('spr_gruther_bed', 80, 100);
+      g.destroy();
+    }
+  }
+
+  /**
+   * Gera texturas para Baús de Tesouro (fechado, aberto) e partículas de moedas douradas.
+   */
+  generateChestAndCoinTextures() {
+    // 1. Baú Fechado em Pixel Art (tex_chest_closed: 32x24)
+    if (!this.textures.exists('tex_chest_closed')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Madeira carvalho do baú
+      g.fillStyle(0x795548, 1);
+      g.fillRect(2, 6, 28, 16);
+      // Tampa abaulada
+      g.fillStyle(0x5d4037, 1);
+      g.fillRect(2, 2, 28, 6);
+      // Cintas de ferro reforçado
+      g.fillStyle(0x37474f, 1);
+      g.fillRect(6, 2, 4, 20);
+      g.fillRect(22, 2, 4, 20);
+      // Fechadura dourada de latão
+      g.fillStyle(0xffd700, 1);
+      g.fillRect(14, 10, 4, 5);
+      g.fillStyle(0x111111, 1);
+      g.fillRect(15, 12, 2, 2);
+      g.generateTexture('tex_chest_closed', 32, 24);
+      g.destroy();
+    }
+
+    // 2. Baú Aberto em Pixel Art (tex_chest_open: 32x28)
+    if (!this.textures.exists('tex_chest_open')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Base do baú
+      g.fillStyle(0x795548, 1);
+      g.fillRect(2, 10, 28, 16);
+      // Cintas de ferro
+      g.fillStyle(0x37474f, 1);
+      g.fillRect(6, 10, 4, 16);
+      g.fillRect(22, 10, 4, 16);
+      // Interior brilhando em ouro e rubis
+      g.fillStyle(0xffd700, 1);
+      g.fillRect(4, 8, 24, 6);
+      g.fillStyle(0xffffff, 1);
+      g.fillCircle(10, 10, 2);
+      g.fillCircle(20, 11, 2);
+      g.fillStyle(0xe74c3c, 1); // Gema vermelha
+      g.fillRect(15, 9, 3, 3);
+      // Tampa erguida para trás
+      g.fillStyle(0x5d4037, 1);
+      g.fillRect(2, 0, 28, 7);
+      g.fillStyle(0x37474f, 1);
+      g.fillRect(6, 0, 4, 7);
+      g.fillRect(22, 0, 4, 7);
+      g.generateTexture('tex_chest_open', 32, 28);
+      g.destroy();
+    }
+
+    // 3. Moeda de Ouro (fx_coin: 8x8)
+    if (!this.textures.exists('fx_coin')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      g.fillStyle(0xffd700, 1);
+      g.fillCircle(4, 4, 4);
+      g.fillStyle(0xfff176, 1);
+      g.fillCircle(3, 3, 2);
+      g.fillStyle(0xb78103, 1);
+      g.fillRect(3, 3, 2, 2);
+      g.generateTexture('fx_coin', 8, 8);
       g.destroy();
     }
   }

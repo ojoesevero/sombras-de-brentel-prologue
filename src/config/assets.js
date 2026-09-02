@@ -16,7 +16,20 @@ export const AssetsConfig = {
     table: 'tex_table',
     hearth: 'tex_hearth',
     noticeboard: 'tex_noticeboard',
-    rules: 'tex_rules'
+    rules: 'tex_rules',
+    fence: 'tex_fence',
+    barn: 'tex_barn',
+    beast_tracks: 'tex_beast_tracks',
+    redwood_pillar: 'tex_redwood_pillar',
+    altar_rune: 'tex_altar_rune',
+    sealed_gate: 'tex_sealed_gate',
+    dirt_road: 'tex_dirt_road',
+    fog: 'tex_fog',
+    temple_floor: 'tex_temple_floor',
+    temple_pillar: 'tex_temple_pillar',
+    temple_altar: 'tex_temple_altar',
+    chest_closed: 'tex_chest_closed',
+    chest_open: 'tex_chest_open'
   },
   sprites: {
     rhogar: 'spr_rhogar',
@@ -25,7 +38,10 @@ export const AssetsConfig = {
     veronica: 'spr_veronica_stinfy',
     john: 'spr_john_bardem',
     traudon: 'spr_traudon_alicia',
+    waitress: 'spr_waitress',
     guard: 'spr_guard',
+    sacerdotisa: 'spr_sacerdotisa',
+    gruther_bed: 'spr_gruther_bed',
     iksar: 'spr_iksar',
     minotaur: 'spr_minotaur',
     cultist: 'spr_cultist',
@@ -44,7 +60,10 @@ export const AssetsConfig = {
   fx: {
     particle_star: 'fx_star',
     particle_lightning: 'fx_lightning',
-    particle_ember: 'fx_ember'
+    particle_ember: 'fx_ember',
+    particle_leaf: 'fx_leaf',
+    particle_coin: 'fx_coin',
+    bird: 'tex_bird'
   },
   bgm: {
     battle_theme: 'bgm_battle'

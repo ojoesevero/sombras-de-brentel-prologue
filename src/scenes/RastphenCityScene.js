@@ -5,6 +5,9 @@ import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
+import { AssetsConfig } from '../config/assets.js';
+import EnvironmentFX from '../utils/EnvironmentFX.js';
+import NPCWalker from '../entities/NPCWalker.js';
 
 /**
  * Cena Hub de Mundo Aberto - Rastphen.
@@ -52,21 +55,65 @@ export default class RastphenCityScene extends Phaser.Scene {
     addBuilding(300, 800, 400, 300);
     this.add.text(300, 800, 'Taverna Cauda do Dragão', { fill: '#fff', fontSize: '20px' }).setOrigin(0.5);
 
-    // NPCs da Cidade
+    // Efeitos Ambientais: Pássaros voando pelo céu da cidade
+    EnvironmentFX.addFlyingBirds(this, { x: 0, y: 0, w: 2400, h: 1800 });
+
+    // NPCs da Cidade (Pixel Art com sombras e tags)
     this.staticGroupNPCs = this.physics.add.staticGroup();
     
-    this.mercadorYanil = this.add.rectangle(1200, 850, 32, 32, 0xf1c40f);
+    // Mercador Yânil
+    this.add.ellipse(1200, 863, 22, 8, 0x000000, 0.35).setDepth(2);
+    this.mercadorYanil = this.add.sprite(1200, 850, AssetsConfig.sprites.veronica || 'spr_npc_default').setDepth(3);
     this.physics.add.existing(this.mercadorYanil, true);
     this.staticGroupNPCs.add(this.mercadorYanil);
-    this.add.text(1200, 850, 'Yânil', { fill: '#fff' }).setOrigin(0.5);
+    this.add.text(1200, 828, 'YÂNIL', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
 
-    this.guardaTelmer = this.add.rectangle(1100, 1750, 32, 32, 0xf1c40f);
+    // Guarda Telmer (Portão Sul)
+    this.add.ellipse(1100, 1763, 22, 8, 0x000000, 0.35).setDepth(2);
+    this.guardaTelmer = this.add.sprite(1100, 1750, AssetsConfig.sprites.guard).setDepth(3);
     this.physics.add.existing(this.guardaTelmer, true);
     this.staticGroupNPCs.add(this.guardaTelmer);
+    this.add.text(1100, 1728, 'TELMER', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
 
-    this.guardaBreno = this.add.rectangle(1300, 1750, 32, 32, 0xf1c40f);
+    // Guarda Breno (Portão Sul)
+    this.add.ellipse(1300, 1763, 22, 8, 0x000000, 0.35).setDepth(2);
+    this.guardaBreno = this.add.sprite(1300, 1750, AssetsConfig.sprites.guard).setDepth(3);
     this.physics.add.existing(this.guardaBreno, true);
     this.staticGroupNPCs.add(this.guardaBreno);
+    this.add.text(1300, 1728, 'BRENO', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
+
+    // Guarda de Patrulha da Praça (NPCWalker)
+    this.cityPatrol = new NPCWalker(this, 1100, 950, AssetsConfig.sprites.guard, {
+      name: 'Vigia de Rastphen',
+      speed: 38,
+      depth: 3,
+      waypoints: [
+        { x: 1100, y: 950, waitTime: 3000 },
+        { x: 1300, y: 950, waitTime: 3000 },
+        { x: 1200, y: 1050, waitTime: 2500 }
+      ]
+    });
 
     // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 1200);

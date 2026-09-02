@@ -6,6 +6,9 @@ import InventoryManager from '../services/InventoryManager.js';
 import QuestManager from '../services/QuestManager.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
+import { AssetsConfig } from '../config/assets.js';
+import EnvironmentFX from '../utils/EnvironmentFX.js';
+import NPCWalker from '../entities/NPCWalker.js';
 
 /**
  * Cena da Estrada Exterior (Ato II - A Floresta Cinzenta).
@@ -31,44 +34,119 @@ export class ForestRouteScene extends Phaser.Scene {
     // Limites do Mundo Expandido (1600x1200)
     this.physics.world.setBounds(0, 0, 1600, 1200);
 
-    // Fundo da Floresta
-    this.add.rectangle(0, 0, 1600, 1200, 0x224422).setOrigin(0);
+    // 1. Fundo da Floresta em Pixel Art verde musgo profundo
+    this.add.rectangle(0, 0, 1600, 1200, 0x1a331a).setOrigin(0);
 
-    // Caminho da Estrada (Estética)
-    this.add.rectangle(600, 0, 400, 1200, 0x4d3319).setOrigin(0);
+    // 2. Estrada de Terra com ranhuras e pedregulhos
+    this.add.tileSprite(800, 600, 360, 1200, AssetsConfig.tiles.dirt_road).setOrigin(0.5);
 
     this.staticGroup = this.physics.add.staticGroup();
 
-    // Gerador Procedural de Árvores Colisíveis
+    // 3. Cercas de Madeira e Perímetro da Fazenda (com entrada desobstruída)
+    [
+      { x: 100, y: 340 }, { x: 164, y: 340 }, { x: 228, y: 340 }, // Cerca norte
+      { x: 100, y: 560 }, { x: 164, y: 560 }, { x: 228, y: 560 }, { x: 292, y: 560 }, // Cerca sul
+      { x: 68, y: 400 }, { x: 68, y: 464 }, { x: 68, y: 528 }, // Cerca oeste
+      { x: 350, y: 360 } // Cerca leste com portão amplo aberto para a estrada
+    ].forEach(fp => {
+      const fence = this.add.image(fp.x, fp.y, AssetsConfig.tiles.fence).setDepth(2);
+      this.physics.add.existing(fence, true);
+      this.staticGroup.add(fence);
+    });
+
+    // 4. Fazenda dos Halflings e Celeiro Arrombado (Layout Espaçado e Fluido)
+    this.add.rectangle(210, 450, 280, 200, 0x4a2e18).setDepth(1); // Terreno arado
+    const farmhouse = this.add.rectangle(140, 410, 110, 90, 0x6e3b1b).setDepth(2);
+    this.physics.add.existing(farmhouse, true);
+    this.staticGroup.add(farmhouse);
+    this.add.text(140, 410, 'Casa da Fazenda', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#f1c40f',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setDepth(3);
+    
+    // Celeiro Arrombado posicionado com recuo limpo para acesso desimpedido
+    this.celeiro = this.add.image(310, 410, AssetsConfig.tiles.barn).setDepth(2);
+    this.physics.add.existing(this.celeiro, true);
+    this.staticGroup.add(this.celeiro);
+    this.add.text(310, 472, 'Celeiro Arrombado', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
+
+    // 5. Rastros de Sangue Negro e Garras da Besta (Guiando ao Sul para a Masmorra)
+    [
+      { x: 350, y: 470 }, { x: 450, y: 510 }, { x: 580, y: 560 },
+      { x: 740, y: 660 }, { x: 820, y: 820 }, { x: 790, y: 1050 }
+    ].forEach(tp => {
+      this.add.image(tp.x, tp.y, AssetsConfig.tiles.beast_tracks).setDepth(1).setAlpha(0.8);
+    });
+
+    // 6. Bosque de Árvores Colisíveis (Excluindo a zona da fazenda para evitar sobreposição)
+    this.treesList = [];
     const addTree = (x, y) => {
-      const tree = this.add.circle(x, y, 40, 0x002200);
+      this.add.ellipse(x, y + 26, 58, 20, 0x000000, 0.35).setDepth(1);
+      const tree = this.add.circle(x, y, 38, 0x145a32).setDepth(5);
+      tree.setStrokeStyle(3, 0x0e3a20);
+      this.treesList.push(tree);
       this.physics.add.existing(tree, true);
       this.staticGroup.add(tree);
     };
 
-    // Populando as margens com árvores
-    for (let i = 0; i < 20; i++) {
-      addTree(Phaser.Math.Between(50, 500), Phaser.Math.Between(50, 1150));
-      addTree(Phaser.Math.Between(1100, 1550), Phaser.Math.Between(50, 1150));
+    // Árvores a oeste (fora do raio da fazenda)
+    for (let i = 0; i < 30; i++) {
+      const tx = Phaser.Math.Between(50, 560);
+      const ty = Phaser.Math.Between(50, 1150);
+      // Proteção de perímetro: não gerar árvores dentro do lote da fazenda
+      if (tx >= 50 && tx <= 440 && ty >= 300 && ty <= 640) {
+        continue;
+      }
+      addTree(tx, ty);
+    }
+    // Árvores a leste da estrada
+    for (let i = 0; i < 24; i++) {
+      addTree(Phaser.Math.Between(1040, 1550), Phaser.Math.Between(50, 1150));
     }
 
-    // Fazenda dos Halflings (Bifurcação no meio da estrada)
-    this.add.rectangle(200, 500, 300, 200, 0x6b4226); // Terreno Arado
-    const farmhouse = this.add.rectangle(150, 450, 120, 100, 0x8b4513); // Casa
-    this.physics.add.existing(farmhouse, true);
-    this.staticGroup.add(farmhouse);
-    
-    this.celeiro = this.add.rectangle(300, 420, 100, 80, 0x5c4033); // Celeiro Destruído
-    this.physics.add.existing(this.celeiro, true);
-    this.staticGroup.add(this.celeiro);
-    this.add.text(300, 420, 'Celeiro\n(Arrombado)', { fill: '#fff', fontSize: '12px' }).setOrigin(0.5);
+    // 7. Efeitos Ambientais: Vento com folhas, árvores oscilantes e pássaros voando
+    EnvironmentFX.addTreeSway(this, this.treesList);
+    EnvironmentFX.addWindLeaves(this, { x: 0, y: 0, w: 1600, h: 1200 });
+    EnvironmentFX.addFlyingBirds(this, { x: 0, y: 0, w: 1600, h: 1200 });
 
-    // NPC: Fazendeiro
+    // 8. NPCs: Fazendeiro e Patrulheiro da Fazenda (NPCWalker)
     this.staticGroupNPCs = this.physics.add.staticGroup();
-    this.fazendeiro = this.add.rectangle(200, 530, 32, 32, 0xf1c40f);
+    
+    // Fazendeiro em Pixel Art com sombra e tag
+    this.add.ellipse(200, 533, 22, 8, 0x000000, 0.35).setDepth(2);
+    this.fazendeiro = this.add.sprite(200, 520, AssetsConfig.sprites.traudon).setDepth(3);
     this.physics.add.existing(this.fazendeiro, true);
     this.staticGroupNPCs.add(this.fazendeiro);
-    this.add.text(200, 530, 'Fazendeiro', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
+    this.add.text(200, 498, 'FAZENDEIRO', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
+
+    // Guarda da Fazenda patrulhando os limites da cerca
+    this.farmPatrol = new NPCWalker(this, 370, 520, AssetsConfig.sprites.guard, {
+      name: 'Vigia da Fazenda',
+      speed: 35,
+      depth: 3,
+      waypoints: [
+        { x: 370, y: 520, waitTime: 2500 },
+        { x: 370, y: 370, waitTime: 2000 },
+        { x: 230, y: 370, waitTime: 3000 },
+        { x: 370, y: 370, waitTime: 1500 }
+      ]
+    });
 
     // O Jogador e Spawn (Player com FSM)
     this.player = new Player(this, this.spawnX, this.spawnY, 32, 32, 0x2980b9);
@@ -83,34 +161,105 @@ export class ForestRouteScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, 1600, 1200);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-    // Baús de Itens (Exploração)
+    // 9. Baú de Tesouro em Pixel Art com Animação e Partículas de Moedas
     this.chests = this.physics.add.group();
-    const chest1 = this.add.rectangle(450, 600, 32, 32, 0xffff00);
+    this.add.ellipse(480, 592, 30, 10, 0x000000, 0.35).setDepth(1);
+    const chest1 = this.add.sprite(480, 580, AssetsConfig.tiles.chest_closed).setDepth(2);
     this.physics.add.existing(chest1, true); 
+    chest1.isOpened = false;
     this.chests.add(chest1);
 
     this.physics.add.overlap(this.player, this.chests, (player, chest) => {
-      Logger.info('ForestRouteScene', 'Baú encontrado! +1 Poção de Vida, +50 PO');
+      if (chest.isOpened) return;
+      chest.isOpened = true;
+
+      // Animação visual: troca de textura para baú aberto e efeito pop
+      chest.setTexture(AssetsConfig.tiles.chest_open);
+      this.tweens.add({
+        targets: chest,
+        scaleY: 1.25,
+        scaleX: 1.1,
+        duration: 150,
+        yoyo: true,
+        ease: 'Back.easeOut'
+      });
+
+      // Partículas de moedas douradas saltando
+      if (this.textures.exists(AssetsConfig.fx.particle_coin)) {
+        const coins = this.add.particles(chest.x, chest.y - 6, AssetsConfig.fx.particle_coin, {
+          speedY: { min: -120, max: -60 },
+          speedX: { min: -45, max: 45 },
+          gravityY: 180,
+          scale: { start: 1, end: 0.5 },
+          lifespan: 800,
+          quantity: 6,
+          emitting: false
+        }).setDepth(10);
+        coins.explode(6);
+        this.time.delayedCall(1000, () => coins.destroy());
+      }
+
+      Logger.info('ForestRouteScene', 'Baú de tesouro aberto! +1 Poção de Vida, +50 PO');
       InventoryManager.addItem('potion_heal', 1);
       InventoryManager.gold += 50;
       
-      const fx = this.add.text(chest.x, chest.y - 20, '+ Saque', { fill: '#ff0' }).setOrigin(0.5);
-      this.tweens.add({ targets: fx, y: fx.y - 40, alpha: 0, duration: 1000, onComplete: () => fx.destroy() });
-      
-      chest.destroy();
+      const fx = this.add.text(chest.x, chest.y - 25, '+50 PO & Poção de Cura!', {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '11px',
+        color: '#ffd700',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(10);
+
+      this.tweens.add({
+        targets: fx,
+        y: fx.y - 35,
+        alpha: 0,
+        duration: 1400,
+        onComplete: () => fx.destroy()
+      });
     });
 
-    // Inimigos de Campo (Emboscada)
+    // 10. Inimigos de Campo em Patrulha Ativa (Goblins em movimento com FlipX)
     this.enemies = this.physics.add.group();
-    const patrol1 = this.add.rectangle(800, 500, 32, 32, 0xff0000);
-    this.physics.add.existing(patrol1, false);
-    patrol1.body.setImmovable(true);
-    this.enemies.add(patrol1);
+    const spawnPatrollingGoblin = (startX, startY, deltaX, deltaY) => {
+      const shadow = this.add.ellipse(startX, startY + 13, 20, 8, 0x000000, 0.35).setDepth(2);
+      const e = this.add.sprite(startX, startY, AssetsConfig.sprites.goblin || 'spr_guard').setDepth(3);
+      this.physics.add.existing(e, false);
+      e.body.setImmovable(true);
+      this.enemies.add(e);
 
-    const patrol2 = this.add.rectangle(900, 900, 32, 32, 0xff0000);
-    this.physics.add.existing(patrol2, false);
-    patrol2.body.setImmovable(true);
-    this.enemies.add(patrol2);
+      const targetX = startX + deltaX;
+      const targetY = startY + deltaY;
+
+      this.tweens.add({
+        targets: [e, shadow],
+        x: targetX,
+        y: targetY,
+        duration: 2600,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+        onYoyo: () => {
+          if (deltaX !== 0) e.setFlipX(!e.flipX);
+        },
+        onRepeat: () => {
+          if (deltaX !== 0) e.setFlipX(!e.flipX);
+        },
+        onUpdate: () => {
+          if (e.body) {
+            e.body.position.x = e.x - e.width / 2;
+            e.body.position.y = e.y - e.height / 2;
+          }
+        }
+      });
+
+      return e;
+    };
+
+    spawnPatrollingGoblin(780, 500, 140, 0); // Patrulha horizontal na estrada
+    spawnPatrollingGoblin(920, 860, 0, 120); // Patrulha vertical na bifurcação
 
     this.physics.add.overlap(this.player, this.enemies, (player, enemy) => {
       if (this.scene.isPaused()) return;

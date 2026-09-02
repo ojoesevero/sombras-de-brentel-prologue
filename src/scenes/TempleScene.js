@@ -5,6 +5,7 @@ import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
+import { AssetsConfig } from '../config/assets.js';
 
 /**
  * Cena do Templo de Palmem (Ato II).
@@ -23,41 +24,107 @@ export default class TempleScene extends Phaser.Scene {
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
 
-    // Layout Sagrado (800x600) - Piso de Mármore
+    // Layout Sagrado (800x600) - Piso Texturizado de Ladrilhos de Pedra e Mármore
     this.physics.world.setBounds(0, 0, 800, 600);
-    this.add.rectangle(0, 0, 800, 600, 0xdddddd).setOrigin(0);
+    this.add.tileSprite(400, 300, 800, 600, AssetsConfig.tiles.temple_floor).setOrigin(0.5);
+
+    // Tapete Cerimonial Central
+    this.add.rectangle(400, 350, 96, 420, 0x8b0000).setDepth(1);
+    this.add.rectangle(400, 350, 86, 414, 0xb71540).setDepth(1);
+    this.add.rectangle(400, 350, 78, 410, 0x780218).setDepth(1);
 
     this.staticGroup = this.physics.add.staticGroup();
 
-    // Colunas e Paredes
+    // 1. Pilares de Mármore e Ouro com Capitéis
     const addPillar = (x, y) => {
-      const p = this.add.circle(x, y, 20, 0xaaaaaa);
+      this.add.ellipse(x, y + 26, 44, 14, 0x000000, 0.35).setDepth(1);
+      const p = this.add.image(x, y, AssetsConfig.tiles.temple_pillar).setDepth(2);
       this.physics.add.existing(p, true);
       this.staticGroup.add(p);
     };
     addPillar(200, 200); addPillar(600, 200);
     addPillar(200, 400); addPillar(600, 400);
 
-    // Altar Cerimonial
-    const altar = this.add.rectangle(400, 150, 120, 60, 0xd4af37);
-    this.physics.add.existing(altar, true);
-    this.staticGroup.add(altar);
-    this.add.text(400, 150, 'Altar de Palmem', { fill: '#fff', fontSize: '12px' }).setOrigin(0.5);
+    // 2. Altar Cerimonial de Palmem com Iluminação Sagrada e Velas
+    this.altar = this.add.image(400, 140, AssetsConfig.tiles.temple_altar).setDepth(2);
+    this.physics.add.existing(this.altar, true);
+    this.staticGroup.add(this.altar);
 
-    // Área de Enfermaria (Leito de Gruther)
-    const leito = this.add.rectangle(230, 220, 80, 120, 0x8b0000);
+    // Halo sagrado dourado ambiente do altar
+    const altarHalo = this.add.circle(400, 140, 85, 0xf1c40f, 0.2)
+      .setDepth(1)
+      .setBlendMode(Phaser.BlendModes.ADD);
+
+    this.tweens.add({
+      targets: altarHalo,
+      alpha: 0.36,
+      scale: 1.15,
+      duration: 1300,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    // Chamas cintilantes das velas nos castiçais do altar
+    const candleL = this.add.circle(362, 120, 16, 0xffa502, 0.35).setDepth(1).setBlendMode(Phaser.BlendModes.ADD);
+    const candleR = this.add.circle(438, 120, 16, 0xffa502, 0.35).setDepth(1).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({
+      targets: [candleL, candleR],
+      alpha: 0.55,
+      scale: 1.3,
+      duration: 450,
+      yoyo: true,
+      repeat: -1
+    });
+
+    this.add.text(400, 178, 'ALTAR DE PALMEM', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(3);
+
+    // 3. Área de Enfermaria: Leito de Gruther em Pixel Art
+    this.add.ellipse(230, 260, 68, 18, 0x000000, 0.35).setDepth(1);
+    const leito = this.add.image(230, 220, AssetsConfig.sprites.gruther_bed).setDepth(2);
     this.physics.add.existing(leito, true);
     this.staticGroup.add(leito);
-    this.add.text(230, 220, 'Gruther\n(Febril)', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
+    this.add.text(230, 275, 'GRUTHER (FEBRIL)', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#74b9ff',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 3, y: 2 }
+    }).setOrigin(0.5).setDepth(3);
 
-    // NPCs e Zonas
+    // 4. Sacerdotisa de Palmem em Pixel Art Chibi com Sombra e Respiração
     this.staticGroupNPCs = this.physics.add.staticGroup();
     
-    // Sacerdotisa
-    this.sacerdotisa = this.add.rectangle(400, 250, 32, 32, 0xf1c40f);
+    this.add.ellipse(400, 263, 22, 8, 0x000000, 0.35).setDepth(2);
+    this.sacerdotisa = this.add.sprite(400, 250, AssetsConfig.sprites.sacerdotisa).setDepth(3);
     this.physics.add.existing(this.sacerdotisa, true);
     this.staticGroupNPCs.add(this.sacerdotisa);
-    this.add.text(400, 250, 'Sacerdotisa', { fill: '#fff', fontSize: '10px' }).setOrigin(0.5);
+
+    this.tweens.add({
+      targets: this.sacerdotisa,
+      scaleY: 0.94,
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    this.add.text(400, 225, 'SACERDOTISA ILIDIZ', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '9px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(10, 10, 16, 0.75)',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5).setDepth(4);
 
     // Spawn do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
