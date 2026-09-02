@@ -7,6 +7,7 @@ import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
 import Player, { PlayerState } from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
+import { AssetsConfig } from '../config/assets.js';
 
 /**
  * Cena de Exploração Top-Down da Taverna Cauda do Dragão.
@@ -24,7 +25,7 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   create() {
-    Logger.info('TavernScene', 'Renderizando Taverna Cauda do Dragão.');
+    Logger.info('TavernScene', 'Renderizando Taverna Cauda do Dragão (Pixel Art).');
     this.interactions = this.cache.json.get('tavern_interactions');
     
     // Inicializar QuestManager se necessário
@@ -37,30 +38,65 @@ export default class TavernScene extends Phaser.Scene {
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
 
-    // Chão de madeira
-    this.add.rectangle(0, 0, 800, 600, 0x4a3b2c).setOrigin(0);
+    // 1. Fundo Atmosférico de Pixel Art (assoalho de madeira, paredes de pedra e tapete rúnico)
+    this.add.image(400, 300, AssetsConfig.backgrounds.tavern).setDepth(0);
 
-    // Sistema Físico de Colisões
+    // 2. Iluminação Dinâmica da Lareira e Partículas de Brasas
+    const hearthLight = this.add.circle(400, 45, 95, 0xffa502, 0.22)
+      .setDepth(1)
+      .setBlendMode(Phaser.BlendModes.ADD);
+
+    this.tweens.add({
+      targets: hearthLight,
+      alpha: 0.38,
+      scale: 1.12,
+      duration: 700,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
+    if (this.textures.exists(AssetsConfig.fx.particle_ember)) {
+      this.add.particles(400, 40, AssetsConfig.fx.particle_ember, {
+        speedY: { min: -35, max: -12 },
+        speedX: { min: -15, max: 15 },
+        scale: { start: 0.6, end: 0 },
+        alpha: { start: 0.8, end: 0 },
+        lifespan: 1500,
+        frequency: 180,
+        blendMode: 'ADD'
+      }).setDepth(2);
+    }
+
+    // 3. Sistema Físico de Colisões (Paredes invisíveis)
     this.staticGroup = this.physics.add.staticGroup();
     
-    const addStatic = (x, y, w, h, color) => {
-      const r = this.add.rectangle(x, y, w, h, color);
+    const addInvisibleBoundary = (x, y, w, h) => {
+      const r = this.add.rectangle(x, y, w, h, 0x000000, 0);
       this.physics.add.existing(r, true);
       this.staticGroup.add(r);
     };
 
-    // Limites de Borda (Paredes)
-    addStatic(400, 10, 800, 20, 0x221100);
-    addStatic(400, 590, 800, 20, 0x221100);
-    addStatic(10, 300, 20, 600, 0x221100);
-    addStatic(790, 300, 20, 600, 0x221100);
+    // Limites de Borda (Paredes da Taverna)
+    addInvisibleBoundary(400, 35, 800, 70); // Parede norte e lareira
+    addInvisibleBoundary(400, 595, 800, 10); // Parede sul
+    addInvisibleBoundary(5, 300, 10, 600);   // Parede oeste
+    addInvisibleBoundary(795, 300, 10, 600); // Parede leste
 
-    // Mobília (Colisores)
-    addStatic(400, 100, 400, 60, 0x3d2314); // Balcão
-    addStatic(200, 300, 80, 80, 0x5c3a21);  // Mesa 1
-    addStatic(600, 300, 80, 80, 0x5c3a21);  // Mesa 2
+    // 4. Mobílias e Colisores em Sprites/Imagens
+    const counter = this.add.image(400, 100, AssetsConfig.tiles.counter).setDepth(2);
+    this.physics.add.existing(counter, true);
+    this.staticGroup.add(counter);
 
-    // NPCs e Entidades de Interação
+    const mesa1 = this.add.image(200, 300, AssetsConfig.tiles.table).setDepth(2);
+    this.physics.add.existing(mesa1, true);
+    this.staticGroup.add(mesa1);
+
+    const mesa2 = this.add.image(600, 300, AssetsConfig.tiles.table).setDepth(2);
+    this.physics.add.existing(mesa2, true);
+    this.staticGroup.add(mesa2);
+
+    // 5. NPCs e Entidades de Interação
     this.interactables = [
       { id: 'hilda', x: 400, y: 150 },
       { id: 'placa_regras', x: 200, y: 100 },
@@ -71,10 +107,54 @@ export default class TavernScene extends Phaser.Scene {
       { id: 'joseph_sylven', x: 700, y: 500 }
     ];
 
-    // Renderizar pontos de interesse (NPCs amarelos)
+    // 6. Renderizar NPCs com Sprites de Pixel Art, Sombras e Tags
+    this.npcSprites = {};
     this.interactables.forEach(ent => {
-      this.add.rectangle(ent.x, ent.y, 32, 32, 0xf1c40f);
-      this.add.text(ent.x, ent.y - 25, ent.id.replace('_', ' '), { fontSize: '10px', fill: '#fff' }).setOrigin(0.5);
+      let textureKey = 'spr_npc_default';
+      const isProp = ent.id.startsWith('placa') || ent.id.startsWith('quadro');
+
+      if (ent.id === 'hilda') textureKey = AssetsConfig.sprites.hilda;
+      else if (ent.id === 'joseph_sylven') textureKey = AssetsConfig.sprites.joseph;
+      else if (ent.id === 'veronica_stinfy') textureKey = AssetsConfig.sprites.veronica;
+      else if (ent.id === 'john_bardem') textureKey = AssetsConfig.sprites.john;
+      else if (ent.id === 'traudon_alicia') textureKey = AssetsConfig.sprites.traudon;
+      else if (ent.id === 'quadro_avisos') textureKey = AssetsConfig.tiles.noticeboard;
+      else if (ent.id === 'placa_regras') textureKey = AssetsConfig.tiles.rules;
+
+      if (!this.textures.exists(textureKey)) {
+        textureKey = isProp ? 'tex_noticeboard' : 'spr_npc_default';
+      }
+
+      // Sombra projetada sob os pés de personagens vivos
+      if (!isProp) {
+        this.add.ellipse(ent.x, ent.y + 13, 22, 8, 0x000000, 0.35).setDepth(2);
+      }
+
+      const sprite = this.add.sprite(ent.x, ent.y, textureKey).setDepth(3);
+      this.npcSprites[ent.id] = sprite;
+
+      // Micro-animação sutil de respiração para personagens vivos
+      if (!isProp) {
+        this.tweens.add({
+          targets: sprite,
+          scaleY: 0.95,
+          duration: 1100 + Math.random() * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
+
+      // Etiqueta de identificação estilizada
+      const displayName = ent.id.replace(/_/g, ' ').toUpperCase();
+      this.add.text(ent.x, ent.y - 23, displayName, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '9px',
+        color: '#ffd700',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(10, 10, 16, 0.75)',
+        padding: { x: 4, y: 2 }
+      }).setOrigin(0.5).setDepth(4);
     });
 
     // Instanciação do Jogador (Player com FSM)

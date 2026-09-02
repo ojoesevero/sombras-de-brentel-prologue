@@ -21,6 +21,9 @@ import UIScene from './scenes/UIScene.js';
 
 const config = {
   type: Phaser.AUTO,
+  parent: 'game-container',
+  pixelArt: true, // Renderização nítida para Pixel Art (sem anti-aliasing borrado)
+  roundPixels: true, // Arredonda posições para inteiros para evitar shimmer
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

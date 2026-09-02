@@ -42,6 +42,19 @@ export default class Player extends Phaser.GameObjects.Rectangle {
       }
     }
 
+    // Renderização em Pixel Art (Sprite sobreposto com sombra)
+    this.sprite = null;
+    this.shadow = null;
+    if (scene && scene.textures && scene.textures.exists('spr_rhogar')) {
+      this.setFillStyle(0x000000, 0); // Oculta o retângulo geométrico de colisão
+      this.shadow = scene.add.ellipse(x, y + 13, 22, 8, 0x000000, 0.35);
+      this.sprite = scene.add.sprite(x, y, 'spr_rhogar');
+      if (this.depth !== undefined) {
+        this.shadow.setDepth(this.depth);
+        this.sprite.setDepth(this.depth + 1);
+      }
+    }
+
     // Atributos de Combate
     this.name = 'Rhogar Tordan';
     this.maxHp = 120;
@@ -166,6 +179,43 @@ export default class Player extends Phaser.GameObjects.Rectangle {
     } else {
       this.state = PlayerState.IDLE;
     }
+
+    // Sincronizar o sprite visual de Pixel Art com o corpo físico
+    if (this.sprite) {
+      this.sprite.setPosition(this.x, this.y);
+      if (this.shadow) {
+        this.shadow.setPosition(this.x, this.y + 13);
+      }
+      if (velX < 0) {
+        this.sprite.setFlipX(true);
+      } else if (velX > 0) {
+        this.sprite.setFlipX(false);
+      }
+    }
+  }
+
+  preUpdate(time, delta) {
+    if (super.preUpdate) {
+      super.preUpdate(time, delta);
+    }
+    if (this.sprite) {
+      this.sprite.setPosition(this.x, this.y);
+      if (this.shadow) {
+        this.shadow.setPosition(this.x, this.y + 13);
+      }
+    }
+  }
+
+  destroy(fromScene) {
+    if (this.sprite) {
+      this.sprite.destroy();
+      this.sprite = null;
+    }
+    if (this.shadow) {
+      this.shadow.destroy();
+      this.shadow = null;
+    }
+    super.destroy(fromScene);
   }
 
   /**
