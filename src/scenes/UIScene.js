@@ -71,6 +71,9 @@ export default class UIScene extends Phaser.Scene {
       }
     });
 
+    // 5. Sistema Visual de Toasts de Conquistas
+    this.setupAchievementToast();
+
     // Ouvinte para alternância dinâmica do modo de controle (PC / Mobile)
     const updateControlVisibility = (mode) => {
       const activeMode = mode || this.registry.get('controlMode') || localStorage.getItem('controlMode') || 'pc';
@@ -91,6 +94,7 @@ export default class UIScene extends Phaser.Scene {
       this.game.events.off('advanceDialogue');
       this.game.events.off('closeDialogue');
       this.game.events.off('updateObjective');
+      this.game.events.off('achievementUnlocked');
       this.game.events.off('controlModeChanged', updateControlVisibility);
       InputManager.resetVirtualKeys();
     });
@@ -235,9 +239,198 @@ export default class UIScene extends Phaser.Scene {
     menuBg.on('pointerout', resetMenuBtn);
 
     this.touchControlsContainer.add(menuContainer);
+
+    // ==========================================
+    // BOTÃO VIRTUAL FIXO DE MOCHILA [📦 MOCHILA]
+    // ==========================================
+    const bagBtnX = 720;
+    const bagBtnY = 320;
+
+    const bagContainer = this.add.container(bagBtnX, bagBtnY);
+    const bagBg = this.add.circle(0, 0, 26, 0x1f2937, 0.9);
+    bagBg.setStrokeStyle(2, 0xd4af37, 0.9);
+    bagBg.setInteractive({ useHandCursor: true });
+
+    const bagLabel = this.add.text(0, -2, '📦\nMOCHILA', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '8px',
+      color: '#ffd700',
+      align: 'center',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    bagContainer.add([bagBg, bagLabel]);
+
+    bagBg.on('pointerdown', () => {
+      bagBg.fillColor = 0xd4af37;
+      bagLabel.setColor('#000000');
+      bagContainer.setScale(0.92);
+      this.toggleInventory();
+    });
+
+    const resetBagBtn = () => {
+      bagBg.fillColor = 0x1f2937;
+      bagLabel.setColor('#ffd700');
+      bagContainer.setScale(1.0);
+    };
+
+    bagBg.on('pointerup', resetBagBtn);
+    bagBg.on('pointerout', resetBagBtn);
+
+    this.touchControlsContainer.add(bagContainer);
+
+    // Ouvinte Global do Game para Alternar Mochila
+    this.game.events.off('toggleInventory');
+    this.game.events.on('toggleInventory', () => {
+      this.toggleInventory();
+    });
+
+    // Ouvintes Diretos de Teclado no UIScene (I, B, X, Shift)
+    if (this.input && this.input.keyboard) {
+      this.input.keyboard.on('keydown-I', () => this.toggleInventory());
+      this.input.keyboard.on('keydown-B', () => this.toggleInventory());
+      this.input.keyboard.on('keydown-X', () => {
+        if (!this.dialogueBox || !this.dialogueBox.visible) {
+          this.toggleInventory();
+        }
+      });
+    }
+
+    // Listener de Atalho de Teclado via InputManager
+    InputManager.onAction('INVENTORY', () => {
+      this.toggleInventory();
+    });
+  }
+
+  toggleInventory() {
+    if (this.isTogglingInventory) return;
+    this.isTogglingInventory = true;
+    this.time.delayedCall(250, () => {
+      this.isTogglingInventory = false;
+    });
+
+    if (this.scene.isActive('InventoryScene')) {
+      const invScene = this.scene.get('InventoryScene');
+      if (invScene && typeof invScene.closeInventory === 'function') {
+        invScene.closeInventory();
+      } else {
+        this.scene.stop('InventoryScene');
+      }
+      return;
+    }
+
+    if (this.dialogueBox && this.dialogueBox.visible) {
+      return; // Não abre inventário durante diálogo
+    }
+
+    // Identificar a cena de jogo ativa que esteja executando e não esteja previamente pausada
+    const gameScenes = ['TavernScene', 'RastphenCityScene', 'TempleScene', 'ForestRouteScene', 'DungeonScene', 'GameScene'];
+    const activeKey = gameScenes.find(key => this.scene.isActive(key) && !this.scene.isPaused(key));
+
+    if (activeKey) {
+      const activeScene = this.scene.get(activeKey);
+      if (activeScene && activeScene.player && !activeScene.player.canInteract()) {
+        return; // Não abre se estiver em transição ou interação ativa
+      }
+
+      Logger.info('UIScene', `Pausando [${activeKey}] para abrir Mochila (InventoryScene).`);
+      this.scene.pause(activeKey);
+      this.scene.launch('InventoryScene', {
+        previousSceneKey: activeKey,
+        player: activeScene ? activeScene.player : null
+      });
+    }
   }
 
   isDialogueActive() {
     return this.dialogueBox && this.dialogueBox.visible;
+  }
+
+  /**
+   * Configura o ouvinte de eventos globais de conquistas.
+   */
+  setupAchievementToast() {
+    this.achievementQueue = [];
+    this.isToastShowing = false;
+
+    this.game.events.off('achievementUnlocked');
+    this.game.events.on('achievementUnlocked', (ach) => {
+      this.achievementQueue.push(ach);
+      if (!this.isToastShowing) {
+        this.processNextAchievementToast();
+      }
+    });
+  }
+
+  /**
+   * Processa a fila de notificações flutuantes (Toast) de conquistas no topo da tela.
+   */
+  processNextAchievementToast() {
+    if (this.achievementQueue.length === 0) {
+      this.isToastShowing = false;
+      return;
+    }
+
+    this.isToastShowing = true;
+    const ach = this.achievementQueue.shift();
+
+    const toastContainer = this.add.container(400, -90).setDepth(6000).setScrollFactor(0);
+
+    const toastBg = this.add.rectangle(0, 0, 520, 64, 0x0f0e17, 0.95);
+    toastBg.setStrokeStyle(2, 0xd4af37, 1);
+
+    const goldAccent = this.add.rectangle(-254, 0, 8, 60, 0xffd700);
+
+    const iconText = this.add.text(-220, 0, ach.icon || '🏆', {
+      fontSize: '26px'
+    }).setOrigin(0.5);
+
+    const headerText = this.add.text(-190, -14, '🏆 CONQUISTA DESBLOQUEADA!', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '11px',
+      color: '#ffd700',
+      fontStyle: 'bold'
+    }).setOrigin(0, 0.5);
+
+    const titleText = this.add.text(-190, 10, `${ach.title}: ${ach.description}`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '11px',
+      color: '#ffffff',
+      fontStyle: 'bold',
+      wordWrap: { width: 420 }
+    }).setOrigin(0, 0.5);
+
+    toastContainer.add([toastBg, goldAccent, iconText, headerText, titleText]);
+
+    // Animação: Slide Down -> Brilho -> Slide Up
+    this.tweens.add({
+      targets: toastContainer,
+      y: 50,
+      duration: 450,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.tweens.add({
+          targets: goldAccent,
+          alpha: 0.3,
+          yoyo: true,
+          repeat: 3,
+          duration: 300
+        });
+
+        this.time.delayedCall(3600, () => {
+          this.tweens.add({
+            targets: toastContainer,
+            y: -90,
+            alpha: 0,
+            duration: 400,
+            ease: 'Power2',
+            onComplete: () => {
+              toastContainer.destroy();
+              this.processNextAchievementToast();
+            }
+          });
+        });
+      }
+    });
   }
 }

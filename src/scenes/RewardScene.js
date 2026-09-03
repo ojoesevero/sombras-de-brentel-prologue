@@ -32,14 +32,15 @@ export default class RewardScene extends Phaser.Scene {
     this.add.rectangle(0, 0, 800, 600, 0x050510).setOrigin(0);
     
     if (this.isFlashback) {
-      this.add.text(400, 150, 'Caverna nas Ravinas ao Sudoeste', { fontSize: '24px', fill: '#888' }).setOrigin(0.5);
-      this.add.text(400, 220, 'Escapando dos guardas, Rhogar e Ilídiz encontram refúgio seguro.', { fontSize: '16px', fill: '#ccc' }).setOrigin(0.5);
-      this.add.text(400, 280, 'Entre os destroços antigos, uma lâmina colossal brilha na escuridão...', { fontSize: '18px', fill: '#d4af37', fontStyle: 'italic' }).setOrigin(0.5);
+      this.add.text(400, 140, 'Caverna nas Ravinas ao Sudoeste', { fontSize: '24px', fill: '#ffd700', fontStyle: 'bold' }).setOrigin(0.5);
+      this.add.text(400, 190, 'Escapando dos guardas, Rhogar e Ilídiz encontram refúgio seguro.', { fontSize: '15px', fill: '#ccc' }).setOrigin(0.5);
+      this.add.text(400, 240, 'Entre os destroços antigos, uma lâmina colossal brilha na escuridão...', { fontSize: '16px', fill: '#d4af37', fontStyle: 'italic' }).setOrigin(0.5);
       
-      this.swordText = this.add.text(400, 360, 'Recompensa: Espada Bastarda Serrilhada (+20 ATQ)', { fontSize: '22px', fill: '#0f0', fontStyle: 'bold' }).setOrigin(0.5);
+      this.swordText = this.add.text(400, 310, 'Recompensa: Espada Bastarda Serrilhada (+20 ATQ)\n+100 XP de Batalha', { fontSize: '20px', fill: '#2ecc71', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
     } else {
-      this.add.text(400, 150, 'Vitória!', { fontSize: '32px', fill: '#ff0' }).setOrigin(0.5);
-      this.swordText = this.add.text(400, 300, 'Recompensa: +50 XP e Espólios da Batalha', { fontSize: '22px', fill: '#0f0', fontStyle: 'bold' }).setOrigin(0.5);
+      this.add.text(400, 140, '★ Vitória Conquistada! ★', { fontSize: '28px', fill: '#ffd700', fontStyle: 'bold' }).setOrigin(0.5);
+      const xpAmount = this.player?.xp || 50;
+      this.swordText = this.add.text(400, 280, `Recompensa: Espólios e Experiência\nNível Atual: ${this.player?.level || 1}  •  HP: ${this.player?.hp || 120}/${this.player?.maxHp || 120}`, { fontSize: '18px', fill: '#2ecc71', fontStyle: 'bold', align: 'center' }).setOrigin(0.5);
     }
     
     // Pulse Effect na arma

@@ -66,13 +66,19 @@ export default class PauseScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((t, i) => {
-      if (i === this.selectedIndex) {
-        t.setColor('#ffd700');
-        t.setText(`> ${this.options[i].text} <`);
-      } else {
-        t.setColor('#aaaaaa');
-        t.setText(this.options[i].text);
+      if (!t || !t.active || !t.scene || !t.style) return;
+      try {
+        if (i === this.selectedIndex) {
+          t.setColor('#ffd700');
+          t.setText(`> ${this.options[i].text} <`);
+        } else {
+          t.setColor('#aaaaaa');
+          t.setText(this.options[i].text);
+        }
+      } catch (err) {
+        // Ignora falhas transientes de renderização
       }
     });
   }
@@ -82,7 +88,9 @@ export default class PauseScene extends Phaser.Scene {
     
     // Reacoplar o input na cena principal antes de retomar
     const activeScene = this.scene.get(this.pausedScene);
-    InputManager.init(activeScene);
+    if (activeScene) {
+      InputManager.init(activeScene);
+    }
     
     this.scene.resume(this.pausedScene);
     this.scene.stop();
@@ -96,6 +104,8 @@ export default class PauseScene extends Phaser.Scene {
 
   quitToMenu() {
     Logger.info('PauseScene', 'Retornando ao Menu Principal.');
+    InputManager.cleanListeners();
+    this.scene.stop('UIScene');
     this.scene.stop(this.pausedScene);
     this.scene.start('MenuScene');
   }

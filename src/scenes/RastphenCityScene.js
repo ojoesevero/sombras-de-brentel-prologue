@@ -27,46 +27,126 @@ export default class RastphenCityScene extends Phaser.Scene {
     this.cameras.main.fadeIn(400, 0, 0, 0);
 
     // Limites da malha urbana (2400x1800)
+    // Limites da malha urbana (2400x1800)
     this.physics.world.setBounds(0, 0, 2400, 1800);
-    this.add.rectangle(0, 0, 2400, 1800, 0x4a4a4a).setOrigin(0); // Piso basalto
+    this.add.rectangle(0, 0, 2400, 1800, 0x3d3d3d).setOrigin(0); // Piso basalto escuro
+
+    // 1. Camadas Visuais de Caminhos (Avenidas de Paralelepípedos e Terra Batida)
+    // Avenida Norte-Sul: Templo (y: 370) -> Praça Central (y: 900) -> Portão Sul (y: 1750)
+    this.add.rectangle(1200, 1060, 180, 1380, 0x5a554e).setOrigin(0.5); // Base de terra
+    this.add.rectangle(1200, 1060, 140, 1380, 0x757069).setOrigin(0.5); // Paralelepípedos
+    for (let py = 380; py <= 1740; py += 40) {
+      this.add.rectangle(1200, py, 136, 2, 0x47433e, 0.45);
+    }
+
+    // Avenida Leste-Oeste: Taverna (x: 300, y: 800) -> Praça Central (x: 1200, y: 900)
+    this.add.rectangle(750, 850, 900, 150, 0x5a554e).setOrigin(0.5);
+    this.add.rectangle(750, 850, 900, 110, 0x757069).setOrigin(0.5);
+    for (let px = 320; px <= 1180; px += 40) {
+      this.add.rectangle(px, 850, 2, 106, 0x47433e, 0.45);
+    }
+
+    // Praça Central do Mercado (Ladrilhos em Anel Circular)
+    this.add.circle(1200, 900, 230, 0x5a554e);
+    this.add.circle(1200, 900, 200, 0x827c73);
+    this.add.circle(1200, 900, 160, 0x6e6860);
+    this.add.circle(1200, 900, 60, 0x44403b);
+    this.add.text(1200, 900, 'PRAÇA CENTRAL\nMERCADO DE RASTPHEN', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '12px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      align: 'center'
+    }).setOrigin(0.5);
 
     this.staticGroup = this.physics.add.staticGroup();
 
-    // Procedural genérico de construções e muralhas
-    const addBuilding = (x, y, w, h) => {
-      const b = this.add.rectangle(x, y, w, h, 0x2d2d2d);
+    // Procedural de construções e muralhas
+    const addBuilding = (x, y, w, h, name = null) => {
+      const b = this.add.rectangle(x, y, w, h, 0x222226);
+      b.setStrokeStyle(3, 0x3e3e48);
       this.physics.add.existing(b, true);
       this.staticGroup.add(b);
+      if (name) {
+        this.add.text(x, y, name, {
+          fontFamily: 'Arial',
+          fontSize: '18px',
+          color: '#ffffff',
+          fontStyle: 'bold',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          padding: { x: 8, y: 4 }
+        }).setOrigin(0.5).setDepth(4);
+      }
     };
 
     // Muralhas da Cidade
-    addBuilding(1200, 10, 2400, 40);  // Muro Norte
-    addBuilding(10, 900, 20, 1800);   // Muro Oeste
-    addBuilding(2390, 900, 20, 1800); // Muro Leste
+    addBuilding(1200, 15, 2400, 30);  // Muro Norte
+    addBuilding(15, 900, 30, 1800);   // Muro Oeste
+    addBuilding(2385, 900, 30, 1800); // Muro Leste
     
-    // Praça Central (Decalques)
-    this.add.circle(1200, 900, 150, 0x666666);
-    this.add.text(1200, 900, 'Mercado Central', { fill: '#aaa' }).setOrigin(0.5);
+    // Monumentos Principais
+    addBuilding(1200, 200, 600, 280, 'TEMPLO DE PALMEM');
+    addBuilding(300, 800, 420, 280, 'TAVERNA CAUDA DO DRAGÃO');
+    addBuilding(2000, 800, 380, 260, 'QUARTEL DA GUARDA');
 
-    // Monumentos e Construções Relevantes
-    addBuilding(1200, 200, 600, 300);
-    this.add.text(1200, 250, 'Templo de Palmem', { fill: '#fff', fontSize: '24px' }).setOrigin(0.5);
+    // 2. Decoração Urbana: Barracas de Feira na Praça Central
+    const addMarketStall = (x, y, colorPrimary, colorStripe, label) => {
+      this.add.ellipse(x, y + 25, 80, 22, 0x000000, 0.4).setDepth(1);
+      const stall = this.add.rectangle(x, y, 76, 44, colorPrimary).setDepth(2);
+      stall.setStrokeStyle(2, 0x111111);
+      this.physics.add.existing(stall, true);
+      this.staticGroup.add(stall);
 
-    addBuilding(300, 800, 400, 300);
-    this.add.text(300, 800, 'Taverna Cauda do Dragão', { fill: '#fff', fontSize: '20px' }).setOrigin(0.5);
+      // Toldo listrado
+      for (let sx = -30; sx <= 30; sx += 15) {
+        this.add.rectangle(x + sx, y - 8, 8, 26, colorStripe).setDepth(3);
+      }
+
+      this.add.text(x, y - 30, label, {
+        fontFamily: 'Arial',
+        fontSize: '8px',
+        color: '#ffd700',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(0,0,0,0.75)',
+        padding: { x: 3, y: 1 }
+      }).setOrigin(0.5).setDepth(4);
+    };
+
+    addMarketStall(1060, 830, 0x2980b9, 0xffffff, 'BARRACA DE TECIDOS');
+    addMarketStall(1340, 830, 0xc0392b, 0xf1c40f, 'BARRACA DE ESPECIARIAS');
+    addMarketStall(1060, 970, 0x27ae60, 0xf39c12, 'FRUTAS & PROVISÕES');
+    addMarketStall(1340, 970, 0x8e44ad, 0xecf0f1, 'ARTESANATO & POÇÕES');
+
+    // Carroças de mercadores estacionadas (`tex_cart`)
+    this.add.image(920, 880, 'tex_cart').setScale(0.8).setDepth(2);
+    this.add.image(1480, 920, 'tex_cart').setScale(0.8).setFlipX(true).setDepth(2);
+
+    // Árvores de rua e postes de iluminação
+    const addStreetTree = (x, y) => {
+      this.add.ellipse(x, y + 20, 36, 14, 0x000000, 0.4).setDepth(1);
+      const tree = this.add.circle(x, y, 22, 0x27ae60).setDepth(2);
+      this.add.circle(x - 4, y - 4, 16, 0x2ecc71).setDepth(2);
+      this.physics.add.existing(tree, true);
+      this.staticGroup.add(tree);
+    };
+
+    addStreetTree(1100, 480); addStreetTree(1300, 480);
+    addStreetTree(1100, 680); addStreetTree(1300, 680);
+    addStreetTree(1100, 1200); addStreetTree(1300, 1200);
+    addStreetTree(1100, 1450); addStreetTree(1300, 1450);
 
     // Efeitos Ambientais: Pássaros voando pelo céu da cidade
     EnvironmentFX.addFlyingBirds(this, { x: 0, y: 0, w: 2400, h: 1800 });
 
-    // NPCs da Cidade (Pixel Art com sombras e tags)
+    // 3. NPCs da Cidade e Comércio
     this.staticGroupNPCs = this.physics.add.staticGroup();
     
-    // Mercador Yânil
+    // Mercador Yânil Resty (Ponto Fixo de Comércio)
     this.add.ellipse(1200, 863, 22, 8, 0x000000, 0.35).setDepth(2);
-    this.mercadorYanil = this.add.sprite(1200, 850, AssetsConfig.sprites.veronica || 'spr_npc_default').setDepth(3);
+    this.mercadorYanil = this.add.sprite(1200, 850, AssetsConfig.sprites.yanil || 'spr_yanil').setDepth(3);
     this.physics.add.existing(this.mercadorYanil, true);
     this.staticGroupNPCs.add(this.mercadorYanil);
-    this.add.text(1200, 828, 'YÂNIL', {
+    this.add.text(1200, 828, 'YANIL RESTY (LOJA)', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '9px',
       color: '#ffd700',
@@ -75,7 +155,7 @@ export default class RastphenCityScene extends Phaser.Scene {
       padding: { x: 4, y: 2 }
     }).setOrigin(0.5).setDepth(4);
 
-    // Guarda Telmer (Portão Sul)
+    // Guardas do Portão Sul
     this.add.ellipse(1100, 1763, 22, 8, 0x000000, 0.35).setDepth(2);
     this.guardaTelmer = this.add.sprite(1100, 1750, AssetsConfig.sprites.guard).setDepth(3);
     this.physics.add.existing(this.guardaTelmer, true);
@@ -89,7 +169,6 @@ export default class RastphenCityScene extends Phaser.Scene {
       padding: { x: 4, y: 2 }
     }).setOrigin(0.5).setDepth(4);
 
-    // Guarda Breno (Portão Sul)
     this.add.ellipse(1300, 1763, 22, 8, 0x000000, 0.35).setDepth(2);
     this.guardaBreno = this.add.sprite(1300, 1750, AssetsConfig.sprites.guard).setDepth(3);
     this.physics.add.existing(this.guardaBreno, true);
@@ -103,17 +182,60 @@ export default class RastphenCityScene extends Phaser.Scene {
       padding: { x: 4, y: 2 }
     }).setOrigin(0.5).setDepth(4);
 
-    // Guarda de Patrulha da Praça (NPCWalker)
+    // 4. População Viva: NPCs Civis e Patrulhas em Movimento Contínuo (NPCWalker)
+    this.walkers = [];
+
+    // Guarda da Praça
     this.cityPatrol = new NPCWalker(this, 1100, 950, AssetsConfig.sprites.guard, {
       name: 'Vigia de Rastphen',
-      speed: 38,
+      speed: 40,
       depth: 3,
       waypoints: [
-        { x: 1100, y: 950, waitTime: 3000 },
-        { x: 1300, y: 950, waitTime: 3000 },
-        { x: 1200, y: 1050, waitTime: 2500 }
+        { x: 1100, y: 950, waitTime: 2500 },
+        { x: 1300, y: 950, waitTime: 2500 },
+        { x: 1200, y: 1060, waitTime: 2000 }
       ]
     });
+    this.walkers.push(this.cityPatrol);
+
+    // Ronda de Soldados do Portão Norte/Templo
+    this.soldierSquad = new NPCWalker(this, 1200, 480, AssetsConfig.sprites.soldier || AssetsConfig.sprites.guard, {
+      name: 'Soldado de Patrulha',
+      speed: 45,
+      depth: 3,
+      waypoints: [
+        { x: 1200, y: 480, waitTime: 2000 },
+        { x: 1200, y: 750, waitTime: 1800 },
+        { x: 1150, y: 600, waitTime: 1500 }
+      ]
+    });
+    this.walkers.push(this.soldierSquad);
+
+    // Cidadão Tobias (Caminha da Taverna ao Mercado)
+    this.civilianTobias = new NPCWalker(this, 550, 850, AssetsConfig.sprites.veronica || 'spr_npc_default', {
+      name: 'Tobias (Cidadão)',
+      speed: 35,
+      depth: 3,
+      waypoints: [
+        { x: 550, y: 850, waitTime: 3000 },
+        { x: 1000, y: 850, waitTime: 4000 },
+        { x: 800, y: 850, waitTime: 2000 }
+      ]
+    });
+    this.walkers.push(this.civilianTobias);
+
+    // Cidadã Martha (Caminha pela Feira)
+    this.civilianMartha = new NPCWalker(this, 1150, 1020, 'spr_npc_default', {
+      name: 'Martha (Compradora)',
+      speed: 32,
+      depth: 3,
+      waypoints: [
+        { x: 1150, y: 1020, waitTime: 3500 },
+        { x: 1250, y: 1020, waitTime: 3500 },
+        { x: 1200, y: 940, waitTime: 2500 }
+      ]
+    });
+    this.walkers.push(this.civilianMartha);
 
     // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 1200);
@@ -180,6 +302,17 @@ export default class RastphenCityScene extends Phaser.Scene {
       }
 
       if (this.currentInteractTarget) {
+        if (this.currentInteractTarget === 'mercador_yanil') {
+          Logger.info('Intent', 'Abrindo loja do Mercador Yanil Resty.');
+          this.interactIndicator.setVisible(false);
+          this.scene.pause();
+          this.scene.launch('YanilShopScene', {
+            previousSceneKey: 'RastphenCityScene',
+            player: this.player
+          });
+          return;
+        }
+
         let data = this.interactionsData ? this.interactionsData[this.currentInteractTarget] : null;
         if (data) {
           if (data.nodes) data = data.nodes;
@@ -215,7 +348,19 @@ export default class RastphenCityScene extends Phaser.Scene {
     addZone(this.guardaBreno, 'guardas_muralha');
   }
 
-  update() {
+  update(time, delta) {
+    if (this.player) {
+      this.player.update(time, delta);
+    }
+
+    if (this.walkers) {
+      this.walkers.forEach(w => {
+        if (typeof w.update === 'function') {
+          w.update(time, delta);
+        }
+      });
+    }
+
     if (!this.input.keyboard || !this.input.keyboard.enabled) return;
     
     // Controle de movimento delegado ao Player (FSM com instâncias em cache)

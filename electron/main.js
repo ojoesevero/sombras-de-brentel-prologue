@@ -3,24 +3,41 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Garante que o diretório de dados do usuário e logs/ existam
+// Garante que o diretório de dados do usuário e a pasta raiz logs/ existam
 const userDataDir = app.getPath('userData');
-const logsDir = path.join(userDataDir, 'logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
+const rootLogsDir = path.join(process.cwd(), 'logs');
+const userLogsDir = path.join(userDataDir, 'logs');
+
+[rootLogsDir, userLogsDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (e) {
+      console.warn('Falha ao criar diretório de logs:', dir, e);
+    }
+  }
+});
 
 ipcMain.on('write-log', (event, logEntry) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const logFile = path.join(logsDir, `${today}.log`);
     const line = typeof logEntry === 'string' ? logEntry : JSON.stringify(logEntry);
-    fs.appendFileSync(logFile, `[${new Date().toLocaleTimeString()}] ${line}\n`, 'utf8');
+    const formattedLine = line.endsWith('\n') ? line : `${line}\n`;
+
+    // 1. Gravação física contínua em logs/game_interactions.log (raiz do projeto)
+    const interactionLog = path.join(rootLogsDir, 'game_interactions.log');
+    fs.appendFileSync(interactionLog, formattedLine, 'utf8');
+
+    // 2. Gravação diária no diretório userData do usuário
+    const today = new Date().toISOString().split('T')[0];
+    const userLog = path.join(userLogsDir, `${today}.log`);
+    fs.appendFileSync(userLog, formattedLine, 'utf8');
   } catch (err) {
-    console.error('Erro ao escrever log:', err);
+    console.error('Erro ao escrever log físico:', err);
   }
 });
 
@@ -89,27 +106,54 @@ function createWindow() {
     : path.join(__dirname, 'preload.js');
 
   const mainWindow = new BrowserWindow({
-    width: 1024,
+    width: isDev ? 1360 : 1024,
     height: 768,
     useContentSize: true,
+    show: true,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false
     }
   });
 
   mainWindow.setMenu(null);
-  mainWindow.setAspectRatio(4 / 3);
+  if (!isDev) {
+    mainWindow.setAspectRatio(4 / 3);
+  }
+
+  // Prevenção contra abertura indevida de janelas filhas ou popups
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https://') || url.startsWith('http://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  // Prevenção contra navegações não autorizadas para fora do jogo
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (isDev && url.startsWith('http://127.0.0.1:3000')) {
+      return;
+    }
+    if (!url.startsWith('file://')) {
+      event.preventDefault();
+      if (url.startsWith('https://') || url.startsWith('http://')) {
+        shell.openExternal(url);
+      }
+    }
+  });
 
   if (isDev) {
-    const devServerUrl = 'http://localhost:3000';
+    const devServerUrl = 'http://127.0.0.1:3000';
     
     // Tratamento de retry resiliente para o loadURL durante o boot do Vite
-    const loadWithRetry = (retries = 10, delay = 500) => {
+    const loadWithRetry = (retries = 15, delay = 400) => {
       mainWindow.loadURL(devServerUrl).catch((err) => {
         if (retries > 0) {
-          console.log(`[Electron] Vite dev server ainda não respondeu, tentando novamente em ${delay}ms... (${retries} tentativas restantes)`);
+          console.log(`[Electron] Vite dev server ainda inicializando, reconectando em ${delay}ms... (${retries} restantes)`);
           setTimeout(() => loadWithRetry(retries - 1, delay), delay);
         } else {
           console.error('[Electron] Falha persistente ao conectar ao servidor Vite:', err);
@@ -118,7 +162,8 @@ function createWindow() {
     };
 
     loadWithRetry();
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
+    // Abre as ferramentas de desenvolvedor (DevTools) acopladas à direita para visualização de logs/erros
+    mainWindow.webContents.openDevTools({ mode: 'right' });
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
   }

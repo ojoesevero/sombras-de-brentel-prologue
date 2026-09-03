@@ -9,12 +9,15 @@ import SettingsScene from './scenes/SettingsScene.js';
 import TavernScene from './scenes/TavernScene.js';
 import RastphenCityScene from './scenes/RastphenCityScene.js';
 import TempleScene from './scenes/TempleScene.js';
+import TempleNorthScene from './scenes/TempleNorthScene.js';
 import ForestRouteScene from './scenes/ForestRouteScene.js';
 import GameScene from './scenes/GameScene.js';
 import BattleScene from './scenes/BattleScene.js';
 import RewardScene from './scenes/RewardScene.js';
 import GameOverScene from './scenes/GameOverScene.js';
 import PauseScene from './scenes/PauseScene.js';
+import InventoryScene from './scenes/InventoryScene.js';
+import YanilShopScene from './scenes/YanilShopScene.js';
 import DemoEndScene from './scenes/DemoEndScene.js';
 import DungeonScene from './scenes/DungeonScene.js';
 import UIScene from './scenes/UIScene.js';
@@ -41,6 +44,7 @@ const config = {
     TavernScene,
     RastphenCityScene,
     TempleScene,
+    TempleNorthScene,
     ForestRouteScene,
     DungeonScene,
     GameScene,
@@ -48,6 +52,8 @@ const config = {
     RewardScene,
     GameOverScene,
     PauseScene,
+    InventoryScene,
+    YanilShopScene,
     DemoEndScene,
     UIScene
   ],

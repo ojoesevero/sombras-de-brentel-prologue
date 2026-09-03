@@ -58,7 +58,6 @@ class InputManager extends Phaser.Events.EventEmitter {
    */
   cleanListeners() {
     this.resetVirtualKeys();
-    this.removeAllListeners();
     if (this.scene) {
       if (this.scene.input && this.scene.input.keyboard) {
         this.scene.input.keyboard.off('keydown', this.handleKeyboard, this);
@@ -122,6 +121,15 @@ class InputManager extends Phaser.Events.EventEmitter {
    * Trata inputs diretos do teclado via eventos discretos.
    */
   handleKeyboard(event) {
+    if (!event) return;
+
+    if (event.stopPropagation) {
+      event.stopPropagation();
+    }
+    if (event.stopImmediatePropagation) {
+      event.stopImmediatePropagation();
+    }
+
     switch (event.keyCode) {
       case Phaser.Input.Keyboard.KeyCodes.UP:
       case Phaser.Input.Keyboard.KeyCodes.W:
@@ -144,10 +152,16 @@ class InputManager extends Phaser.Events.EventEmitter {
       case Phaser.Input.Keyboard.KeyCodes.Z:
         this.emitAction('CONFIRM');
         break;
+      case Phaser.Input.Keyboard.KeyCodes.SHIFT:
+      case Phaser.Input.Keyboard.KeyCodes.I:
+        this.emitAction('INVENTORY');
+        break;
       case Phaser.Input.Keyboard.KeyCodes.X:
+        this.emitAction('INVENTORY');
         this.emitAction('CANCEL');
         break;
       case Phaser.Input.Keyboard.KeyCodes.ESC:
+        this.emitAction('CANCEL');
         this.emitAction('MENU');
         break;
     }
@@ -179,6 +193,13 @@ class InputManager extends Phaser.Events.EventEmitter {
   }
 
   emitAction(action) {
+    if (action === 'INVENTORY') {
+      const now = Date.now();
+      if (this._lastInventoryTime && (now - this._lastInventoryTime < 250)) {
+        return;
+      }
+      this._lastInventoryTime = now;
+    }
     this.emit(action);
     const sceneName = (this.scene && this.scene.scene) ? this.scene.scene.key : 'Global';
     Logger.input('KEY_EVENT', action, sceneName);

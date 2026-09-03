@@ -92,32 +92,10 @@ export default class PreloadScene extends Phaser.Scene {
       fontSize: '11px',
       color: '#666666'
     }).setOrigin(0.5);
-
-    // Suporte extensível a spritesheets customizadas na pasta public/assets/images/sprites/
-    this.load.spritesheet('goblin_idle', 'assets/images/sprites/goblin_idle.png', { frameWidth: 32, frameHeight: 32 });
-    this.load.spritesheet('goblin_attack', 'assets/images/sprites/goblin_attack.png', { frameWidth: 32, frameHeight: 32 });
   }
 
   create() {
     Logger.info('PreloadScene', 'Bancos carregados. Construindo texturas procedurais Pixel Art...');
-
-    // Registro de animações de spritesheets customizadas se os arquivos existirem
-    if (this.textures.exists('goblin_idle') && this.textures.get('goblin_idle').frameTotal > 1) {
-      this.anims.create({
-        key: 'anim_goblin_idle',
-        frames: this.anims.generateFrameNumbers('goblin_idle', { start: 0, end: -1 }),
-        frameRate: 6,
-        repeat: -1
-      });
-    }
-    if (this.textures.exists('goblin_attack') && this.textures.get('goblin_attack').frameTotal > 1) {
-      this.anims.create({
-        key: 'anim_goblin_attack',
-        frames: this.anims.generateFrameNumbers('goblin_attack', { start: 0, end: -1 }),
-        frameRate: 8,
-        repeat: 0
-      });
-    }
 
     // 1. Cenário Detalhado da Taverna (bg_tavern)
     this.generateTavernBackgroundTexture();
@@ -150,7 +128,10 @@ export default class PreloadScene extends Phaser.Scene {
     // 10. Baús de Tesouro e Partículas de Moeda
     this.generateChestAndCoinTextures();
 
-    Logger.info('PreloadScene', 'Pipeline de Pixel Art, Templo e Baús inicializado.');
+    // 11. Carroça Detalhada em Pixel Art
+    this.generateCartTexture();
+
+    Logger.info('PreloadScene', 'Pipeline de Pixel Art, Templo, Baús e Carroça inicializado.');
     this.scene.start('IntroSplashScene');
   }
 
@@ -439,16 +420,127 @@ export default class PreloadScene extends Phaser.Scene {
       g.fillRect(17, 27, 5, 5);
     });
 
-    // 7. Soldado da Guarda de Rastphen (spr_guard)
+    // 7. Soldado da Guarda de Rastphen (spr_guard - Chibi Micro Pixel Art)
     makeSprite(AssetsConfig.sprites.guard, (g) => {
-      g.fillStyle(0x7f8c8d, 1); // Elmo de ferro
-      g.fillRect(10, 5, 12, 10);
-      g.fillStyle(0xbdc3c7, 1); // Armadura
-      g.fillRect(9, 15, 14, 12);
-      g.fillStyle(0xc0392b, 1); // Capa vermelha
-      g.fillRect(6, 16, 3, 11);
-      g.fillRect(23, 16, 3, 11);
-      g.fillStyle(0x2c3e50, 1);
+      // Elmo de ferro polido com viseira e pluma
+      g.fillStyle(0x7f8c8d, 1); // Elmo base
+      g.fillRect(9, 4, 14, 11);
+      g.fillStyle(0xbdc3c7, 1); // Brilho de metal no elmo
+      g.fillRect(10, 4, 12, 3);
+      g.fillStyle(0xd63031, 1); // Pluma vermelha de capitão no topo
+      g.fillRect(14, 1, 4, 4);
+      g.fillRect(16, 2, 3, 3);
+      // Fenda da viseira de combate
+      g.fillStyle(0x1e272e, 1);
+      g.fillRect(11, 9, 10, 3);
+      g.fillStyle(0xf1c40f, 1); // Olhar determinado através da fenda
+      g.fillRect(13, 10, 2, 1);
+      g.fillRect(17, 10, 2, 1);
+      // Armadura peitoral de aço com rebites e ombreiras
+      g.fillStyle(0xbdc3c7, 1); // Peitoral
+      g.fillRect(8, 15, 16, 11);
+      g.fillStyle(0xd4af37, 1); // Detalhe dourado no peitoral e ombreiras
+      g.fillRect(6, 14, 4, 6);
+      g.fillRect(22, 14, 4, 6);
+      g.fillRect(10, 18, 12, 2);
+      // Capa carmesim drapeada
+      g.fillStyle(0x962d2d, 1);
+      g.fillRect(5, 16, 3, 11);
+      g.fillRect(24, 16, 3, 11);
+      // Cinto de couro com fivela de latão
+      g.fillStyle(0x4a2a18, 1);
+      g.fillRect(9, 23, 14, 3);
+      g.fillStyle(0xf1c40f, 1);
+      g.fillRect(15, 23, 2, 3);
+      // Botas pesadas de ferro
+      g.fillStyle(0x2f3542, 1);
+      g.fillRect(9, 26, 5, 6);
+      g.fillRect(18, 26, 5, 6);
+    });
+
+    // 7.1. Soldado Mercenário Inimigo (spr_soldier - Micro Pixel Art)
+    makeSprite(AssetsConfig.sprites.soldier, (g) => {
+      // Elmo de ferro escuro cônico com nasal
+      g.fillStyle(0x57606f, 1);
+      g.fillRect(10, 4, 12, 11);
+      g.fillStyle(0x747d8c, 1);
+      g.fillRect(11, 4, 10, 3);
+      // Fenda e nasal
+      g.fillStyle(0x1e272e, 1);
+      g.fillRect(11, 9, 4, 2);
+      g.fillRect(17, 9, 4, 2);
+      g.fillStyle(0x57606f, 1); // Protetor nasal
+      g.fillRect(15, 8, 2, 5);
+      // Cota de malha e gibão de couro reforçado
+      g.fillStyle(0x8395a7, 1); // Malha
+      g.fillRect(8, 15, 16, 11);
+      g.fillStyle(0x5d4037, 1); // Colete de couro
+      g.fillRect(10, 16, 12, 9);
+      // Rebites de ferro
+      g.fillStyle(0xdcdde1, 1);
+      g.fillRect(11, 17, 2, 2);
+      g.fillRect(19, 17, 2, 2);
+      // Braço com adaga / espada curta
+      g.fillStyle(0xdcdde1, 1);
+      g.fillRect(4, 16, 3, 8);
+      // Calças e botas
+      g.fillStyle(0x2f3542, 1);
+      g.fillRect(9, 26, 5, 6);
+      g.fillRect(18, 26, 5, 6);
+    });
+
+    // 7.2. Ilídiz (spr_ilidiz - Acólita Sagrada)
+    makeSprite(AssetsConfig.sprites.ilidiz, (g) => {
+      // Capuz e manto lilás suave
+      g.fillStyle(0x8e44ad, 1);
+      g.fillRect(9, 4, 14, 11);
+      g.fillStyle(0x9b59b6, 1);
+      g.fillRect(10, 5, 12, 9);
+      // Rosto delicado
+      g.fillStyle(0xf8c291, 1);
+      g.fillRect(12, 8, 8, 7);
+      // Olhos expressivos
+      g.fillStyle(0x2980b9, 1);
+      g.fillRect(13, 10, 2, 2);
+      g.fillRect(17, 10, 2, 2);
+      // Túnica lilás com estola branca
+      g.fillStyle(0x6c5ce7, 1);
+      g.fillRect(8, 15, 16, 12);
+      g.fillStyle(0xffffff, 0.9); // Estola sagrada
+      g.fillRect(13, 15, 6, 12);
+      // Amuleto de Lízan dourado
+      g.fillStyle(0xffd700, 1);
+      g.fillRect(15, 17, 2, 4);
+      // Sapatos
+      g.fillStyle(0x34495e, 1);
+      g.fillRect(11, 27, 4, 5);
+      g.fillRect(17, 27, 4, 5);
+    });
+
+    // 7.3. Mercador e Mercenário Yânil Resty (spr_yanil - Cap. 7)
+    makeSprite(AssetsConfig.sprites.yanil, (g) => {
+      // Turbante / Capuz azul marinho com pena exótica
+      g.fillStyle(0x1e3799, 1);
+      g.fillRect(9, 4, 14, 11);
+      g.fillStyle(0x4a69bd, 1);
+      g.fillRect(10, 4, 12, 4);
+      g.fillStyle(0xffd700, 1); // Broche dourado
+      g.fillRect(14, 5, 4, 3);
+      // Rosto astuto
+      g.fillStyle(0xf5cd79, 1);
+      g.fillRect(11, 8, 10, 7);
+      g.fillStyle(0x2d3436, 1); // Cavanhaque fino
+      g.fillRect(14, 13, 4, 2);
+      // Sobretudo nobre azul-noite com gola de veludo
+      g.fillStyle(0x0c2461, 1);
+      g.fillRect(8, 15, 16, 12);
+      g.fillStyle(0xb71540, 1); // Faixa carmesim na cintura
+      g.fillRect(8, 22, 16, 3);
+      // Rolo de tecido raro preso às costas
+      g.fillStyle(0xe58e26, 1);
+      g.fillRect(5, 14, 3, 11);
+      // Botas de couro de viagem
+      g.fillStyle(0x4a2a18, 1);
       g.fillRect(10, 27, 5, 5);
       g.fillRect(17, 27, 5, 5);
     });
@@ -1025,4 +1117,144 @@ export default class PreloadScene extends Phaser.Scene {
       g.destroy();
     }
   }
+
+  /**
+   * Gera a Carroça de Madeira com Lona e Rodas detalhadas em Pixel Art (tex_cart: 220x130).
+   */
+  generateCartTexture() {
+    if (this.textures.exists('tex_cart')) return;
+
+    const g = this.make.graphics({ x: 0, y: 0, add: false });
+    const w = 220;
+    const h = 130;
+
+    // Sombra oval projetada sob a carroça
+    g.fillStyle(0x000000, 0.4);
+    g.fillEllipse(110, 118, 100, 12);
+
+    // Viga mestra do chassi e engate frontal
+    g.fillStyle(0x3e2723, 1);
+    g.fillRect(15, 88, 190, 10);
+    g.fillStyle(0x27160c, 1);
+    g.fillRect(5, 92, 25, 6); // Lança de tração
+    g.fillStyle(0x57606f, 1); // Anel de ferro da ponta da lança
+    g.strokeCircle(6, 95, 4);
+
+    // Estrutura / Corpo da Carroça (Pranchas de carvalho envelhecido)
+    const plankColors = [0x5d4037, 0x4e342e, 0x6d4c41, 0x3e2723];
+    for (let i = 0; i < 4; i++) {
+      g.fillStyle(plankColors[i % plankColors.length], 1);
+      g.fillRect(30, 56 + (i * 8), 160, 8);
+      // Ranhura entre pranchas
+      g.fillStyle(0x1a0f08, 0.7);
+      g.fillRect(30, 56 + (i * 8) + 7, 160, 1);
+    }
+
+    // Reforços verticais de ferro e pregos
+    [30, 70, 110, 150, 190].forEach(bx => {
+      g.fillStyle(0x2d3436, 1);
+      g.fillRect(bx - 3, 54, 6, 36);
+      g.fillStyle(0x636e72, 1);
+      g.fillRect(bx - 2, 54, 2, 36); // Brilho de metal
+      // Rebites / Pregos
+      g.fillStyle(0xdcdde1, 1);
+      g.fillRect(bx - 1, 58, 2, 2);
+      g.fillRect(bx - 1, 72, 2, 2);
+      g.fillRect(bx - 1, 84, 2, 2);
+    });
+
+    // Banco do cocheiro frontal
+    g.fillStyle(0x4e342e, 1);
+    g.fillRect(16, 68, 16, 8);
+    g.fillStyle(0x27160c, 1);
+    g.fillRect(14, 76, 18, 4);
+
+    // Lona / Toldo Arqueado (Canvas Cover com vincos e sombreamento)
+    // Fundo escuro do interior visto pelas aberturas
+    g.fillStyle(0x1a120b, 1);
+    g.fillRoundedRect(35, 12, 150, 48, 20);
+
+    // Toldo de tecido cru / lona clara
+    g.fillStyle(0xede6d6, 1);
+    g.fillRoundedRect(33, 10, 154, 48, 22);
+
+    // Sombreamento degradê e dobras da lona
+    g.fillStyle(0xd5ccb8, 1);
+    g.fillRoundedRect(35, 20, 150, 36, 10);
+    g.fillStyle(0xbab09c, 1);
+    g.fillRoundedRect(35, 36, 150, 20, 4);
+
+    // 5 Arcos de suporte estruturais de madeira sob a lona
+    [38, 72, 110, 148, 182].forEach(ax => {
+      g.lineStyle(3, 0x6d4c41, 0.9);
+      g.beginPath();
+      g.moveTo(ax, 56);
+      g.lineTo(ax, 10);
+      g.strokePath();
+
+      // Cordas de amarração presas aos ganchos laterais
+      g.lineStyle(1, 0x8d6e63, 0.8);
+      g.lineBetween(ax, 54, ax, 66);
+      g.fillStyle(0x2d3436, 1);
+      g.fillCircle(ax, 66, 2); // Gancho de ferro
+    });
+
+    // Barra de grade de cela de escravos visível na traseira aberta
+    g.fillStyle(0x2f3542, 1);
+    for (let barX = 165; barX <= 185; barX += 5) {
+      g.fillRect(barX, 22, 2, 34);
+    }
+
+    // Lanterna de viagem frontal acesa com brilho dourado
+    g.fillStyle(0x2d3436, 1);
+    g.fillRect(18, 52, 2, 8); // Gancho
+    g.fillStyle(0xd4af37, 1); // Armação da lanterna
+    g.fillRect(15, 58, 8, 10);
+    g.fillStyle(0xffa502, 1); // Vidro com fogo
+    g.fillRect(17, 60, 4, 6);
+    g.fillStyle(0xfff200, 1); // Núcleo da chama
+    g.fillRect(18, 62, 2, 3);
+
+    // Rodas Pesadas com Raios de Madeira e Aro de Aço
+    const drawWheel = (cx, cy, radius) => {
+      // Sombra traseira da roda
+      g.fillStyle(0x111111, 0.5);
+      g.fillCircle(cx, cy + 2, radius);
+
+      // Aro externo de ferro negro
+      g.fillStyle(0x2d3436, 1);
+      g.fillCircle(cx, cy, radius);
+
+      // Aro de madeira interno
+      g.fillStyle(0x5d4037, 1);
+      g.fillCircle(cx, cy, radius - 3);
+      g.fillStyle(0x3e2723, 1);
+      g.fillCircle(cx, cy, radius - 5);
+
+      // 8 Raios de madeira
+      g.lineStyle(2, 0x8d6e63, 1);
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+        g.beginPath();
+        g.moveTo(cx, cy);
+        g.lineTo(cx + Math.cos(angle) * (radius - 5), cy + Math.sin(angle) * (radius - 5));
+        g.strokePath();
+      }
+
+      // Cubo central da roda com rebite dourado
+      g.fillStyle(0x2d3436, 1);
+      g.fillCircle(cx, cy, 5);
+      g.fillStyle(0xd4af37, 1);
+      g.fillCircle(cx, cy, 2);
+    };
+
+    // Roda Traseira Maior (x: 65, y: 98, r: 24)
+    drawWheel(65, 98, 24);
+
+    // Roda Dianteira (x: 160, y: 100, r: 21)
+    drawWheel(160, 100, 21);
+
+    g.generateTexture('tex_cart', w, h);
+    g.destroy();
+  }
 }
+

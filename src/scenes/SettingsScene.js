@@ -54,13 +54,39 @@ export default class SettingsScene extends Phaser.Scene {
     });
 
     InputManager.init(this);
-    InputManager.onAction('DOWN', () => this.moveSelection(1));
-    InputManager.onAction('UP', () => this.moveSelection(-1));
-    InputManager.onAction('CONFIRM', () => this.options[this.selectedIndex].action());
-    InputManager.onAction('CANCEL', () => this.goBack());
+    this.setupInputs();
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      InputManager.cleanListeners();
+    });
+
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => {
+      InputManager.cleanListeners();
+    });
 
     this.updateSelectionVisuals();
     Logger.info('SettingsScene', 'Opções renderizadas.');
+  }
+
+  setupInputs() {
+    InputManager.onAction('DOWN', () => {
+      if (!this.sys || !this.sys.isActive()) return;
+      this.moveSelection(1);
+    });
+    InputManager.onAction('UP', () => {
+      if (!this.sys || !this.sys.isActive()) return;
+      this.moveSelection(-1);
+    });
+    InputManager.onAction('CONFIRM', () => {
+      if (!this.sys || !this.sys.isActive()) return;
+      if (this.options && this.options[this.selectedIndex]) {
+        this.options[this.selectedIndex].action();
+      }
+    });
+    InputManager.onAction('CANCEL', () => {
+      if (!this.sys || !this.sys.isActive()) return;
+      this.goBack();
+    });
   }
 
   toggleControlMode() {
@@ -105,6 +131,7 @@ export default class SettingsScene extends Phaser.Scene {
   }
 
   goBack() {
+    InputManager.cleanListeners();
     this.scene.start('MenuScene');
   }
 
@@ -121,13 +148,19 @@ export default class SettingsScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((textObj, i) => {
-      if (i === this.selectedIndex) {
-        textObj.setColor('#ffd700');
-        textObj.setText(`> ${this.options[i].text} <`);
-      } else {
-        textObj.setColor('#aaaaaa');
-        textObj.setText(this.options[i].text);
+      if (!textObj || !textObj.active || !textObj.scene || !textObj.style) return;
+      try {
+        if (i === this.selectedIndex) {
+          textObj.setColor('#ffd700');
+          textObj.setText(`> ${this.options[i].text} <`);
+        } else {
+          textObj.setColor('#aaaaaa');
+          textObj.setText(this.options[i].text);
+        }
+      } catch (err) {
+        // Ignora falhas de renderização em transição
       }
     });
   }

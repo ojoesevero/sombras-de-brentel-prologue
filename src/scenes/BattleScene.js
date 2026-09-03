@@ -264,22 +264,19 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   changeTarget(dir) {
-    let newIndex = this.selectedEnemyIndex + dir;
-    if (newIndex < 0) newIndex = this.enemies.length - 1;
-    if (newIndex >= this.enemies.length) newIndex = 0;
+    const step = dir === 0 ? 1 : dir;
+    let newIndex = (this.selectedEnemyIndex + dir + this.enemies.length) % this.enemies.length;
     
     // Pula inimigos mortos
     let attempts = 0;
-    while (this.enemies[newIndex].hp <= 0 && attempts < this.enemies.length) {
-      newIndex += dir;
-      if (newIndex < 0) newIndex = this.enemies.length - 1;
-      if (newIndex >= this.enemies.length) newIndex = 0;
+    while (this.enemies[newIndex] && this.enemies[newIndex].hp <= 0 && attempts < this.enemies.length) {
+      newIndex = (newIndex + step + this.enemies.length) % this.enemies.length;
       attempts++;
     }
 
     this.selectedEnemyIndex = newIndex;
     
-    if (this.enemies[newIndex].hp <= 0) {
+    if (!this.enemies[newIndex] || this.enemies[newIndex].hp <= 0) {
       this.targetIndicator.setVisible(false);
     } else {
       this.updateTargetVisual();
@@ -533,17 +530,70 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   winBattle() {
-    Logger.info('BattleScene', 'Batalha vencida (Multi-Alvo)!');
-    this.add.text(400, 200, 'VITÓRIA', { fontSize: '40px', fill: '#ff0' }).setOrigin(0.5);
+    Logger.info('BattleScene', 'Batalha vencida (Multi-Alvo)! Processando recompensas e XP...');
     
-    this.time.delayedCall(1000, () => {
-      this.cameras.main.fadeOut(1000, 0, 0, 0);
+    // Cálculo do ganho de XP baseado nos inimigos derrotados
+    let totalXp = 0;
+    this.enemies.forEach(enemy => {
+      const lower = (enemy.name || '').toLowerCase();
+      if (lower.includes('minotaur') || lower.includes('corruptor')) {
+        totalXp += 120;
+      } else if (lower.includes('cultista') || lower.includes('iksar')) {
+        totalXp += 75;
+      } else if (lower.includes('goblin')) {
+        totalXp += 35;
+      } else {
+        totalXp += 45; // Guardas de Estayler / padrão
+      }
+    });
+    totalXp = Math.max(50, totalXp);
+
+    const xpResult = this.player.gainXP(totalXp);
+
+    // Banner Visual de Vitória
+    const bannerContainer = this.add.container(400, 180).setDepth(100);
+    const bannerBg = this.add.rectangle(0, 0, 380, xpResult.leveledUp ? 130 : 90, 0x07070e, 0.92);
+    bannerBg.setStrokeStyle(3, 0xd4af37, 1);
+    bannerContainer.add(bannerBg);
+
+    const vicText = this.add.text(0, -25, '★ VITÓRIA ★', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '28px',
+      color: '#ffd700',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+    bannerContainer.add(vicText);
+
+    const xpText = this.add.text(0, 5, `+${totalXp} XP Adquirido`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      color: '#2ecc71',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+    bannerContainer.add(xpText);
+
+    if (xpResult.leveledUp) {
+      const lvlText = this.add.text(0, 32, `★ LEVEL UP! NÍVEL ${xpResult.currentLevel} ★`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '15px',
+        color: '#ff9f1a',
+        fontStyle: 'bold'
+      }).setOrigin(0.5);
+      bannerContainer.add(lvlText);
+
+      this.cameras.main.flash(400, 255, 215, 0, 0.5);
+    }
+    
+    this.time.delayedCall(1500, () => {
+      this.cameras.main.fadeOut(800, 0, 0, 0);
       this.cameras.main.once('camerafadeoutcomplete', () => {
         this.scene.start('RewardScene', { 
           player: this.player,
           returnScene: this.returnScene,
           isOverlay: this.isOverlay,
-          isFlashback: this.isFlashback
+          isFlashback: this.isFlashback,
+          xpGained: totalXp,
+          xpResult: xpResult
         });
       });
     });

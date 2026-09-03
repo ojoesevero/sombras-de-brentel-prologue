@@ -1,6 +1,7 @@
 import Logger from '../utils/Logger.js';
 import InventoryManager from './InventoryManager.js';
 import QuestManager from './QuestManager.js';
+import AchievementManager from './AchievementManager.js';
 
 /**
  * Módulo de Persistência (Save Manager).
@@ -52,12 +53,17 @@ class SaveManager {
     if (playerData) {
       playerState = {
         name: playerData.name || 'Rhogar Tordan',
+        level: playerData.level !== undefined ? playerData.level : 1,
+        xp: playerData.xp !== undefined ? playerData.xp : 0,
+        xpToNextLevel: playerData.xpToNextLevel !== undefined ? playerData.xpToNextLevel : 100,
         hp: playerData.hp !== undefined ? playerData.hp : 120,
         maxHp: playerData.maxHp !== undefined ? playerData.maxHp : 120,
         attack: playerData.attack !== undefined ? playerData.attack : 18,
         defense: playerData.defense !== undefined ? playerData.defense : 8,
         fury: playerData.fury !== undefined ? playerData.fury : 0,
         maxFury: playerData.maxFury !== undefined ? playerData.maxFury : 100,
+        electricBreathCost: playerData.electricBreathCost !== undefined ? playerData.electricBreathCost : 50,
+        electricBreathMultiplier: playerData.electricBreathMultiplier !== undefined ? playerData.electricBreathMultiplier : 2.5,
         equippedWeapon: playerData.equippedWeapon || 'Lâmina de Brentel',
         checkpoint: playerData.checkpoint || (playerData.scene?.scene?.key) || 'TavernScene',
         scene: playerData.currentScene || (playerData.scene?.scene?.key) || playerData.checkpoint || 'TavernScene',
@@ -70,6 +76,7 @@ class SaveManager {
       player: playerState,
       inventory: InventoryManager.saveToStorage(),
       quests: QuestManager.quests,
+      achievements: AchievementManager.saveToStorage(),
       savedAt: new Date().toISOString()
     };
   }
@@ -142,6 +149,9 @@ class SaveManager {
 
       if (encodedData) {
         const decoded = this._decode(encodedData);
+        if (decoded && decoded.achievements) {
+          AchievementManager.loadFromStorage(decoded.achievements);
+        }
         return decoded;
       }
       return null;
@@ -176,6 +186,7 @@ class SaveManager {
       localStorage.removeItem(this.saveKey);
     }
     this._memoryStore = null;
+    AchievementManager.reset();
   }
 }
 

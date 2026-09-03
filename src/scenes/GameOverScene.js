@@ -77,19 +77,26 @@ export default class GameOverScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((t, i) => {
-      if (i === this.selectedIndex) {
-        t.setColor('#ffffff');
-        t.setText(`> ${this.options[i].text} <`);
-      } else {
-        t.setColor('#aaaaaa');
-        t.setText(this.options[i].text);
+      if (!t || !t.active || !t.scene || !t.style) return;
+      try {
+        if (i === this.selectedIndex) {
+          t.setColor('#ffffff');
+          t.setText(`> ${this.options[i].text} <`);
+        } else {
+          t.setColor('#aaaaaa');
+          t.setText(this.options[i].text);
+        }
+      } catch (err) {
+        // Ignora falhas de renderização em transição
       }
     });
   }
 
   retry() {
     Logger.info('GameOverScene', 'Reiniciando a jornada.');
+    InputManager.cleanListeners();
     this.scene.launch('UIScene');
     if (this.previousScene && this.previousScene !== 'GameOverScene' && this.previousScene !== 'BattleScene') {
       this.scene.start(this.previousScene);
@@ -120,12 +127,15 @@ export default class GameOverScene extends Phaser.Scene {
       loadedData: saveData
     };
 
+    InputManager.cleanListeners();
     this.scene.launch('UIScene');
     this.scene.start(targetScene, spawnData);
   }
 
   goToMenu() {
     Logger.info('GameOverScene', 'Voltando ao menu principal.');
+    InputManager.cleanListeners();
+    this.scene.stop('UIScene');
     this.scene.start('MenuScene');
   }
 }

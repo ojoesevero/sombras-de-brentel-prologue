@@ -39,13 +39,24 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     this.add(this.dialogueText);
 
     // Prompt text (blinking)
-    this.promptText = scene.add.text(width - 20, height - 25, '▼ Pressione ESPAÇO', {
+    this.promptText = scene.add.text(width - 20, height - 25, '▼ [Espaço / Z / Toque]', {
       fontFamily: 'Arial',
       fontSize: '12px',
-      color: '#ffffff'
+      color: '#ffd700',
+      fontStyle: 'bold'
     }).setOrigin(1, 0);
     this.promptText.setVisible(false);
     this.add(this.promptText);
+
+    // Zona de toque interativa local cobrindo a caixa de diálogo
+    this.touchZone = scene.add.zone(0, 0, width, height).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    this.add(this.touchZone);
+    this.touchZone.on('pointerdown', (pointer, localX, localY, event) => {
+      if (this.visible && this.isOpen) {
+        if (event && event.stopPropagation) event.stopPropagation();
+        this.skipOrNext();
+      }
+    });
 
     // Blinking tween
     scene.tweens.add({
@@ -69,6 +80,20 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     this.activeChoices = [];
     this.tempResponseNode = null;
 
+    // Listener global de toque na tela (Mobile & Pointer)
+    this.handleGlobalPointerDown = (pointer) => {
+      if (this.visible && this.isOpen) {
+        // Se houver opções ativas, o clique nas opções tem prioridade
+        if (this.hasChoices) {
+          // Se clicou fora das opções enquanto tem choices, não cancela, mas pode focar ou avançar
+          return;
+        }
+        this.skipOrNext();
+      }
+    };
+
+    scene.input.on('pointerdown', this.handleGlobalPointerDown);
+
     // Destrutor de segurança para evitar Memory Leak do timer e binds
     this.on('destroy', () => {
       this.clearChoices();
@@ -76,10 +101,15 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
         this.typingTimer.remove();
         this.typingTimer = null;
       }
-      this.scene.input.keyboard.off('keydown-UP', this.handleUp, this);
-      this.scene.input.keyboard.off('keydown-DOWN', this.handleDown, this);
-      this.scene.input.keyboard.off('keydown-W', this.handleUp, this);
-      this.scene.input.keyboard.off('keydown-S', this.handleDown, this);
+      if (this.scene && this.scene.input) {
+        this.scene.input.off('pointerdown', this.handleGlobalPointerDown);
+        if (this.scene.input.keyboard) {
+          this.scene.input.keyboard.off('keydown-UP', this.handleUp, this);
+          this.scene.input.keyboard.off('keydown-DOWN', this.handleDown, this);
+          this.scene.input.keyboard.off('keydown-W', this.handleUp, this);
+          this.scene.input.keyboard.off('keydown-S', this.handleDown, this);
+        }
+      }
     });
 
     this.scene.input.keyboard.on('keydown-UP', this.handleUp, this);
@@ -280,6 +310,11 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     this.isOpen = false;
     this.isPrinting = false;
     this.isTyping = false;
+    if (this.typingTimer) {
+      this.typingTimer.remove();
+      this.typingTimer = null;
+    }
+    this.clearChoices();
     this.setVisible(false);
     
     if (this.scene) {

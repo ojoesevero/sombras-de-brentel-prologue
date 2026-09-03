@@ -60,6 +60,10 @@ describe('SaveManager Unit Tests', () => {
     // Validação de quests persistidas
     assert.equal(loaded.quests.quest_01_flashback.status, 'completed');
     assert.equal(loaded.quests.quest_02_temple.status, 'active');
+
+    // Validação de achievements persistidos
+    assert.ok(loaded.achievements);
+    assert.equal(Array.isArray(loaded.achievements), true);
   });
 
   it('deve construir payload com valores padrão caso o player seja omitido', () => {
@@ -67,6 +71,7 @@ describe('SaveManager Unit Tests', () => {
     assert.equal(payload.player, null);
     assert.equal(payload.inventory.gold, 100);
     assert.ok(payload.quests);
+    assert.ok(payload.achievements);
     assert.ok(payload.savedAt);
   });
 

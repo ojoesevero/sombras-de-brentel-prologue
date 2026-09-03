@@ -81,24 +81,30 @@ export default class MenuScene extends Phaser.Scene {
 
   setupInputs() {
     InputManager.onAction('DOWN', () => {
+      if (!this.sys || !this.sys.isActive()) return;
       if (this.modalContainer) return;
       this.moveSelection(1);
     });
 
     InputManager.onAction('UP', () => {
+      if (!this.sys || !this.sys.isActive()) return;
       if (this.modalContainer) return;
       this.moveSelection(-1);
     });
 
     InputManager.onAction('CONFIRM', () => {
+      if (!this.sys || !this.sys.isActive()) return;
       if (this.modalContainer) {
         this.closeHowToPlay();
         return;
       }
-      this.options[this.selectedIndex].action();
+      if (this.options && this.options[this.selectedIndex]) {
+        this.options[this.selectedIndex].action();
+      }
     });
 
     InputManager.onAction('CANCEL', () => {
+      if (!this.sys || !this.sys.isActive()) return;
       if (this.modalContainer) {
         this.closeHowToPlay();
       }
@@ -118,33 +124,55 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((textObj, i) => {
-      if (i === this.selectedIndex) {
-        textObj.setColor('#ffd700');
-        textObj.setFontStyle('bold');
-        textObj.setText(`> ${this.options[i].text} <`);
-      } else {
-        textObj.setColor('#aaaaaa');
-        textObj.setFontStyle('normal');
-        textObj.setText(this.options[i].text);
+      if (!textObj || !textObj.active || !textObj.scene || !textObj.style) return;
+      try {
+        if (i === this.selectedIndex) {
+          textObj.setColor('#ffd700');
+          textObj.setFontStyle('bold');
+          textObj.setText(`> ${this.options[i].text} <`);
+        } else {
+          textObj.setColor('#aaaaaa');
+          textObj.setFontStyle('normal');
+          textObj.setText(this.options[i].text);
+        }
+      } catch (err) {
+        // Ignora falhas transientes de contexto gráfico durante transições
       }
     });
   }
 
   startNewGame() {
+    if (this._isTransitioning) return;
+    this._isTransitioning = true;
+
     Logger.info('MenuScene', 'Ação: Iniciar Novo Jogo -> IntroStoryScene');
     QuestManager.resetQuests();
-    this.cameras.main.fadeOut(500, 0, 0, 0);
-    this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+    InventoryManager.reset();
+    InputManager.cleanListeners();
+
+    if (this.cameras && this.cameras.main) {
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+        this.scene.stop('MenuScene');
+        this.scene.start('IntroStoryScene');
+      });
+    } else {
+      this.scene.stop('MenuScene');
       this.scene.start('IntroStoryScene');
-    });
+    }
   }
 
   continueGame() {
+    if (this._isTransitioning) return;
+    this._isTransitioning = true;
+
     Logger.info('MenuScene', 'Ação: Continuar progresso salvo');
     const saveData = SaveManager.loadGame();
     if (!saveData) {
       Logger.warn('MenuScene', 'Nenhum save válido encontrado para continuar.');
+      this._isTransitioning = false;
       return;
     }
 
@@ -162,7 +190,9 @@ export default class MenuScene extends Phaser.Scene {
       loadedData: saveData
     };
 
+    InputManager.cleanListeners();
     Logger.info('MenuScene', `Restaurando sessão para ${targetScene}`, spawnData);
+    this.scene.stop('MenuScene');
     this.scene.launch('UIScene');
     this.scene.start(targetScene, spawnData);
   }

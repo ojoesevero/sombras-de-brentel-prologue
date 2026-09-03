@@ -3,19 +3,38 @@ import InventoryManager from '../services/InventoryManager.js';
 import Logger from '../utils/Logger.js';
 import InputManager from '../services/InputManager.js';
 
+/**
+ * Interface Modal de Loja/Cardápio da Taverna (ShopUI).
+ * Permite compra de itens via teclado e toque.
+ */
 export default class ShopUI extends Phaser.GameObjects.Container {
+  /**
+   * @param {Phaser.Scene} scene 
+   * @param {number} x 
+   * @param {number} y 
+   */
   constructor(scene, x, y) {
     super(scene, x, y);
     this.scene = scene;
 
+    // Fundo ornamental
     const bg = scene.add.rectangle(0, 0, 400, 300, 0x111111, 0.95);
     bg.setStrokeStyle(4, 0xd4af37);
     this.add(bg);
 
-    this.title = scene.add.text(0, -120, 'Balcão da Hilda', { fontSize: '24px', fill: '#ffd700', fontStyle: 'bold' }).setOrigin(0.5);
+    this.title = scene.add.text(0, -120, 'Balcão da Hilda', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '24px',
+      color: '#ffd700',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
     this.add(this.title);
 
-    this.goldText = scene.add.text(0, -90, `Ouro: ${InventoryManager.gold} PO`, { fontSize: '16px', fill: '#ffffff' }).setOrigin(0.5);
+    this.goldText = scene.add.text(0, -90, `Ouro: ${InventoryManager.gold} PO`, {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '16px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
     this.add(this.goldText);
 
     this.stock = [
@@ -28,9 +47,13 @@ export default class ShopUI extends Phaser.GameObjects.Container {
     
     this.stock.forEach((item, index) => {
       const yPos = -40 + (index * 40);
-      const text = scene.add.text(0, yPos, `${item.name} - ${item.price} PO`, { fontSize: '18px', fill: '#aaaaaa' })
+      const text = scene.add.text(0, yPos, `${item.name} - ${item.price} PO`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '18px',
+        color: '#aaaaaa'
+      })
         .setOrigin(0.5)
-        .setInteractive();
+        .setInteractive({ useHandCursor: true });
       
       text.on('pointerdown', () => this.buyItem(item));
       text.on('pointerover', () => {
@@ -43,7 +66,12 @@ export default class ShopUI extends Phaser.GameObjects.Container {
       this.add(text);
     });
 
-    this.closeBtn = scene.add.text(0, 100, 'Fechar', { fontSize: '18px', fill: '#ff5555' }).setOrigin(0.5).setInteractive();
+    this.closeBtn = scene.add.text(0, 100, 'Fechar', {
+      fontFamily: 'Arial, sans-serif',
+      fontSize: '18px',
+      color: '#ff5555'
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
     this.closeBtn.on('pointerdown', () => this.closeShop());
     this.closeBtn.on('pointerover', () => {
       this.selectedIndex = this.selectables.length - 1;
@@ -55,17 +83,34 @@ export default class ShopUI extends Phaser.GameObjects.Container {
     scene.add.existing(this);
     this.setVisible(false);
     this.selectedIndex = 0;
+
+    // Limpeza de listeners no descarte
+    this.on('destroy', () => {
+      this.unbindInputListeners();
+    });
   }
 
+  /**
+   * Executa a transação de compra de item.
+   * @param {Object} item 
+   */
   buyItem(item) {
+    if (!item) return;
     if (InventoryManager.gold >= item.price) {
-      InventoryManager.gold -= item.price;
+      InventoryManager.removeGold(item.price);
       InventoryManager.addItem(item.id, 1);
-      this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
+      if (this.goldText && this.goldText.active) {
+        this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
+      }
       Logger.info('ShopUI', `Comprou ${item.name} por ${item.price} PO`);
+      if (this.scene && this.scene.cameras && this.scene.cameras.main) {
+        this.scene.cameras.main.flash(150, 212, 175, 55, 0.3);
+      }
     } else {
       Logger.warn('ShopUI', 'Ouro insuficiente para comprar o item.');
-      this.scene.cameras.main.shake(100, 0.01);
+      if (this.scene && this.scene.cameras && this.scene.cameras.main) {
+        this.scene.cameras.main.shake(100, 0.01);
+      }
     }
   }
 
@@ -99,34 +144,49 @@ export default class ShopUI extends Phaser.GameObjects.Container {
 
   updateSelection() {
     this.selectables.forEach((text, i) => {
-      if (i === this.selectedIndex) {
-        text.setColor('#ffff00');
-        text.setBackgroundColor('#333300'); // Fundo iluminado (destaque visual)
-      } else {
-        text.setBackgroundColor('transparent');
-        text.setColor(text === this.closeBtn ? '#ff5555' : '#aaaaaa');
+      if (!text || !text.active || !text.scene) return;
+      try {
+        if (i === this.selectedIndex) {
+          text.setColor('#ffff00');
+          text.setBackgroundColor('#333300');
+        } else {
+          text.setBackgroundColor('transparent');
+          text.setColor(text === this.closeBtn ? '#ff5555' : '#aaaaaa');
+        }
+      } catch (err) {
+        // Ignora erros de renderização transientes
       }
     });
   }
 
-  openShop() {
-    this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
-    this.setVisible(true);
-    this.selectedIndex = 0;
-    this.updateSelection();
-    
+  bindInputListeners() {
+    this.unbindInputListeners();
     InputManager.on('UP', this.handleUp);
     InputManager.on('DOWN', this.handleDown);
     InputManager.on('CONFIRM', this.handleConfirm);
     InputManager.on('CANCEL', this.handleCancel);
   }
 
-  closeShop() {
-    this.setVisible(false);
+  unbindInputListeners() {
     InputManager.off('UP', this.handleUp);
     InputManager.off('DOWN', this.handleDown);
     InputManager.off('CONFIRM', this.handleConfirm);
     InputManager.off('CANCEL', this.handleCancel);
+  }
+
+  openShop() {
+    if (this.goldText && this.goldText.active) {
+      this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
+    }
+    this.setVisible(true);
+    this.selectedIndex = 0;
+    this.updateSelection();
+    this.bindInputListeners();
+  }
+
+  closeShop() {
+    this.setVisible(false);
+    this.unbindInputListeners();
     this.emit('shopClosed');
   }
 }

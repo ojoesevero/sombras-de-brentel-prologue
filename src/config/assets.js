@@ -29,7 +29,8 @@ export const AssetsConfig = {
     temple_pillar: 'tex_temple_pillar',
     temple_altar: 'tex_temple_altar',
     chest_closed: 'tex_chest_closed',
-    chest_open: 'tex_chest_open'
+    chest_open: 'tex_chest_open',
+    cart: 'tex_cart'
   },
   sprites: {
     rhogar: 'spr_rhogar',
@@ -40,6 +41,9 @@ export const AssetsConfig = {
     traudon: 'spr_traudon_alicia',
     waitress: 'spr_waitress',
     guard: 'spr_guard',
+    soldier: 'spr_soldier',
+    ilidiz: 'spr_ilidiz',
+    yanil: 'spr_yanil',
     sacerdotisa: 'spr_sacerdotisa',
     gruther_bed: 'spr_gruther_bed',
     iksar: 'spr_iksar',

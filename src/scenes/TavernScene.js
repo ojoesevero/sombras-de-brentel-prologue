@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
+import InventoryManager from '../services/InventoryManager.js';
+import AchievementManager from '../services/AchievementManager.js';
 import ShopUI from '../ui/ShopUI.js';
 import WorldMapUI from '../ui/WorldMapUI.js';
 import QuestManager from '../services/QuestManager.js';
@@ -99,7 +101,8 @@ export default class TavernScene extends Phaser.Scene {
 
     // 5. NPCs e Entidades de Interação
     this.interactables = [
-      { id: 'hilda', x: 400, y: 150 },
+      { id: 'balcao_taverna', x: 400, y: 140 },
+      { id: 'hilda', x: 400, y: 75 },
       { id: 'placa_regras', x: 200, y: 100 },
       { id: 'quadro_avisos', x: 600, y: 100 },
       { id: 'john_bardem', x: 100, y: 500 },
@@ -219,10 +222,16 @@ export default class TavernScene extends Phaser.Scene {
         this.waitress.resumePatrol();
       }
 
+      // Abrir cardápio da Hilda se necessário
+      if (target === 'hilda' && this.openHildaShopOnClose) {
+        this.openHildaShopOnClose = false;
+        this.shopUI.openShop();
+      }
+
       // Controle do Flashback no Joseph Sylven
-      if (target === 'joseph_sylven' && (josephType === 'joseph_ready' || this.visitedNPCs.size >= 4)) {
+      if (target === 'joseph_sylven' && (josephType === 'joseph_flashback_ready' || this.registry.get('drankBeer'))) {
         if (!QuestManager.isQuestCompleted('quest_01_flashback')) {
-          Logger.info('TavernScene', 'Rhogar lembrou do passado. Iniciando Flashback...');
+          Logger.info('TavernScene', 'Rhogar bebeu a cerveja e lembrou do passado. Iniciando Flashback de Estayler...');
           this.cameras.main.fadeOut(500, 255, 255, 255);
           this.time.delayedCall(550, () => {
             this.scene.start('GameScene'); 
@@ -251,6 +260,7 @@ export default class TavernScene extends Phaser.Scene {
       if (typeof this.setupInputs === 'function') {
         this.setupInputs();
       }
+      this.updateHUD();
     });
 
     // Atalhos de desenvolvedor protegidos por ambiente DEV
@@ -291,72 +301,294 @@ export default class TavernScene extends Phaser.Scene {
       this.scene.pause();
       this.scene.launch('PauseScene', { sceneKey: 'TavernScene' });
     });
+
+    InputManager.onAction('INVENTORY', () => {
+      this.game.events.emit('toggleInventory');
+    });
   }
 
   openInteraction(id) {
     this.activeDialogueTarget = id;
-    if (id === 'hilda') {
+    this.openHildaShopOnClose = false;
+
+    const talkedToJosephInitial = !!this.registry.get('talkedToJosephInitial');
+    const talkedToAll = !!this.registry.get('talkedToAllClients');
+    const josephRequestedBeer = !!this.registry.get('josephRequestedBeer');
+    const drankBeer = !!this.registry.get('drankBeer') || (this.player?.beersDrunkCount > 0);
+    const isPostFlashback = QuestManager.isQuestCompleted('quest_01_flashback');
+
+    if (id === 'balcao_taverna' || id === 'counter') {
       this.player.setState(PlayerState.INTERACTING);
-      this.shopUI.openShop();
-      this.visitedNPCs.add('hilda');
-      this.updateHUD();
+      const hasAle = InventoryManager.hasItem('dwarven_ale');
+
+      if (hasAle) {
+        // Consumo direto no balcão
+        InventoryManager.useItem('dwarven_ale', this.player);
+        this.registry.set('drankBeer', true);
+        this.updateHUD();
+
+        const dialogueNodes = [
+          {
+            character: 'Rhogar Tordan',
+            portraitKey: AssetsConfig.sprites.rhogar || 'spr_rhogar',
+            text: '*Glup, glup, glup...* Ahh! A Cerveja Anã desce quente na garganta, despertando toda a energia dracônica!'
+          }
+        ];
+
+        if (this.player.isDrunk) {
+          dialogueNodes.push({
+            character: 'Hilda Barba-de-Ferro',
+            portraitKey: AssetsConfig.sprites.hilda,
+            text: 'Pelos deuses anões, o grandalhão bebeu até cair! Seus olhos estão rodopiando... Cuidado ao dar seus passos!'
+          });
+        }
+
+        this.game.events.emit('openDialogue', dialogueNodes);
+      } else if (!drankBeer) {
+        // Bronca clássica da Hilda ao tentar interagir no balcão sem cerveja
+        this.openHildaShopOnClose = true;
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Hilda Barba-de-Ferro',
+            portraitKey: AssetsConfig.sprites.hilda,
+            text: 'Compre uma cerveja seu miserável! Ninguém encosta no meu balcão sem pedir a legítima Cerveja Anã de Rastphen!'
+          }
+        ]);
+      } else {
+        // Jogador já bebeu antes mas está sem cerveja na mochila
+        this.openHildaShopOnClose = true;
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Hilda Barba-de-Ferro',
+            portraitKey: AssetsConfig.sprites.hilda,
+            text: 'Secou sua caneca, grandalhão? Se quiser encher de novo para a estrada, escolha no cardápio!'
+          }
+        ]);
+      }
+    } else if (id === 'hilda') {
+      this.player.setState(PlayerState.INTERACTING);
+      this.openHildaShopOnClose = true;
+      this.game.events.emit('openDialogue', [
+        {
+          character: 'Hilda Barba-de-Ferro',
+          portraitKey: AssetsConfig.sprites.hilda,
+          text: 'Bem-vindo ao balcão da Taverna Cauda do Dragão! Aqui está o cardápio com as melhores cervejas e provisões de Rastphen!'
+        }
+      ]);
     } else if (id === 'quadro_avisos') {
       this.player.setState(PlayerState.INTERACTING);
       this.currentMapUI = new WorldMapUI(this, 400, 300);
       this.currentMapUI.setDepth(60);
     } else if (id === 'joseph_sylven') {
-      let josephId = 'joseph_initial';
-      
-      if (QuestManager.isQuestCompleted('quest_01_flashback')) {
-        if (this.battleOutcome === 'victory') {
-          josephId = 'joseph_victory';
-        } else if (this.battleOutcome === 'defeat') {
-          josephId = 'joseph_defeat';
-        } else {
-          josephId = 'joseph_victory';
-        }
-      } else if (this.visitedNPCs.size >= 4) {
-        josephId = 'joseph_ready';
+      this.player.setState(PlayerState.INTERACTING);
+
+      if (isPostFlashback) {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Joseph Sylven',
+            portraitKey: AssetsConfig.sprites.joseph,
+            text: 'Você reviveu as dores de Estayler, Rhogar... mas a verdadeira batalha começa agora. Saia da taverna pela porta sul e vá até a Cidade de Rastphen. O Templo de Palmem ao norte é nosso primeiro destino!'
+          }
+        ]);
+      } else if (!talkedToJosephInitial) {
+        this.registry.set('talkedToJosephInitial', true);
+        this.activeDialogueJosephType = 'joseph_initial';
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Joseph Sylven',
+            portraitKey: AssetsConfig.sprites.joseph,
+            text: 'Rhogar! Bom ver você desperto. As sombras do culto de Brentel estão se movendo pelas estradas do sul. Vá conversar com nossos companheiros no salão — Verônica, John e Traudon — para entender a situação antes de partirmos.'
+          }
+        ]);
+        this.updateHUD();
+      } else if (!talkedToAll) {
+        const remaining = 3 - this.visitedNPCs.size;
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Joseph Sylven',
+            portraitKey: AssetsConfig.sprites.joseph,
+            text: `Ainda faltam companheiros para você consultar no salão (${this.visitedNPCs.size}/3). Vá falar com eles!`
+          }
+        ]);
+      } else if (talkedToAll && !drankBeer) {
+        this.registry.set('josephRequestedBeer', true);
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Joseph Sylven',
+            portraitKey: AssetsConfig.sprites.joseph,
+            text: 'Rhogar, você parece tenso. Suas escamas estão faiscando de ansiedade. Vá até a Hilda no balcão, compre uma boa Cerveja Anã e beba na sua mochila para acalmar a mente antes de relembrarmos Estayler.'
+          }
+        ]);
+        this.updateHUD();
+      } else if (drankBeer) {
+        this.activeDialogueJosephType = 'joseph_flashback_ready';
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Joseph Sylven',
+            portraitKey: AssetsConfig.sprites.joseph,
+            text: 'Agora sim, sua respiração estabilizou. Feche os olhos, Rhogar... Lembre-se do que aconteceu naquele dia nas ravinas de Estayler...'
+          }
+        ]);
       }
-      
-      this.activeDialogueJosephType = josephId;
-      const dialogue = this.interactions[josephId];
-      this.game.events.emit('openDialogue', dialogue);
+    } else if (['veronica_stinfy', 'traudon_alicia', 'john_bardem'].includes(id)) {
+      this.player.setState(PlayerState.INTERACTING);
+
+      if (isPostFlashback) {
+        // Diálogos pós-flashback com missões individuais
+        if (id === 'veronica_stinfy') {
+          this.game.events.emit('openDialogue', [
+            {
+              character: 'Verônica Stinfy',
+              portraitKey: AssetsConfig.sprites.veronica,
+              text: 'Rhogar! Sinto perturbações arcanas e corrupção vindas do Templo de Palmem ao norte de Rastphen. Vá até lá e investigue as anomalias com a Sacerdotisa Ilídiz!'
+            }
+          ]);
+        } else if (id === 'john_bardem') {
+          this.game.events.emit('openDialogue', [
+            {
+              character: 'John Bardem',
+              portraitKey: AssetsConfig.sprites.john,
+              text: 'Os camponeses relatam rastros de sangue e criaturas de chifres rondando a Fazenda dos Halflings ao sul. Mantenha sua lâmina afiada!'
+            }
+          ]);
+        } else if (id === 'traudon_alicia') {
+          this.game.events.emit('openDialogue', [
+            {
+              character: 'Traudon & Alícia',
+              portraitKey: AssetsConfig.sprites.traudon,
+              text: 'O druida da colina enviou um alerta: as raízes da Floresta Cinzenta estão apodrecendo. O caminho para o sul através do portão de Rastphen é perigoso, não se aventure desarmado.'
+            }
+          ]);
+        }
+      } else if (!talkedToJosephInitial) {
+        // Redirecionamento obrigatório para Joseph no início
+        let redirectText = 'Fale com Joseph primeiro, temos assuntos mais urgentes antes de qualquer conversa.';
+        if (id === 'veronica_stinfy') redirectText = 'Rhogar, vá falar com Joseph primeiro. Ele tem informações cruciais sobre os acontecimentos recentes.';
+        else if (id === 'john_bardem') redirectText = 'Joseph está esperando por você perto da lareira. Converse com ele primeiro!';
+        else if (id === 'traudon_alicia') redirectText = 'Acalme-se, draconato. Fale com Joseph antes de começarmos a planejar.';
+
+        this.game.events.emit('openDialogue', [
+          {
+            character: id === 'veronica_stinfy' ? 'Verônica Stinfy' : id === 'john_bardem' ? 'John Bardem' : 'Traudon & Alícia',
+            portraitKey: AssetsConfig.sprites[id.split('_')[0]] || 'spr_npc_default',
+            text: redirectText
+          }
+        ]);
+      } else {
+        // Diálogo normal com o herói durante a coleta de informações
+        if (id === 'traudon_alicia' && !this.registry.get('aliciaGaveGold')) {
+          this.registry.set('aliciaGaveGold', true);
+          InventoryManager.addGold(20);
+          this.player.showFloatingText('+20 Ouro de Alícia! 🪙', '#ffd700');
+
+          this.game.events.emit('openDialogue', [
+            {
+              character: 'Traudon',
+              portraitKey: AssetsConfig.sprites.traudon,
+              text: 'Rhogar, as florestas de Brentel estão inquietas... Sentimos o pulsar de necromancia corrompendo a terra.'
+            },
+            {
+              character: 'Alícia',
+              portraitKey: AssetsConfig.sprites.traudon,
+              text: 'Rhogar, você parece exausto e sem um único tostão na bolsa. Tome estas 20 moedas de ouro para pagar uma boa rodada de cerveja no balcão de Hilda!'
+            }
+          ]);
+        } else {
+          const dialogue = this.interactions[id];
+          if (dialogue) {
+            this.game.events.emit('openDialogue', dialogue);
+          }
+        }
+
+        this.visitedNPCs.add(id);
+        if (this.visitedNPCs.has('veronica_stinfy') && this.visitedNPCs.has('traudon_alicia') && this.visitedNPCs.has('john_bardem')) {
+          this.registry.set('talkedToAllClients', true);
+          Logger.info('TavernScene', 'Todos os 3 companheiros consultados. Retorno a Joseph liberado.');
+        }
+        this.updateHUD();
+      }
     } else if (id === 'gisela_waitress') {
       this.player.setState(PlayerState.INTERACTING);
       if (this.waitress) this.waitress.pauseForDialogue(this.player.x);
-      this.game.events.emit('openDialogue', [
-        {
-          character: 'Gisela (Garçonete)',
-          portrait: 'port_ilidiz_worried',
-          text: 'Mais uma caneca de cerveja anã fresquinha? Os viajantes que chegaram do sul estavam tremendo... Dizem que o celeiro da fazenda foi partido ao meio e rastros negros cobrem a estrada.'
-        }
-      ]);
+
+      const waitressCount = (this.registry.get('waitressInteractionsCount') || 0) + 1;
+      this.registry.set('waitressInteractionsCount', waitressCount);
+
+      if (waitressCount === 1) {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Gisela (Garçonete)',
+            portraitKey: AssetsConfig.sprites.waitress,
+            text: 'Olá, guerreiro! Para pedir bebidas ou provisões, fale diretamente com a Hilda no balcão principal.'
+          }
+        ]);
+      } else if (waitressCount === 2) {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Gisela (Garçonete)',
+            portraitKey: AssetsConfig.sprites.waitress,
+            text: 'Ainda com sede? Como eu disse, a dona Hilda é quem cuida dos barris e das vendas no balcão.'
+          }
+        ]);
+      } else if (waitressCount === 3) {
+        InventoryManager.addItem('dwarven_ale', 1);
+        this.player.showFloatingText('+1 Cerveja Anã Recebida! 🍺', '#f39c12');
+        AchievementManager.unlock('ach_free_beer', this.game);
+        this.updateHUD();
+
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Gisela (Garçonete)',
+            portraitKey: AssetsConfig.sprites.waitress,
+            text: 'Pelos deuses, quanta insistência! Tome esta Cerveja Anã por conta da casa antes que a Hilda perceba... Mas não conte a ninguém!'
+          }
+        ]);
+      } else {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Gisela (Garçonete)',
+            portraitKey: AssetsConfig.sprites.waitress,
+            text: 'Aproveite sua cerveja! Se eu entregar mais uma de graça, a Hilda desconta tudo do meu salário.'
+          }
+        ]);
+      }
     } else {
       const dialogue = this.interactions[id];
       if (dialogue) {
         this.game.events.emit('openDialogue', dialogue);
-        if (['veronica_stinfy', 'traudon_alicia', 'john_bardem'].includes(id)) {
-          this.visitedNPCs.add(id);
-          this.updateHUD();
-        }
       }
     }
   }
 
   updateHUD() {
     let text = '';
-    if (QuestManager.isQuestCompleted('quest_01_flashback')) {
-      text = 'Objetivo Atual: Saia da Taverna e vá ao Templo de Palmem ao norte de Rastphen';
-    } else if (this.visitedNPCs.size >= 4) {
-      text = 'Objetivo: Fale com Joseph Sylven sobre o passado';
+    const talkedToJosephInitial = !!this.registry.get('talkedToJosephInitial');
+    const talkedToAll = !!this.registry.get('talkedToAllClients');
+    const drankBeer = !!this.registry.get('drankBeer') || (this.player?.beersDrunkCount > 0);
+    const isPostFlashback = QuestManager.isQuestCompleted('quest_01_flashback');
+
+    if (isPostFlashback) {
+      text = 'Objetivo: Saia da Taverna e vá ao Templo de Palmem ao norte de Rastphen';
+    } else if (!talkedToJosephInitial) {
+      text = 'Objetivo: Fale com Joseph Sylven no salão da Taverna';
+    } else if (!talkedToAll) {
+      const clientCount = (this.visitedNPCs.has('veronica_stinfy') ? 1 : 0) +
+                          (this.visitedNPCs.has('traudon_alicia') ? 1 : 0) +
+                          (this.visitedNPCs.has('john_bardem') ? 1 : 0);
+      text = `Objetivo: Converse com os companheiros no salão (${clientCount}/3)`;
+    } else if (!drankBeer) {
+      text = 'Objetivo: Compre e beba uma Cerveja Anã com Hilda no balcão';
     } else {
-      text = 'Objetivo: Converse com todos os clientes da Taverna (' + this.visitedNPCs.size + '/4)';
+      text = 'Objetivo: Fale com Joseph Sylven para relembrar Estayler';
     }
     this.game.events.emit('updateObjective', text);
   }
 
-  update() {
+  update(time, delta) {
+    if (this.player) {
+      this.player.update(time, delta);
+    }
+
     if (!this.input.keyboard.enabled) return;
 
     if (this.returnedFromFlashback) {
@@ -377,12 +609,22 @@ export default class TavernScene extends Phaser.Scene {
 
     // Sistema de Gatilhos Espaciais
     let closest = null;
-    let minDist = 50;
+    let closestDist = Infinity;
 
     this.interactables.forEach(ent => {
-      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, ent.x, ent.y);
-      if (dist < minDist) {
-        minDist = dist;
+      let dist;
+      // Para o balcão da taverna (permite interação fluida ao longo de toda a extensão x: 280 a 520)
+      if (ent.id === 'balcao_taverna') {
+        const clampedX = Phaser.Math.Clamp(this.player.x, 280, 520);
+        dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, clampedX, ent.y);
+      } else {
+        dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, ent.x, ent.y);
+      }
+
+      const maxRange = (ent.id === 'balcao_taverna' || ent.id === 'hilda') ? 85 : 55;
+
+      if (dist <= maxRange && dist < closestDist) {
+        closestDist = dist;
         closest = ent;
       }
     });
