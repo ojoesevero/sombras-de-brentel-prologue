@@ -65,32 +65,48 @@ Por trás das paredes de pedra e das mesas da **Taverna Cauda do Dragão**, suss
       <h3 align="center">🎒 Sistema de Inventário & Economia</h3>
       <ul>
         <li><strong>Mochila em Grade (InventoryScene):</strong> Abertura sobreposta com tecla <kbd>I</kbd> ou botão touch, inspeção de descrições, consumo de poções, pergaminhos e equipamentos.</li>
-        <li><strong>Novo Jogo Limpo:</strong> O inventário inicia vazio e com 10 Moedas de Ouro base, exigindo que o jogador interaja e compre provisões.</li>
-        <li><strong>Lojas & Mercadores:</strong> Balcão de Hilda na taverna e o <em>Empório de Yanil Resty</em> (<code>YanilShopScene</code>) em Rastphen com itens exclusivos do lore.</li>
+        <li><strong>Lojas & Mercadores:</strong> Balcão de Hilda na taverna e o <em>Empório de Yanil Resty</em> em Rastphen com itens exclusivos do lore.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3 align="center">🏆 Conquistas & Progressão de Nível</h3>
+      <h3 align="center">🏆 Conquistas & Progressão</h3>
       <ul>
-        <li><strong>Sistema de Conquistas (AchievementManager):</strong> Desbloqueio de marcos canônicos com banner flutuante no topo e persistência automática.</li>
-        <li><strong>XP e Level Up em Combate:</strong> Rhogar ganha experiência, sobe de nível e aprimora HP máximo, Ataque, Defesa e custo de Fúria do Sopro Elétrico.</li>
-        <li><strong>Mecânicas da Taverna:</strong> Estado de embriaguez (*isDrunk*) ao consumir 3 doses de Cerveja Anã, com comandos invertidos temporários.</li>
+        <li><strong>Sistema de Conquistas:</strong> Desbloqueio de marcos canônicos com banner flutuante no topo e persistência automática.</li>
+        <li><strong>XP e Level Up em Combate:</strong> Rhogar ganha experiência, sobe de nível e aprimora atributos e Habilidades.</li>
       </ul>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top">
-      <h3 align="center">⛪ Nova Cena: Ala Norte do Templo</h3>
+      <h3 align="center">🎵 Sonoplastia & Trilha Sonora BGM</h3>
       <ul>
-        <li><strong>Enfermaria de Gunther (TempleNorthScene):</strong> Cena dedicada com o monge ferido, leito de enfermagem, diálogo tocante e entrega de Poção de Vida.</li>
-        <li><strong>Portais Bidirecionais:</strong> Transição fluida entre o Santuário Principal e a Enfermaria via <code>map_transitions.json</code>.</li>
+        <li><strong>Sistema Global de Áudio (AudioManager):</strong> Transições suaves (*fade in/out*) e persistência entre mapas sem cortes bruscos.</li>
+        <li><strong>Trilhas Temáticas:</strong> 6 Músicas de Fundo (BGM) originais, incluindo o tema de batalha canônico *Fúria de Estayler*.</li>
+        <li><strong>SFX Polido:</strong> Cooldown de input na UI (Anti-Bubbling) e novo *sfx_ui_hover* para navegação menos cansativa.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h3 align="center">📱 Experiência Mobile & Logs Físicos</h3>
+      <h3 align="center">🏙️ Atmosfera de Lei Marcial</h3>
       <ul>
-        <li><strong>Controles Virtuais Touch:</strong> D-Pad analógico responsivo e botões de ação e mochila dedicados no HUD.</li>
-        <li><strong>Gravação Física de Logs (Electron):</strong> Persistência em tempo real no arquivo <code>logs/game_interactions.log</code> via IPC seguro.</li>
+        <li><strong>Rastphen Sitiada:</strong> Novo visual atmosférico com filtro frio (0x001a33), neblina assustadora (BlendMode: SCREEN) e sem civis nas ruas.</li>
+        <li><strong>Portas Trancadas & Sussurros:</strong> Interações com portas trancadas que revelam o terror instaurado pelo culto.</li>
+        <li><strong>Patrulhas Mecânicas:</strong> Guardas no Portão Sul se movimentam fluidamente via sistema de Tweens O(1).</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3 align="center">⚡ Performance & Otimização</h3>
+      <ul>
+        <li><strong>Refatoração de Raiz Quadrada:</strong> Substituição total de <code>Distance.Between</code> por <code>Distance.Squared</code> em todos os NPCs, aliviando o ciclo <code>update()</code>.</li>
+        <li><strong>Memory Leak Corrigido:</strong> Eventos isolados e atados ao <code>SHUTDOWN</code> do Phaser. Lixo residual recolhido (Garbage Collection otimizado).</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h3 align="center">📊 Telemetria (Vercel Analytics)</h3>
+      <ul>
+        <li><strong>Tracking Integrado:</strong> Monitoramento nativo sem cookies via injeção direta do Vercel Analytics.</li>
+        <li><strong>Web Vitals em Tempo Real:</strong> Acompanhamento de performance global (FCP, LCP) sem invasão à privacidade.</li>
       </ul>
     </td>
   </tr>
