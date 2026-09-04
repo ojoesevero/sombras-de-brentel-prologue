@@ -305,7 +305,10 @@ npm run electron:build
 sombras-de-brentel-prologue/
 ├── docs/                             # Documentação viva de engenharia
 │   ├── CHANGELOG.md                  # Histórico de alterações e releases
-│   └── DEVLOG.md                     # Registros técnicos e decisões arquiteturais
+│   ├── DEVLOG.md                     # Registros técnicos e decisões arquiteturais
+│   ├── FLOWCHARTS.md                 # Diagramas de fluxo e diagramas Mermaid
+│   ├── GDD.md                        # Game Design Document completo
+│   └── SCENES.md                     # Mapa e documentação do roteamento das Cenas
 ├── electron/                         # Camada de runtime nativo Desktop
 │   ├── main.js                       # Processo principal, ciclo de vida da janela, IPC e logs
 │   ├── preload.cjs                   # Ponte IPC exposta com contextBridge segura
@@ -327,6 +330,7 @@ sombras-de-brentel-prologue/
 │   ├── config/                       # Constantes de configuração
 │   │   └── assets.js                 # Manifesto central de IDs de texturas e portraits
 │   ├── entities/                     # Entidades físicas e mecânicas
+│   │   ├── NPCWalker.js              # Controlador FSM para patrulhas e civis O(1)
 │   │   └── Player.js                 # FSM de exploração, atributos de combate e XP/Level Up
 │   ├── scenes/                       # Cenas orquestradas pelo Phaser
 │   │   ├── ActIntroScene.js          # Introdução narrativa com lore oficial de cada Ato
@@ -365,6 +369,7 @@ sombras-de-brentel-prologue/
 │   │   └── WorldMapUI.js             # Exibição gráfica do mapa-múndi
 │   ├── utils/                        # Utilitários de diagnóstico e depuração
 │   │   ├── DevShortcuts.js           # Atalhos de depuração (blindados para modo DEV)
+│   │   ├── EnvironmentFX.js          # Emissores de partículas ambientais (pássaros, folhas)
 │   │   └── Logger.js                 # Sistema unificado de logs com escrita física em arquivo
 │   └── main.js                       # Instanciação da engine e registros de cenas
 ├── tests/                            # Testes de unidade automatizados (28 testes)
