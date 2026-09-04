@@ -7,6 +7,7 @@ import WorldMapUI from '../ui/WorldMapUI.js';
 import QuestManager from '../services/QuestManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import Player, { PlayerState } from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
 import { AssetsConfig } from '../config/assets.js';
@@ -28,6 +29,8 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_fogo_ouro_cerveja');
     Logger.info('TavernScene', 'Renderizando Taverna Cauda do Dragão (Pixel Art).');
     this.interactions = this.cache.json.get('tavern_interactions');
     
@@ -299,6 +302,13 @@ export default class TavernScene extends Phaser.Scene {
   }
 
   setupInputs() {
+    this.events.off(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+    this._bgmResumeHandler = () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_fogo_ouro_cerveja');
+    };
+    this.events.on(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         if (this.currentMapUI) {

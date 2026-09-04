@@ -3,6 +3,7 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import Player, { PlayerState } from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
 import { AssetsConfig } from '../config/assets.js';
@@ -21,6 +22,8 @@ export default class TempleScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_bencao_gunther');
     Logger.info('TempleScene', 'Renderizando Santuário do Templo de Palmem.');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -230,6 +233,13 @@ export default class TempleScene extends Phaser.Scene {
   }
 
   setupInputs() {
+    this.events.off(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+    this._bgmResumeHandler = () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_bencao_gunther');
+    };
+    this.events.on(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+
     InputManager.onAction('CONFIRM', () => {
       if (!this.sys || !this.sys.isActive()) return;
       if (this.player && !this.player.canInteract()) {

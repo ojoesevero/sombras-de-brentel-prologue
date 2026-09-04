@@ -3,6 +3,7 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import SaveManager from '../services/SaveManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
 import { AssetsConfig } from '../config/assets.js';
@@ -23,6 +24,8 @@ export default class DungeonScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_rastros_icor');
     this.runasPurificadas = 0;
     Logger.info('DungeonScene', 'Iniciando Masmorra do Bosque Cinzento.');
 
@@ -285,6 +288,13 @@ export default class DungeonScene extends Phaser.Scene {
   }
 
   setupInputs() {
+    this.events.off(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+    this._bgmResumeHandler = () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_rastros_icor');
+    };
+    this.events.on(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         this.game.events.emit('advanceDialogue');
@@ -308,7 +318,9 @@ export default class DungeonScene extends Phaser.Scene {
         const rune = this.currentInteractEntity;
         if (!rune.isPurified) {
           rune.isPurified = true;
-          this.runasPurificadas++;
+          this.sound.play('sfx_env_purify', { volume: 0.6 });
+        this.cameras.main.flash(500, 255, 255, 255);
+        this.runasPurificadas++;
           Logger.info('DungeonScene', `Runa purificada! (${this.runasPurificadas}/3)`);
           
           // Efeito de purificação: brilho muda para ciano sagrado

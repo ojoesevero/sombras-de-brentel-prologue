@@ -58,6 +58,9 @@ class InventoryManager {
     if (!baseItem) return false;
 
     if (this.removeItem(itemId, 1)) {
+      if (typeof target.scene?.sound?.play === 'function') {
+         target.scene.sound.play('sfx_item_drink', { volume: 0.6 });
+      }
       if (itemId === 'potion_heal') {
         target.hp = Math.min(target.hp + 50, target.maxHp || 120);
         Logger.info('InventoryManager', 'Poção de Vida usada. +50 HP');

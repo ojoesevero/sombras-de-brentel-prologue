@@ -20,6 +20,27 @@ export default class PreloadScene extends Phaser.Scene {
       Logger.warn('PreloadScene', `Arquivo ausente: ${fileObj.src}. Fallback procedural ativado.`);
     });
 
+    // --- BGM (Músicas de Fundo) ---
+    this.load.audio('bgm_ecos_do_abismo', 'assets/audio/bgm_ecos_do_abismo.mp3');
+    this.load.audio('bgm_fogo_ouro_cerveja', 'assets/audio/bgm_fogo_ouro_cerveja.mp3');
+    this.load.audio('bgm_furia_estayler', 'assets/audio/bgm_furia_estayler.mp3');
+    this.load.audio('bgm_muralhas_medo', 'assets/audio/bgm_muralhas_medo.mp3');
+    this.load.audio('bgm_bencao_gunther', 'assets/audio/bgm_bencao_gunther.mp3');
+    this.load.audio('bgm_rastros_icor', 'assets/audio/bgm_rastros_icor.mp3');
+
+    // --- SFX (Efeitos Sonoros) ---
+    this.load.audio('sfx_ui_hover', 'assets/audio/sfx/sfx_ui_hover.wav');
+    this.load.audio('sfx_ui_confirm', 'assets/audio/sfx/sfx_ui_confirm.wav');
+    this.load.audio('sfx_item_drink', 'assets/audio/sfx/sfx_item_drink.wav');
+    this.load.audio('sfx_item_coin', 'assets/audio/sfx/sfx_item_coin.wav');
+    this.load.audio('sfx_combat_slash', 'assets/audio/sfx/sfx_combat_slash.wav');
+    this.load.audio('sfx_combat_zap', 'assets/audio/sfx/sfx_combat_zap.wav');
+    this.load.audio('sfx_combat_hurt', 'assets/audio/sfx/sfx_combat_hurt.wav');
+    this.load.audio('sfx_combat_death', 'assets/audio/sfx/sfx_combat_death.wav');
+    this.load.audio('sfx_env_portal', 'assets/audio/sfx/sfx_env_portal.wav');
+    this.load.audio('sfx_env_purify', 'assets/audio/sfx/sfx_env_purify.wav');
+    this.load.audio('sfx_env_chest', 'assets/audio/sfx/sfx_env_chest.mp3');
+
     // 1. Carregamento dos Bancos Data-Driven
     this.load.json('dialogues', './data/dialogues.json');
     this.load.json('enemies', './data/enemies.json');

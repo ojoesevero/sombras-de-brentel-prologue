@@ -121,6 +121,7 @@ export default class ShopUI extends Phaser.GameObjects.Container {
   };
 
   updateSelection() {
+    this.scene.sound.play('sfx_ui_hover', { volume: 0.3 });
     this.selectables.forEach((text, i) => {
       if (!text || !text.active || !text.scene) return;
       try {

@@ -30,6 +30,7 @@ class WorldManager {
     if (!currentScene || !currentScene.scene) return;
     if (currentScene._fadeRunning) return;
     currentScene._fadeRunning = true;
+    currentScene.sound.play('sfx_env_portal', { volume: 0.4 });
 
     // Se o player possuir FSM, trava em TRANSITIONING
     if (currentScene.player) {
@@ -99,7 +100,11 @@ class WorldManager {
               // Empurrar o player para longe do trigger
               if (scene.player && scene.player.body) {
                 scene.player.setState(PlayerState.TRANSITIONING);
-                scene.player.y -= 20;
+                if (tData.pushY !== undefined) {
+                  scene.player.y += tData.pushY;
+                } else {
+                  scene.player.y += (scene.player.y < tData.y ? -20 : 20);
+                }
                 scene.player.body.setVelocity(0, 0);
 
                 scene.game.events.once('dialogueClosed', () => {
@@ -123,7 +128,22 @@ class WorldManager {
           }
 
           // Transição direta ou com Ato Narrativo intermediário
-          this.transitionTo(scene, tData.targetScene, tData.spawn || {}, tData.actTransition || null);
+          let actData = tData.actTransition || null;
+          
+          if (actData && actData.actNumber === 'ATO II') {
+            const isQuestDone = QuestManager.isQuestCompleted('quest_01_flashback') || QuestManager.getQuestStatus('quest_01_flashback') === 'completed';
+            const seenAct2 = window.gameState?.flags?.seenAct2;
+            
+            if (isQuestDone && !seenAct2) {
+              window.gameState = window.gameState || {};
+              window.gameState.flags = window.gameState.flags || {};
+              window.gameState.flags.seenAct2 = true;
+            } else {
+              actData = null; // Anula a transição de ato se não cumprir os requisitos
+            }
+          }
+          
+          this.transitionTo(scene, tData.targetScene, tData.spawn || {}, actData);
         });
       }
     });

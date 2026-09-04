@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import Player from '../entities/Player.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import InputManager from '../services/InputManager.js';
 import FXManager from '../services/FXManager.js';
 import InventoryManager from '../services/InventoryManager.js';
@@ -52,6 +53,8 @@ export default class BattleScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_furia_estayler');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
     InputManager.init(this);

@@ -66,6 +66,7 @@ export default class PauseScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    this.sound.play('sfx_ui_hover', { volume: 0.3 });
     if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((t, i) => {
       if (!t || !t.active || !t.scene || !t.style) return;

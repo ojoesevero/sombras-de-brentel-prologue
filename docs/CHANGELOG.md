@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [1.0.0-alpha] - 2026-08-27
 ### Added
 - Setup inicial do projeto Vite, Electron e Phaser 3.
+- Correção crítica no `InputManager` / `UIScene` para Input Bubbling (adição de debounce no diálogo e substituição de SFX de confirm para hover na leitura contínua).
+- Implementação massiva do sistema de Áudio Global (BGM e SFX) em todas as cenas usando `window.playBGM` sem Object.freeze.
+- Refatoração dos portais no `WorldManager.js` com repulsão inteligente e suporte a trava por quests (Ex: Portal do Templo).
+- Trava narrativa avançada do Ato II integrada ao fluxo do mapa de cidade.
 - Script de automação e integração `npm run electron:dev`.
 - Componente Orientado a Objetos `DialogueBox` renderizando diálogos via efeito Typewriter.
 - Separação da arquitetura de dados (Data-Driven): `public/data/dialogues.json` e `public/data/enemies.json`.

@@ -4,6 +4,7 @@ import QuestManager from '../services/QuestManager.js';
 import InventoryManager from '../services/InventoryManager.js';
 import InputManager from '../services/InputManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 
 /**
  * Cena de Menu Principal do Jogo.
@@ -15,6 +16,8 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_ecos_do_abismo');
     this.add.rectangle(0, 0, 800, 600, 0x080808).setOrigin(0);
 
     // Título Principal
@@ -77,6 +80,10 @@ export default class MenuScene extends Phaser.Scene {
 
     this.updateSelectionVisuals();
     Logger.info('MenuScene', 'Cena de Menu criada e inputs vinculados.');
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_ecos_do_abismo');
+    });
   }
 
   setupInputs() {
@@ -121,9 +128,14 @@ export default class MenuScene extends Phaser.Scene {
     if (this.selectedIndex < 0) this.selectedIndex = this.options.length - 1;
     if (this.selectedIndex >= this.options.length) this.selectedIndex = 0;
     this.updateSelectionVisuals();
+    this.events.on(Phaser.Scenes.Events.RESUME, () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_ecos_do_abismo');
+    });
   }
 
   updateSelectionVisuals() {
+    this.sound.play('sfx_ui_hover', { volume: 0.3 });
     if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((textObj, i) => {
       if (!textObj || !textObj.active || !textObj.scene || !textObj.style) return;

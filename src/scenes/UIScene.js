@@ -47,6 +47,8 @@ export default class UIScene extends Phaser.Scene {
     this.game.events.off('openDialogue');
     this.game.events.on('openDialogue', (dialogueNodes) => {
       if (!dialogueNodes) return;
+      this.inputLocked = true;
+      this.time.delayedCall(200, () => { this.inputLocked = false; });
       this.dialogueBox.setVisible(true);
       this.dialogueBox.startDialogue(dialogueNodes);
       this.game.events.emit('dialogueOpened');
@@ -54,6 +56,8 @@ export default class UIScene extends Phaser.Scene {
 
     this.game.events.off('advanceDialogue');
     this.game.events.on('advanceDialogue', () => {
+      if (this.inputLocked) return;
+      this.sound.play('sfx_ui_hover', { volume: 0.3 });
       if (this.dialogueBox.visible) {
         this.dialogueBox.skipOrNext();
       }

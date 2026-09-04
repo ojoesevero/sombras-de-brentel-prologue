@@ -148,6 +148,7 @@ export default class SettingsScene extends Phaser.Scene {
   }
 
   updateSelectionVisuals() {
+    this.sound.play('sfx_ui_hover', { volume: 0.3 });
     if (!this.sys || !this.sys.isActive() || !this.menuTexts) return;
     this.menuTexts.forEach((textObj, i) => {
       if (!textObj || !textObj.active || !textObj.scene || !textObj.style) return;

@@ -11,6 +11,7 @@ class AudioManager {
       return AudioManager.instance;
     }
     this.currentBGM = null;
+    this.currentBGMKey = null;
     this.bgmVolume = 1.0;
     this.sfxVolume = 1.0;
     this.scene = null;
@@ -24,6 +25,34 @@ class AudioManager {
   init(scene) {
     this.scene = scene;
     Logger.info('AudioManager', 'Instância associada à cena atual.');
+
+    if (!window.playBGM) {
+      window.playBGM = (sceneContext, key, volume = 0.35) => {
+        if (!sceneContext || !sceneContext.sound) {
+          Logger.warn('AudioManager', 'Cena inválida para playBGM.');
+          return;
+        }
+
+        if (window.currentBGMKey === key && window.currentBGMInstance?.isPlaying) {
+          return;
+        }
+
+        if (window.currentBGMInstance) {
+          window.currentBGMInstance.stop();
+          window.currentBGMInstance.destroy();
+          window.currentBGMInstance = null;
+        }
+
+        try {
+          window.currentBGMInstance = sceneContext.sound.add(key, { loop: true, volume: volume });
+          window.currentBGMKey = key;
+          window.currentBGMInstance.play();
+          Logger.info('AudioManager', `BGM global ${key} iniciada com volume ${volume}.`);
+        } catch (e) {
+          Logger.error('AudioManager', `Falha ao tocar BGM global ${key}: ${e.message}`);
+        }
+      };
+    }
   }
 
   /**
@@ -37,16 +66,22 @@ class AudioManager {
       return;
     }
 
+    if (this.currentBGMKey === key) {
+      return; // Já está tocando
+    }
+
     if (this.currentBGM) {
       this.currentBGM.stop();
     }
 
     try {
       this.currentBGM = this.scene.sound.add(key, { loop: true, volume: 0 });
+      this.currentBGMKey = key;
+      window.currentBGMKey = key;
       this.currentBGM.play();
       this.scene.tweens.add({
         targets: this.currentBGM,
-        volume: this.bgmVolume,
+        volume: this.bgmVolume * 0.3,
         duration: config.fadeDuration || 1000
       });
       Logger.info('AudioManager', `BGM ${key} iniciada.`);
@@ -68,6 +103,8 @@ class AudioManager {
         onComplete: () => {
           this.currentBGM.stop();
           this.currentBGM = null;
+          this.currentBGMKey = null;
+          window.currentBGMKey = null;
           Logger.info('AudioManager', 'BGM parada com fade-out.');
         }
       });
@@ -110,5 +147,4 @@ class AudioManager {
 }
 
 const audioManagerInstance = new AudioManager();
-Object.freeze(audioManagerInstance);
 export default audioManagerInstance;

@@ -3,6 +3,7 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import Player from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
 import { AssetsConfig } from '../config/assets.js';
@@ -22,6 +23,8 @@ export default class RastphenCityScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_muralhas_medo');
     Logger.info('RastphenCityScene', 'Renderizando mapa aberto da cidade.');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
@@ -294,6 +297,13 @@ export default class RastphenCityScene extends Phaser.Scene {
   }
 
   setupInputs() {
+    this.events.off(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+    this._bgmResumeHandler = () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_muralhas_medo');
+    };
+    this.events.on(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         Logger.info('Intent', 'Input Z/ESPAÇO: Avançando diálogo na UIScene.');

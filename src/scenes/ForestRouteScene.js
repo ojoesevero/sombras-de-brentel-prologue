@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 import InventoryManager from '../services/InventoryManager.js';
 import QuestManager from '../services/QuestManager.js';
 import Player from '../entities/Player.js';
@@ -25,6 +26,8 @@ export class ForestRouteScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    window.playBGM(this, 'bgm_rastros_icor');
     Logger.info('ForestRouteScene', 'Cena ForestRouteScene iniciada com sucesso.');
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(300, 0, 0, 0);
@@ -344,6 +347,13 @@ export class ForestRouteScene extends Phaser.Scene {
   }
 
   setupInputs() {
+    this.events.off(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+    this._bgmResumeHandler = () => {
+      AudioManager.init(this);
+      window.playBGM(this, 'bgm_rastros_icor');
+    };
+    this.events.on(Phaser.Scenes.Events.RESUME, this._bgmResumeHandler, this);
+
     InputManager.onAction('CONFIRM', () => {
       if (this.player && !this.player.canInteract()) {
         Logger.info('Intent', 'Input Z/ESPAÇO recebido: Avançando diálogo na UIScene.');

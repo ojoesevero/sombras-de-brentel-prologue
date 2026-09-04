@@ -18,5 +18,10 @@
     "name": "Rhogar (Pensamento)",
     "text": "O Grande Portão está selado por feitiçaria sombria. Preciso purificar as 3 Runas de Pestilência nos altares para romper o selo.",
     "character": "Rhogar (Pensamento)"
+  },
+  "thought_locked_temple_entry": {
+    "name": "Rhogar (Pensamento)",
+    "text": "Não devo incomodar a Sacerdotisa ainda. Preciso falar com Joseph na Taverna e entender o que está acontecendo.",
+    "character": "Rhogar (Pensamento)"
   }
 }

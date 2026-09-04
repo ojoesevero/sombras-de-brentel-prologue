@@ -3,6 +3,7 @@ import SaveManager from '../services/SaveManager.js';
 import QuestManager from '../services/QuestManager.js';
 import WorldManager from '../services/WorldManager.js';
 import Logger from '../utils/Logger.js';
+import AudioManager from '../audio/AudioManager.js';
 
 /**
  * Cena de Recompensa (Reward Scene).
@@ -25,8 +26,16 @@ export default class RewardScene extends Phaser.Scene {
   }
 
   create() {
+    AudioManager.init(this);
+    if (window.currentBGMInstance) {
+      window.currentBGMInstance.stop();
+      window.currentBGMInstance.destroy();
+      window.currentBGMInstance = null;
+      window.currentBGMKey = null;
+    }
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
+    this.sound.play('sfx_item_coin', { volume: 0.5 });
 
     // Fundo escurecido e lore
     this.add.rectangle(0, 0, 800, 600, 0x050510).setOrigin(0);

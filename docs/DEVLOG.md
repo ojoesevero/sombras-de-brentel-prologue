@@ -109,6 +109,10 @@
 - **Status:** Concluído
 - **Detalhes:** Projetado o arquivo `thought_interactions.json` contendo alertas mentais canônicos que impedem exploração desordenada dos mapas. Engastado nas cenas `TavernScene`, `RastphenCityScene`, `ForestRouteScene` e `DungeonScene`, o sistema aplica um recuo dinâmico (*pushback*) na coordenada `y` do jogador e ativa imediatamente a UI da `DialogueBox` notificando o jogador de que ele precisa terminar a Quest pendente antes de avançar para um Ato que ele ainda não desvendou.
 
+## Nova Feature e Polimento: Sistema Global de BGM e SFX
+- **Status:** Concluído
+- **Detalhes:** Arquitetura centralizada de áudio (BGM e Foley) orquestrada em `AudioManager.js` via nova API global segura (`window.playBGM`), evitando reinicializações espúrias e contornando exceções de estado selado (`Object.freeze`). O pacote inclui SFX imersivo mapeado para UI (*Hover*, *Confirm*), economia (beber, pilhar) e combate responsivo (*Slash*, *Zap*, *Hurt*, *Death*). Solucionado também o efeito nocivo de *Input Bubbling* na leitura de diálogos mediante um bloqueio temporal de ciclo rápido na `UIScene`, solidificando a experiência final do Prólogo.
+
 ## Correção Crítica: Progressão Pós-Flashback e Interação NPC (v0.16.5)
 - **Status:** Concluído
 - **Detalhes:** Consertado o avanço da Missão `quest_01_flashback` que não persistia na cena de recompensa, impedindo o avanço livre na `TavernScene`. Além disso, configuramos a inicialização correta da `DialogueBox` na `RastphenCityScene` (`setScrollFactor`, `setVisible(true)`) garantindo que interações robustas como a dos Guardas da Muralha abram a interface e restaurem a flag de controle limpa ao fechar.
