@@ -28,6 +28,7 @@ export const AssetsConfig = {
     temple_floor: 'tex_temple_floor',
     temple_pillar: 'tex_temple_pillar',
     temple_altar: 'tex_temple_altar',
+    bed: 'tex_bed',
     chest_closed: 'tex_chest_closed',
     chest_open: 'tex_chest_open',
     cart: 'tex_cart'
@@ -45,6 +46,7 @@ export const AssetsConfig = {
     ilidiz: 'spr_ilidiz',
     yanil: 'spr_yanil',
     sacerdotisa: 'spr_sacerdotisa',
+    gunther: 'spr_gunther',
     gruther_bed: 'spr_gruther_bed',
     iksar: 'spr_iksar',
     minotaur: 'spr_minotaur',

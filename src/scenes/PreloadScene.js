@@ -649,7 +649,37 @@ export default class PreloadScene extends Phaser.Scene {
       g.fillRect(17, 27, 4, 5);
     });
 
-    // 12. NPC Default
+    // 12. Monge Gunther Ferido (spr_gunther: 32x32)
+    makeSprite(AssetsConfig.sprites.gunther, (g) => {
+      // Cabeça raspada / tonsura de monge
+      g.fillStyle(0xf5cd79, 1);
+      g.fillRect(11, 6, 10, 8);
+      g.fillStyle(0x795548, 1); // Cabelos castanhos na lateral da tonsura
+      g.fillRect(10, 8, 2, 6);
+      g.fillRect(20, 8, 2, 6);
+      // Faixa / Curativo branco na testa com mancha de remédio
+      g.fillStyle(0xffffff, 0.95);
+      g.fillRect(10, 7, 12, 3);
+      g.fillStyle(0x74b9ff, 1); // Pano úmido / ervas medicinais
+      g.fillRect(14, 7, 4, 3);
+      // Olhos fechados descansando em dor
+      g.fillStyle(0x2d3436, 1);
+      g.fillRect(12, 10, 3, 1);
+      g.fillRect(17, 10, 3, 1);
+      // Túnica e hábito monástico de Palmem (marrom / bege com estola)
+      g.fillStyle(0x8d6e63, 1);
+      g.fillRect(8, 14, 16, 13);
+      g.fillStyle(0xd7ccc8, 1); // Faixa sagrada transversal
+      g.fillRect(13, 14, 6, 13);
+      g.fillStyle(0xd4af37, 1); // Símbolo solar de Palmem
+      g.fillRect(15, 17, 2, 3);
+      // Sapatos simples de tecido
+      g.fillStyle(0x4e342e, 1);
+      g.fillRect(11, 27, 4, 5);
+      g.fillRect(17, 27, 4, 5);
+    });
+
+    // 13. NPC Default
     makeSprite('spr_npc_default', (g) => {
       g.fillStyle(0x34495e, 1);
       g.fillRect(10, 6, 12, 10);
@@ -1046,6 +1076,53 @@ export default class PreloadScene extends Phaser.Scene {
       g.fillStyle(0x74b9ff, 1);
       g.fillRect(36, 17, 8, 3);
       g.generateTexture('spr_gruther_bed', 80, 100);
+      g.destroy();
+    }
+
+    // 6. Cama de Madeira da Enfermaria (tex_bed: 64x90)
+    if (!this.textures.exists('tex_bed')) {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+      // Sombra projetada sob a cama
+      g.fillStyle(0x000000, 0.35);
+      g.fillRoundedRect(2, 4, 60, 84, 4);
+
+      // Estrutura de madeira nobre de carvalho
+      g.fillStyle(0x4a2c16, 1);
+      g.fillRoundedRect(4, 2, 56, 84, 4);
+
+      // Cabeceira entalhada
+      g.fillStyle(0x341d0c, 1);
+      g.fillRect(4, 2, 56, 12);
+      g.fillStyle(0xd4af37, 0.7); // Friso dourado na cabeceira
+      g.fillRect(8, 4, 48, 2);
+
+      // Colchão de palha/linho
+      g.fillStyle(0xdfe6e9, 1);
+      g.fillRect(8, 16, 48, 66);
+
+      // Lençóis brancos imaculados
+      g.fillStyle(0xf5f6fa, 1);
+      g.fillRect(10, 22, 44, 58);
+
+      // Dobra sombreada do lençol
+      g.fillStyle(0xdcdde1, 1);
+      g.fillRect(10, 36, 44, 4);
+
+      // Cobertor cerimonial vermelho aos pés da cama
+      g.fillStyle(0x8b0000, 1);
+      g.fillRect(10, 56, 44, 24);
+      g.fillStyle(0xb71540, 1);
+      g.fillRect(10, 56, 44, 4);
+      g.fillStyle(0xd4af37, 0.8); // Fita dourada decorativa
+      g.fillRect(10, 72, 44, 2);
+
+      // Travesseiro branco
+      g.fillStyle(0xffffff, 1);
+      g.fillRoundedRect(14, 16, 36, 14, 3);
+      g.fillStyle(0xdcdde1, 0.7);
+      g.fillRect(16, 26, 32, 2);
+
+      g.generateTexture('tex_bed', 64, 90);
       g.destroy();
     }
   }

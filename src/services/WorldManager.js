@@ -92,14 +92,21 @@ class WorldManager {
           // Checagem de Requisitos de Quest
           if (tData.requiredQuest) {
             const isCompleted = QuestManager.isQuestCompleted(tData.requiredQuest) ||
-                                QuestManager.getQuestStatus(tData.requiredQuest) === 'completed';
+                                QuestManager.getQuestStatus(tData.requiredQuest) === 'completed' ||
+                                (window.gameState && window.gameState.flags && window.gameState.flags.talkedToPriestess);
 
             if (!isCompleted) {
               // Empurrar o player para longe do trigger
-              if (scene.player.body) {
-                const pushY = tData.y > (scene.player.y || 0) ? -45 : 45;
-                scene.player.y += pushY;
+              if (scene.player && scene.player.body) {
+                scene.player.setState(PlayerState.TRANSITIONING);
+                scene.player.y -= 20;
                 scene.player.body.setVelocity(0, 0);
+
+                scene.game.events.once('dialogueClosed', () => {
+                  if (scene.player && scene.player.state === PlayerState.TRANSITIONING) {
+                    scene.player.setState(PlayerState.IDLE);
+                  }
+                });
               }
 
               // Carregar pensamento de bloqueio

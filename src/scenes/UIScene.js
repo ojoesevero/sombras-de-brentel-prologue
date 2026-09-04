@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import DialogueBox from '../ui/DialogueBox.js';
+import ShopUI from '../ui/ShopUI.js';
 import Logger from '../utils/Logger.js';
 import InputManager from '../services/InputManager.js';
 
@@ -35,6 +36,7 @@ export default class UIScene extends Phaser.Scene {
     // Eventos do DialogueBox
     this.dialogueBox.on('dialogueComplete', () => {
       this.dialogueBox.setVisible(false);
+      if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
       this.game.events.emit('dialogueClosed');
     });
 
@@ -61,6 +63,7 @@ export default class UIScene extends Phaser.Scene {
     this.game.events.on('closeDialogue', () => {
       this.dialogueBox.setVisible(false);
       this.dialogueBox.closeDialogue();
+      if (this.input && this.input.keyboard) this.input.keyboard.resetKeys();
       this.game.events.emit('dialogueClosed');
     });
 
@@ -98,6 +101,17 @@ export default class UIScene extends Phaser.Scene {
       this.game.events.off('controlModeChanged', updateControlVisibility);
       InputManager.resetVirtualKeys();
     });
+  }
+
+  openShop(stockConfig = null) {
+    if (!this.shopUI) {
+      this.shopUI = new ShopUI(this, 400, 300);
+      this.shopUI.setDepth(3000);
+      this.shopUI.on('shopClosed', () => {
+        this.game.events.emit('globalShopClosed');
+      });
+    }
+    this.shopUI.openShop(stockConfig);
   }
 
   /**

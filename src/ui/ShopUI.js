@@ -3,6 +3,8 @@ import InventoryManager from '../services/InventoryManager.js';
 import Logger from '../utils/Logger.js';
 import InputManager from '../services/InputManager.js';
 
+import QuestManager from '../services/QuestManager.js';
+
 /**
  * Interface Modal de Loja/Cardápio da Taverna (ShopUI).
  * Permite compra de itens via teclado e toque.
@@ -37,34 +39,9 @@ export default class ShopUI extends Phaser.GameObjects.Container {
     }).setOrigin(0.5);
     this.add(this.goldText);
 
-    this.stock = [
-      { id: 'potion_heal', name: 'Poção de Vida', price: 20 },
-      { id: 'dwarven_ale', name: 'Cerveja Anã', price: 15 }
-    ];
-
+    this.stock = [];
     this.itemTexts = [];
     this.selectables = [];
-    
-    this.stock.forEach((item, index) => {
-      const yPos = -40 + (index * 40);
-      const text = scene.add.text(0, yPos, `${item.name} - ${item.price} PO`, {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px',
-        color: '#aaaaaa'
-      })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true });
-      
-      text.on('pointerdown', () => this.buyItem(item));
-      text.on('pointerover', () => {
-        this.selectedIndex = index;
-        this.updateSelection();
-      });
-
-      this.itemTexts.push(text);
-      this.selectables.push(text);
-      this.add(text);
-    });
 
     this.closeBtn = scene.add.text(0, 100, 'Fechar', {
       fontFamily: 'Arial, sans-serif',
@@ -98,7 +75,8 @@ export default class ShopUI extends Phaser.GameObjects.Container {
     if (!item) return;
     if (InventoryManager.gold >= item.price) {
       InventoryManager.removeGold(item.price);
-      InventoryManager.addItem(item.id, 1);
+      const qty = item.id === 'dwarven_ale' ? 3 : 1;
+      InventoryManager.addItem(item.id, qty);
       if (this.goldText && this.goldText.active) {
         this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
       }
@@ -174,7 +152,56 @@ export default class ShopUI extends Phaser.GameObjects.Container {
     InputManager.off('CANCEL', this.handleCancel);
   }
 
-  openShop() {
+  buildStock(customStock = null) {
+    this.itemTexts.forEach(t => { this.remove(t); t.destroy(); });
+    this.itemTexts = [];
+    this.selectables = [];
+    
+    if (customStock) {
+      this.stock = customStock.map(item => {
+        if (!item.name) {
+          const dbItem = InventoryManager.itemDatabase[item.id];
+          item.name = dbItem ? dbItem.name : 'Item Desconhecido';
+        }
+        return item;
+      });
+    } else {
+      const isPostFlashback = QuestManager.isQuestCompleted('quest_01_flashback');
+      this.stock = [
+        { id: 'dwarven_ale', name: 'Cerveja Anã (3 doses)', price: 15 }
+      ];
+      
+      if (isPostFlashback) {
+        this.stock.unshift({ id: 'potion_heal', name: 'Poção de Vida', price: 20 });
+      }
+    }
+
+    this.stock.forEach((item, index) => {
+      const yPos = -40 + (index * 40);
+      const text = this.scene.add.text(0, yPos, `${item.name} - ${item.price} PO`, {
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '18px',
+        color: '#aaaaaa'
+      })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true });
+      
+      text.on('pointerdown', () => this.buyItem(item));
+      text.on('pointerover', () => {
+        this.selectedIndex = index;
+        this.updateSelection();
+      });
+
+      this.itemTexts.push(text);
+      this.selectables.push(text);
+      this.add(text);
+    });
+    
+    this.selectables.push(this.closeBtn);
+  }
+
+  openShop(customStock = null) {
+    this.buildStock(customStock);
     if (this.goldText && this.goldText.active) {
       this.goldText.setText(`Ouro: ${InventoryManager.gold} PO`);
     }

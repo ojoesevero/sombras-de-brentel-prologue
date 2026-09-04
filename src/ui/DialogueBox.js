@@ -331,6 +331,12 @@ export default class DialogueBox extends Phaser.GameObjects.Container {
     Logger.dialogue('CHOICE', this.nodes[this.lineIndex].character || '???', choice.text);
     this.clearChoices();
     
+    if (typeof choice.callback === 'function') {
+      this.closeDialogue();
+      choice.callback();
+      return;
+    }
+
     if (choice.response) {
       const speaker = this.nodes[this.lineIndex].character || this.nodes[this.lineIndex].speaker || '???';
       this.tempResponseNode = { speaker: speaker, text: choice.response, portraitKey: this.nodes[this.lineIndex].portraitKey };

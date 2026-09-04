@@ -3,6 +3,7 @@ import InputManager from '../services/InputManager.js';
 import WorldManager from '../services/WorldManager.js';
 import InventoryManager from '../services/InventoryManager.js';
 import AchievementManager from '../services/AchievementManager.js';
+import QuestManager from '../services/QuestManager.js';
 import Logger from '../utils/Logger.js';
 import Player, { PlayerState } from '../entities/Player.js';
 import DevShortcuts from '../utils/DevShortcuts.js';
@@ -26,17 +27,17 @@ export default class TempleNorthScene extends Phaser.Scene {
     this.cameras.main.resetFX();
     this.cameras.main.fadeIn(400, 0, 0, 0);
 
-    // Dimensões do mapa da Enfermaria (800x600)
-    this.physics.world.setBounds(0, 0, 800, 600);
-    this.cameras.main.setBounds(0, 0, 800, 600);
+    // Dimensões do mapa da Enfermaria (800x680 para permitir livre locomoção e saída)
+    this.physics.world.setBounds(0, 0, 800, 680);
+    this.cameras.main.setBounds(0, 0, 800, 680);
 
     // Piso de Pedra Sagrada
-    this.add.tileSprite(400, 300, 800, 600, AssetsConfig.tiles.temple_floor).setOrigin(0.5);
+    this.add.tileSprite(400, 340, 800, 680, AssetsConfig.tiles.temple_floor).setOrigin(0.5);
 
     // Tapete Central da Enfermaria
-    this.add.rectangle(400, 300, 160, 480, 0x8b0000).setDepth(1);
-    this.add.rectangle(400, 300, 148, 474, 0xb71540).setDepth(1);
-    this.add.rectangle(400, 300, 140, 470, 0x780218).setDepth(1);
+    this.add.rectangle(400, 320, 160, 520, 0x8b0000).setDepth(1);
+    this.add.rectangle(400, 320, 148, 514, 0xb71540).setDepth(1);
+    this.add.rectangle(400, 320, 140, 510, 0x780218).setDepth(1);
 
     this.staticGroup = this.physics.add.staticGroup();
 
@@ -48,10 +49,10 @@ export default class TempleNorthScene extends Phaser.Scene {
     };
 
     addWall(400, 10, 800, 20); // Parede Norte
-    addWall(10, 300, 20, 600);  // Parede Oeste
-    addWall(790, 300, 20, 600); // Parede Leste
-    addWall(180, 590, 340, 20); // Parede Sul Esquerda
-    addWall(620, 590, 340, 20); // Parede Sul Direita
+    addWall(10, 340, 20, 680);  // Parede Oeste
+    addWall(790, 340, 20, 680); // Parede Leste
+    addWall(180, 670, 340, 20); // Parede Sul Esquerda
+    addWall(620, 670, 340, 20); // Parede Sul Direita
 
     // Pilares
     const addPillar = (x, y) => {
@@ -63,10 +64,25 @@ export default class TempleNorthScene extends Phaser.Scene {
     addPillar(180, 200); addPillar(620, 200);
     addPillar(180, 420); addPillar(620, 420);
 
-    // Leito de Enfermagem do Monge Gunther
-    this.bed = this.add.image(400, 200, AssetsConfig.tiles.bed).setDepth(2);
+    // 1. Leito de Enfermagem (Cama de Madeira com Lençóis)
+    this.bed = this.add.image(400, 200, AssetsConfig.tiles.bed || 'tex_bed').setDepth(2);
     this.physics.add.existing(this.bed, true);
+    if (this.bed.body) {
+      this.bed.body.setSize(56, 76);
+    }
     this.staticGroup.add(this.bed);
+
+    // 2. Sprite do Monge Gunther repousando ferido sobre a cama
+    this.guntherSprite = this.add.sprite(400, 195, AssetsConfig.sprites.gunther || 'spr_gunther').setDepth(3);
+    this.tweens.add({
+      targets: this.guntherSprite,
+      scaleY: 0.94,
+      alpha: 0.9,
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
 
     // Iluminação e Velas da Enfermaria
     const candleL = this.add.circle(340, 180, 18, 0xffa502, 0.35).setDepth(1).setBlendMode(Phaser.BlendModes.ADD);
@@ -81,17 +97,17 @@ export default class TempleNorthScene extends Phaser.Scene {
     });
 
     // Tag do Monge Gunther
-    this.add.text(400, 150, 'MONGE GUNTHER (FERIDO)', {
+    this.add.text(400, 145, 'MONGE GUNTHER (FERIDO)', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '9px',
       color: '#ff7675',
       fontStyle: 'bold',
       backgroundColor: 'rgba(0,0,0,0.7)',
       padding: { x: 5, y: 2 }
-    }).setOrigin(0.5).setDepth(3);
+    }).setOrigin(0.5).setDepth(4);
 
-    // Portal Sul de Retorno ao Santuário
-    this.add.text(400, 580, '▼ SANTUÁRIO PRINCIPAL', {
+    // Portal Sul de Retorno ao Santuário (Posicionado confortavelmente dentro da área caminhável)
+    this.add.text(400, 550, '▼ SANTUÁRIO PRINCIPAL', {
       fontFamily: 'Arial, sans-serif',
       fontSize: '8px',
       color: '#2ed573',
@@ -100,12 +116,11 @@ export default class TempleNorthScene extends Phaser.Scene {
       padding: { x: 4, y: 1 }
     }).setOrigin(0.5).setDepth(3);
 
-    // Transições de Mapa data-driven
-    this.transitions = WorldManager.buildTransitions(this);
+    // Transições movidas para depois da criação do jogador
 
     // Interagíveis da Ala Norte
     this.interactables = [
-      { id: 'gunther_bed', x: 400, y: 230 }
+      { id: 'gunther_bed', x: 400, y: 220 }
     ];
 
     // Jogador (Spawn)
@@ -114,6 +129,9 @@ export default class TempleNorthScene extends Phaser.Scene {
     this.player = new Player(this, spawnX, spawnY, 32, 32, 0x0055ff);
     this.player.setDepth(10);
     this.physics.add.collider(this.player, this.staticGroup);
+
+    // Transições de Mapa data-driven
+    this.transitions = WorldManager.buildTransitions(this);
 
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 

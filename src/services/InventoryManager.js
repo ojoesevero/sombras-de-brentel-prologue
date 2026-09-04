@@ -16,7 +16,9 @@ class InventoryManager {
     this.itemDatabase = {
       potion_heal: { id: 'potion_heal', name: 'Poção de Vida', type: 'consumable', value: 20, icon: '🧪', effectDesc: '+50 HP', category: 'Poções' },
       potion_large: { id: 'potion_large', name: 'Poção Grande de Cura', type: 'consumable', value: 45, icon: '🍷', effectDesc: '+100 HP', category: 'Poções' },
-      dwarven_ale: { id: 'dwarven_ale', name: 'Cerveja Anã', type: 'consumable', value: 15, icon: '🍺', effectDesc: '+30 Fúria', category: 'Bebidas' },
+      dwarven_ale: { id: 'dwarven_ale', name: 'Cerveja Anã (Gole)', type: 'consumable', value: 15, icon: '🍺', effectDesc: '+30 Fúria, +20 HP', category: 'Bebidas' },
+      dragon_snack: { id: 'dragon_snack', name: 'Petisco de Dragão', type: 'consumable', value: 10, icon: '🍖', effectDesc: '+15 HP', category: 'Alimentos' },
+      water: { id: 'water', name: 'Água', type: 'consumable', value: 5, icon: '💧', effectDesc: '+5 HP', category: 'Bebidas' },
       fury_elixir: { id: 'fury_elixir', name: 'Elixir Dracônico', type: 'consumable', value: 40, icon: '🔥', effectDesc: '+50 Fúria', category: 'Poções' },
       manto_elfico: { id: 'manto_elfico', name: 'Manto Élfico de Yanil', type: 'equipment', value: 75, icon: '🧣', effectDesc: '+4 Defesa Permanente', category: 'Equipamentos' },
       pergaminho_trovao: { id: 'pergaminho_trovao', name: 'Pergaminho do Trovão', type: 'scroll', value: 50, icon: '📜', effectDesc: 'Libera faíscas arcanas (+15 ATQ)', category: 'Pergaminhos' },

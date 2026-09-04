@@ -244,6 +244,13 @@ export default class TempleScene extends Phaser.Scene {
         if (this.currentInteractTarget === 'sacerdotisa_palmem') {
           const guntherVisited = !!this.registry.get('visitedGunther');
 
+          if (!QuestManager.isQuestCompleted('quest_02_temple')) {
+             QuestManager.advanceQuest('quest_02_temple', 'completed');
+             if (!window.gameState) window.gameState = { flags: {} };
+             window.gameState.flags.talkedToPriestess = true;
+             this.game.events.emit('updateObjective', 'Objetivo: Siga para a Estrada Sul em Rastphen (Fazenda dos Halflings)');
+          }
+
           if (guntherVisited) {
             this.game.events.emit('openDialogue', [
               {
@@ -257,7 +264,7 @@ export default class TempleScene extends Phaser.Scene {
               {
                 character: 'Sacerdotisa Ilídiz',
                 portraitKey: AssetsConfig.sprites.sacerdotisa,
-                text: 'Rhogar, as bênçãos de Palmem estejam com você. O jovem monge Gunther foi resgatado do ataque nas estradas, mas repousa em febre na nossa Ala Norte. Ele delira sobre sombras monstruosas rondando a Fazenda dos Halflings.',
+                text: 'Rhogar, as altas muralhas de Rastphen sempre protegeram o sul de Walldarten, mas as sombras agora rastejam pelas estradas. Nosso jovem monge, Gunther, sobreviveu a um ataque na Fazenda dos Halflings... Ele está repousando na Ala Norte. Você pode ir vê-lo se desejar, ou pode seguir direto para o Portão Sul da cidade para investigar a fazenda.',
                 choices: [
                   {
                     text: '[Sim] Visitar Gunther na Ala Norte de Repouso',

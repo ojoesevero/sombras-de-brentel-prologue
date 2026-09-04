@@ -21,6 +21,8 @@ class InputManager extends Phaser.Events.EventEmitter {
       left: false,
       right: false
     };
+    this.ignoreInputs = false;
+    this.interactionLock = false;
   }
 
   /**
@@ -193,6 +195,25 @@ class InputManager extends Phaser.Events.EventEmitter {
   }
 
   emitAction(action) {
+    if (this.ignoreInputs || this.interactionLock) return;
+
+    if (action === 'CONFIRM') {
+      const ui = this.scene && typeof this.scene.scene.get === 'function' ? this.scene.scene.get('UIScene') : null;
+      if (ui && typeof ui.isDialogueActive === 'function' && ui.isDialogueActive()) {
+        ui.game.events.emit('advanceDialogue');
+        
+        this.interactionLock = true;
+        if (this.scene && this.scene.time) {
+          this.scene.time.delayedCall(250, () => {
+            this.interactionLock = false;
+          });
+        } else {
+          setTimeout(() => { this.interactionLock = false; }, 250);
+        }
+        return;
+      }
+    }
+
     if (action === 'INVENTORY') {
       const now = Date.now();
       if (this._lastInventoryTime && (now - this._lastInventoryTime < 250)) {

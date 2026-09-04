@@ -102,7 +102,7 @@ export default class TavernScene extends Phaser.Scene {
     // 5. NPCs e Entidades de Interação
     this.interactables = [
       { id: 'balcao_taverna', x: 400, y: 140 },
-      { id: 'hilda', x: 400, y: 75 },
+      { id: 'hilda', x: 200, y: 135 },
       { id: 'placa_regras', x: 200, y: 100 },
       { id: 'quadro_avisos', x: 600, y: 100 },
       { id: 'john_bardem', x: 100, y: 500 },
@@ -177,13 +177,41 @@ export default class TavernScene extends Phaser.Scene {
     this.interactables.push({ id: 'gisela_waitress', x: 350, y: 180, isWalker: true });
 
     // Instanciação do Jogador (Player com FSM)
-    const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
-    const spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 500);
+    let isNewGameIntro = !this.registry.get('introCutscenePlayed') && !this.returnedFromFlashback;
+    let spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 400);
+    let spawnY = this.spawnData.y || (WorldManager.getSpawn()?.y || 500);
+
+    if (isNewGameIntro) {
+      spawnX = 400;
+      spawnY = 580; // Starting at the door
+    }
+
     this.player = new Player(this, spawnX, spawnY, 32, 32, 0x2980b9);
     if (this.spawnData?.loadedData?.player) {
       this.player.loadState(this.spawnData.loadedData.player);
     }
     this.physics.add.collider(this.player, this.staticGroup);
+
+    if (isNewGameIntro) {
+      this.registry.set('introCutscenePlayed', true);
+      this.player.setState(PlayerState.TRANSITIONING); // blocks input
+      this.tweens.add({
+        targets: this.player,
+        y: 500,
+        duration: 2500,
+        ease: 'Sine.easeInOut',
+        onComplete: () => {
+          this.player.setState(PlayerState.IDLE);
+          this.game.events.emit('openDialogue', [
+            {
+              character: 'Rhogar Tordan',
+              portraitKey: AssetsConfig.sprites.rhogar || 'spr_rhogar',
+              text: '*Suspiro exausto* Finalmente... um lugar para descansar a mente...'
+            }
+          ]);
+        }
+      });
+    }
 
     // Portas Data-Driven via WorldManager
     WorldManager.buildTransitions(this);
@@ -193,12 +221,14 @@ export default class TavernScene extends Phaser.Scene {
     this.interactPrompt.setVisible(false);
     this.interactPrompt.setDepth(10);
     
-    // Shop UI e Map UI locais
-    this.shopUI = new ShopUI(this, 400, 300);
-    this.shopUI.setDepth(30);
-    this.shopUI.on('shopClosed', () => {
-      if (this.player.state === PlayerState.INTERACTING) {
-        this.player.setState(PlayerState.IDLE);
+    // Shop UI delegada para UIScene (removida instância local)
+    this.game.events.on('globalShopClosed', () => {
+      if (this.player && this.player.state === PlayerState.INTERACTING) {
+        if (InventoryManager.hasItem('dwarven_ale') && !this.registry.get('drankBeer')) {
+          this._startBeerDrinkingEvent(0);
+        } else {
+          this.player.setState(PlayerState.IDLE);
+        }
       }
     });
 
@@ -222,16 +252,15 @@ export default class TavernScene extends Phaser.Scene {
         this.waitress.resumePatrol();
       }
 
-      // Abrir cardápio da Hilda se necessário
-      if (target === 'hilda' && this.openHildaShopOnClose) {
-        this.openHildaShopOnClose = false;
-        this.shopUI.openShop();
-      }
-
       // Controle do Flashback no Joseph Sylven
       if (target === 'joseph_sylven' && (josephType === 'joseph_flashback_ready' || this.registry.get('drankBeer'))) {
         if (!QuestManager.isQuestCompleted('quest_01_flashback')) {
           Logger.info('TavernScene', 'Rhogar bebeu a cerveja e lembrou do passado. Iniciando Flashback de Estayler...');
+          
+          if (this.scene.get('UIScene') && this.scene.get('UIScene').dialogueBox) {
+            this.scene.get('UIScene').dialogueBox.closeDialogue();
+          }
+
           this.cameras.main.fadeOut(500, 255, 255, 255);
           this.time.delayedCall(550, () => {
             this.scene.start('GameScene'); 
@@ -319,62 +348,26 @@ export default class TavernScene extends Phaser.Scene {
 
     if (id === 'balcao_taverna' || id === 'counter') {
       this.player.setState(PlayerState.INTERACTING);
+      
       const hasAle = InventoryManager.hasItem('dwarven_ale');
 
       if (hasAle) {
-        // Consumo direto no balcão
-        InventoryManager.useItem('dwarven_ale', this.player);
-        this.registry.set('drankBeer', true);
-        this.updateHUD();
-
-        const dialogueNodes = [
-          {
-            character: 'Rhogar Tordan',
-            portraitKey: AssetsConfig.sprites.rhogar || 'spr_rhogar',
-            text: '*Glup, glup, glup...* Ahh! A Cerveja Anã desce quente na garganta, despertando toda a energia dracônica!'
-          }
-        ];
-
-        if (this.player.isDrunk) {
-          dialogueNodes.push({
-            character: 'Hilda Barba-de-Ferro',
-            portraitKey: AssetsConfig.sprites.hilda,
-            text: 'Pelos deuses anões, o grandalhão bebeu até cair! Seus olhos estão rodopiando... Cuidado ao dar seus passos!'
-          });
-        }
-
-        this.game.events.emit('openDialogue', dialogueNodes);
-      } else if (!drankBeer) {
-        // Bronca clássica da Hilda ao tentar interagir no balcão sem cerveja
-        this.openHildaShopOnClose = true;
-        this.game.events.emit('openDialogue', [
-          {
-            character: 'Hilda Barba-de-Ferro',
-            portraitKey: AssetsConfig.sprites.hilda,
-            text: 'Compre uma cerveja seu miserável! Ninguém encosta no meu balcão sem pedir a legítima Cerveja Anã de Rastphen!'
-          }
-        ]);
+        this._startBeerDrinkingEvent(0);
       } else {
-        // Jogador já bebeu antes mas está sem cerveja na mochila
-        this.openHildaShopOnClose = true;
         this.game.events.emit('openDialogue', [
           {
             character: 'Hilda Barba-de-Ferro',
             portraitKey: AssetsConfig.sprites.hilda,
-            text: 'Secou sua caneca, grandalhão? Se quiser encher de novo para a estrada, escolha no cardápio!'
+            text: 'Ei! Tire as mãos daí! Vá comprar uma bebida com a Hilda ali no canto!'
           }
         ]);
       }
     } else if (id === 'hilda') {
       this.player.setState(PlayerState.INTERACTING);
-      this.openHildaShopOnClose = true;
-      this.game.events.emit('openDialogue', [
-        {
-          character: 'Hilda Barba-de-Ferro',
-          portraitKey: AssetsConfig.sprites.hilda,
-          text: 'Bem-vindo ao balcão da Taverna Cauda do Dragão! Aqui está o cardápio com as melhores cervejas e provisões de Rastphen!'
-        }
-      ]);
+      
+      if (this.scene.get('UIScene') && typeof this.scene.get('UIScene').openShop === 'function') {
+         this.scene.get('UIScene').openShop([{ id: 'dwarven_ale', price: 15 }, { id: 'dragon_snack', price: 10 }, { id: 'water', price: 5 }]);
+      }
     } else if (id === 'quadro_avisos') {
       this.player.setState(PlayerState.INTERACTING);
       this.currentMapUI = new WorldMapUI(this, 400, 300);
@@ -478,8 +471,14 @@ export default class TavernScene extends Phaser.Scene {
         // Diálogo normal com o herói durante a coleta de informações
         if (id === 'traudon_alicia' && !this.registry.get('aliciaGaveGold')) {
           this.registry.set('aliciaGaveGold', true);
-          InventoryManager.addGold(20);
-          this.player.showFloatingText('+20 Ouro de Alícia! 🪙', '#ffd700');
+          
+          const requiredGold = 15;
+          let goldGiven = 0;
+          if (InventoryManager.gold < requiredGold) {
+            goldGiven = requiredGold - InventoryManager.gold;
+            InventoryManager.addGold(goldGiven);
+            this.player.showFloatingText(`+${goldGiven} Ouro de Alícia! 🪙`, '#ffd700');
+          }
 
           this.game.events.emit('openDialogue', [
             {
@@ -490,7 +489,9 @@ export default class TavernScene extends Phaser.Scene {
             {
               character: 'Alícia',
               portraitKey: AssetsConfig.sprites.traudon,
-              text: 'Rhogar, você parece exausto e sem um único tostão na bolsa. Tome estas 20 moedas de ouro para pagar uma boa rodada de cerveja no balcão de Hilda!'
+              text: goldGiven > 0 
+                ? `Rhogar, você parece exausto e sem dinheiro suficiente. Tome estas ${goldGiven} moedas para inteirar o preço de uma Cerveja Anã no balcão de Hilda!`
+                : 'Rhogar, você parece exausto. Compre uma boa rodada de cerveja no balcão de Hilda para aliviar essa tensão!'
             }
           ]);
         } else {
@@ -510,6 +511,17 @@ export default class TavernScene extends Phaser.Scene {
     } else if (id === 'gisela_waitress') {
       this.player.setState(PlayerState.INTERACTING);
       if (this.waitress) this.waitress.pauseForDialogue(this.player.x);
+
+      if (isPostFlashback) {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Gisela (Garçonete)',
+            portraitKey: AssetsConfig.sprites.waitress,
+            text: 'As ruas de Rastphen estão vazias lá fora... As pessoas têm medo da escuridão. Tome cuidado, guerreiro.'
+          }
+        ]);
+        return;
+      }
 
       const waitressCount = (this.registry.get('waitressInteractionsCount') || 0) + 1;
       this.registry.set('waitressInteractionsCount', waitressCount);
@@ -531,18 +543,12 @@ export default class TavernScene extends Phaser.Scene {
           }
         ]);
       } else if (waitressCount === 3) {
-        InventoryManager.addItem('dwarven_ale', 1);
-        this.player.showFloatingText('+1 Cerveja Anã Recebida! 🍺', '#f39c12');
+        InventoryManager.addItem('dwarven_ale', 3);
+        this.player.showFloatingText('+3 Cerveja Anã (3 doses) Recebida! 🍺', '#f39c12');
         AchievementManager.unlock('ach_free_beer', this.game);
         this.updateHUD();
 
-        this.game.events.emit('openDialogue', [
-          {
-            character: 'Gisela (Garçonete)',
-            portraitKey: AssetsConfig.sprites.waitress,
-            text: 'Pelos deuses, quanta insistência! Tome esta Cerveja Anã por conta da casa antes que a Hilda perceba... Mas não conte a ninguém!'
-          }
-        ]);
+        this._startBeerDrinkingEvent(0);
       } else {
         this.game.events.emit('openDialogue', [
           {
@@ -621,7 +627,12 @@ export default class TavernScene extends Phaser.Scene {
         dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, ent.x, ent.y);
       }
 
-      const maxRange = (ent.id === 'balcao_taverna' || ent.id === 'hilda') ? 85 : 55;
+      let maxRange = 65;
+      if (ent.id === 'hilda') {
+        maxRange = 150; // Permite interação confortável através do balcão sem bloqueio de colisão
+      } else if (ent.id === 'balcao_taverna') {
+        maxRange = 125;
+      }
 
       if (dist <= maxRange && dist < closestDist) {
         closestDist = dist;
@@ -636,6 +647,63 @@ export default class TavernScene extends Phaser.Scene {
     } else {
       this.currentInteractable = null;
       this.interactPrompt.setVisible(false);
+    }
+  }
+
+  _startBeerDrinkingEvent(currentSips = 0) {
+    this.player.setState(PlayerState.INTERACTING);
+    const text = currentSips === 0 
+      ? 'Você adquiriu uma Cerveja Anã. Tomar um gole agora?'
+      : 'Tomar mais um gole?';
+
+    this.game.events.emit('openDialogue', [
+      {
+        character: 'Sistema',
+        text: text,
+        choices: [
+          {
+            text: '[Sim]',
+            callback: () => {
+              this._handleSip(currentSips + 1);
+            }
+          },
+          {
+            text: '[Não]',
+            callback: () => {
+              this.game.events.emit('openDialogue', [
+                {
+                  character: 'Rhogar Tordan',
+                  portraitKey: AssetsConfig.sprites.rhogar || 'spr_rhogar',
+                  text: 'Já chega. É melhor eu falar com o Joseph.'
+                }
+              ]);
+            }
+          }
+        ]
+      }
+    ]);
+  }
+
+  _handleSip(sipCount) {
+    // Consume 1 dose
+    InventoryManager.useItem('dwarven_ale', this.player);
+    this.registry.set('drankBeer', true);
+    this.updateHUD();
+
+    if (sipCount < 3) {
+      this.time.delayedCall(1200, () => {
+        this._startBeerDrinkingEvent(sipCount);
+      });
+    } else {
+      this.time.delayedCall(1200, () => {
+        this.game.events.emit('openDialogue', [
+          {
+            character: 'Rhogar Tordan',
+            portraitKey: AssetsConfig.sprites.rhogar || 'spr_rhogar',
+            text: 'Acho que foi demais...'
+          }
+        ]);
+      });
     }
   }
 }
