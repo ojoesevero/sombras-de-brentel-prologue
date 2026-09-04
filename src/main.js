@@ -1,4 +1,9 @@
 import Phaser from 'phaser';
+import { inject } from '@vercel/analytics';
+
+// Inicia o rastreamento do Vercel Analytics
+inject();
+
 import PreloadScene from './scenes/PreloadScene.js';
 import IntroSplashScene from './scenes/IntroSplashScene.js';
 import MenuScene from './scenes/MenuScene.js';

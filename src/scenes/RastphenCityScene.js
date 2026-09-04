@@ -81,6 +81,45 @@ export default class RastphenCityScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(4);
       }
     };
+    window.playBGM(this, 'bgm_muralhas_medo');
+    Logger.info('RastphenCityScene', 'Renderizando mapa aberto da cidade.');
+    this.cameras.main.resetFX();
+    this.cameras.main.fadeIn(400, 0, 0, 0);
+
+    // Limites da malha urbana (2400x1800)
+    // Limites da malha urbana (2400x1800)
+    this.physics.world.setBounds(0, 0, 2400, 1800);
+    this.add.rectangle(0, 0, 2400, 1800, 0x3d3d3d).setOrigin(0); // Piso basalto escuro
+
+    // 1. Camadas Visuais de Caminhos (Avenidas de Paralelepípedos e Terra Batida)
+    // Avenida Norte-Sul: Templo (y: 370) -> Praça Central (y: 900) -> Portão Sul (y: 1750)
+    this.add.rectangle(1200, 1060, 180, 1380, 0x5a554e).setOrigin(0.5); // Base de terra
+    this.add.rectangle(1200, 1060, 140, 1380, 0x757069).setOrigin(0.5); // Paralelepípedos
+    for (let py = 380; py <= 1740; py += 40) {
+      this.add.rectangle(1200, py, 136, 2, 0x47433e, 0.45);
+    }
+
+    // Avenida Leste-Oeste: Taverna (x: 300, y: 800) -> Praça Central (x: 1200, y: 900)
+    this.add.rectangle(750, 850, 900, 150, 0x5a554e).setOrigin(0.5);
+    this.add.rectangle(750, 850, 900, 110, 0x757069).setOrigin(0.5);
+    for (let px = 320; px <= 1180; px += 40) {
+      this.add.rectangle(px, 850, 2, 106, 0x47433e, 0.45);
+    }
+
+    // Praça Central do Mercado (Ladrilhos em Anel Circular)
+    this.add.circle(1200, 900, 230, 0x5a554e);
+    this.add.circle(1200, 900, 200, 0x827c73);
+    this.add.circle(1200, 900, 160, 0x6e6860);
+    this.add.circle(1200, 900, 60, 0x44403b);
+    this.add.text(1200, 900, 'PRAÇA CENTRAL\nMERCADO DE RASTPHEN', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '12px',
+      color: '#ffd700',
+      fontStyle: 'bold',
+      align: 'center'
+    }).setOrigin(0.5);
+
+
 
     // Muralhas da Cidade
     addBuilding(1200, 15, 2400, 30);  // Muro Norte
@@ -91,6 +130,17 @@ export default class RastphenCityScene extends Phaser.Scene {
     addBuilding(1200, 200, 600, 280, 'TEMPLO DE PALMEM');
     addBuilding(300, 800, 420, 280, 'TAVERNA CAUDA DO DRAGÃO');
     addBuilding(2000, 800, 380, 260, 'QUARTEL DA GUARDA');
+
+    // Casas Trancadas (Pontos de Tensão)
+    this.house1 = this.add.rectangle(700, 1300, 180, 150, 0x3e2723);
+    this.house1.setStrokeStyle(3, 0x1a1110);
+    this.physics.add.existing(this.house1, true);
+    this.staticGroup.add(this.house1);
+
+    this.house2 = this.add.rectangle(1700, 1200, 200, 150, 0x3e2723);
+    this.house2.setStrokeStyle(3, 0x1a1110);
+    this.physics.add.existing(this.house2, true);
+    this.staticGroup.add(this.house2);
 
     // 2. Decoração Urbana: Barracas de Feira na Praça Central
     const addMarketStall = (x, y, colorPrimary, colorStripe, label) => {
@@ -185,7 +235,7 @@ export default class RastphenCityScene extends Phaser.Scene {
       padding: { x: 4, y: 2 }
     }).setOrigin(0.5).setDepth(4);
 
-    // 4. População Viva: NPCs Civis e Patrulhas em Movimento Contínuo (NPCWalker)
+    // 4. População Viva: Guardas em Movimento Contínuo (NPCWalker)
     this.walkers = [];
 
     // Guarda da Praça
@@ -214,31 +264,31 @@ export default class RastphenCityScene extends Phaser.Scene {
     });
     this.walkers.push(this.soldierSquad);
 
-    // Cidadão Tobias (Caminha da Taverna ao Mercado)
-    this.civilianTobias = new NPCWalker(this, 550, 850, AssetsConfig.sprites.veronica || 'spr_npc_default', {
-      name: 'Tobias (Cidadão)',
-      speed: 35,
-      depth: 3,
-      waypoints: [
-        { x: 550, y: 850, waitTime: 3000 },
-        { x: 1000, y: 850, waitTime: 4000 },
-        { x: 800, y: 850, waitTime: 2000 }
-      ]
-    });
+    // Cidadãos removidos (Lei Marcial / Toque de Recolher)
+    /*
+    this.civilianTobias = new NPCWalker(this, 550, 850, AssetsConfig.sprites.veronica || 'spr_npc_default', { ... });
     this.walkers.push(this.civilianTobias);
-
-    // Cidadã Martha (Caminha pela Feira)
-    this.civilianMartha = new NPCWalker(this, 1150, 1020, 'spr_npc_default', {
-      name: 'Martha (Compradora)',
-      speed: 32,
-      depth: 3,
-      waypoints: [
-        { x: 1150, y: 1020, waitTime: 3500 },
-        { x: 1250, y: 1020, waitTime: 3500 },
-        { x: 1200, y: 940, waitTime: 2500 }
-      ]
-    });
+    this.civilianMartha = new NPCWalker(this, 1150, 1020, 'spr_npc_default', { ... });
     this.walkers.push(this.civilianMartha);
+    */
+
+    // Patrulhas Mecânicas nos Guardas do Portão Sul
+    this.tweens.add({
+      targets: this.guardaTelmer,
+      x: '+= 120',
+      duration: 4000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    this.tweens.add({
+      targets: this.guardaBreno,
+      x: '-= 120',
+      duration: 4000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
 
     // Instanciação do Jogador (Player com FSM)
     const spawnX = this.spawnData.x || (WorldManager.getSpawn()?.x || 1200);
@@ -294,6 +344,13 @@ export default class RastphenCityScene extends Phaser.Scene {
     if (import.meta.env?.DEV) {
       DevShortcuts.register(this);
     }
+
+    // Filtro Frio e Neblina (Atmosfera do Culto)
+    const gameWidth = this.sys.game.config.width;
+    const gameHeight = this.sys.game.config.height;
+    this.coldFilter = this.add.rectangle(0, 0, gameWidth, gameHeight, 0x001a33, 0.35).setOrigin(0).setScrollFactor(0).setDepth(900);
+    this.fog = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'tex_fog')
+        .setOrigin(0).setScrollFactor(0).setDepth(901).setBlendMode(Phaser.BlendModes.SCREEN).setAlpha(0.25);
   }
 
   setupInputs() {
@@ -320,6 +377,16 @@ export default class RastphenCityScene extends Phaser.Scene {
             previousSceneKey: 'RastphenCityScene',
             player: this.player
           });
+          return;
+        }
+
+        if (this.currentInteractTarget === 'porta_trancada') {
+          Logger.info('Intent', 'Interação com porta trancada (Morador Aterrorizado).');
+          this.interactIndicator.setVisible(false);
+          this.game.events.emit('openDialogue', [{
+            character: 'Morador Aterrorizado (Sussurro)',
+            text: 'Vá embora! Não abrimos para forasteiros antes do amanhecer! O culto está observando...'
+          }]);
           return;
         }
 
@@ -356,6 +423,8 @@ export default class RastphenCityScene extends Phaser.Scene {
     addZone(this.mercadorYanil, 'mercador_yanil');
     addZone(this.guardaTelmer, 'guardas_muralha');
     addZone(this.guardaBreno, 'guardas_muralha');
+    addZone(this.house1, 'porta_trancada');
+    addZone(this.house2, 'porta_trancada');
   }
 
   update(time, delta) {
@@ -388,6 +457,11 @@ export default class RastphenCityScene extends Phaser.Scene {
     if (!touching) {
       this.currentInteractTarget = null;
       this.interactIndicator.setVisible(false);
+    }
+    
+    // Animação da neblina
+    if (this.fog) {
+      this.fog.tilePositionX += 0.3;
     }
   }
 }
