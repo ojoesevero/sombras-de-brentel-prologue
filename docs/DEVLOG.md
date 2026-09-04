@@ -188,3 +188,7 @@ Adicionalmente, injetamos uma camada de instrumentação de telemetria refinada 
   5. **Testes Unitários Automatizados:** Configurado o test runner nativo do Node.js (`node --test`) via `npm test` e criados os arquivos `tests/QuestManager.test.js` e `tests/InventoryManager.test.js`, com 100% de aprovação (9/9 testes passando) de forma desacoplada do DOM.
 
 
+
+## Sonoplastia Global, Atmosfera e Performance (v0.17.2)
+- **Status:** Concluído
+- **Detalhes:** Integração massiva do sistema de Áudio Global utilizando instâncias persistentes (sem Object.freeze) para 6 BGMs temáticas e SFX polidos para interações UI (anti-bubbling) usando `window.playBGM`. Implementação de um Overhaul Atmosférico completo na `RastphenCityScene`, instaurando lei marcial com filtro sombrio, neblina em modo blend *SCREEN*, remoção de NPCs civis, adição de diálogos trancados por trás das portas e patrulha mecânica dos guardas otimizada em *Tweens O(1)*. Performance foi drasticamente melhorada expurgando listeners de teclado em `YanilShopScene`, destruindo referências órfãs no `AudioManager` e substituindo a raiz quadrada custosa de `Phaser.Math.Distance.Between` pelo método ultra-rápido `Distance.Squared` na validação espacial de todas as cenas abertas. Finalizado com injeção segura de telemetria sem cookies (Vercel Analytics) no entry point para acompanhamento remoto.

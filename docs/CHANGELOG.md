@@ -7,6 +7,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [1.0.0-alpha] - 2026-08-27
 ### Added
 - Setup inicial do projeto Vite, Electron e Phaser 3.
+- Injeção de Telemetria segura (Vercel Analytics) sem cookies para monitoramento de Web Vitals.
+- Otimização algorítmica substituindo `Distance.Between` por `Distance.Squared` na colisão espacial, poupando processamento de raiz quadrada a 60fps.
+- Saneamento de Memory Leaks destruindo ouvintes fantasmas do teclado no `YanilShopScene` e nós de áudio mortos no `AudioManager`.
+- Overhaul Atmosférico em `RastphenCityScene` instaurando lei marcial com neblina, remoção de civis e novas interações tensas através das portas.
 - Correção crítica no `InputManager` / `UIScene` para Input Bubbling (adição de debounce no diálogo e substituição de SFX de confirm para hover na leitura contínua).
 - Implementação massiva do sistema de Áudio Global (BGM e SFX) em todas as cenas usando `window.playBGM` sem Object.freeze.
 - Refatoração dos portais no `WorldManager.js` com repulsão inteligente e suporte a trava por quests (Ex: Portal do Templo).
