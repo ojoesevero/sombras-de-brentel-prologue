@@ -336,13 +336,18 @@ export default class TempleScene extends Phaser.Scene {
     let closest = null;
     let closestDist = Infinity;
 
-    this.interactables.forEach(ent => {
-      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, ent.x, ent.y);
-      if (dist <= 65 && dist < closestDist) {
-        closestDist = dist;
-        closest = ent;
-      }
-    });
+    if (this.player.body.velocity.lengthSq() > 0 || !this.currentInteractable) {
+      this.interactables.forEach(ent => {
+        const distSq = Phaser.Math.Distance.Squared(this.player.x, this.player.y, ent.x, ent.y);
+        const maxRangeSq = 65 * 65;
+        if (distSq <= maxRangeSq && distSq < closestDist) {
+          closestDist = distSq;
+          closest = ent;
+        }
+      });
+    } else {
+      closest = this.interactables.find(e => e.id === this.currentInteractable);
+    }
 
     if (closest && this.player.canInteract()) {
       this.currentInteractTarget = closest.id;

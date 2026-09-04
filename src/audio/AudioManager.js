@@ -102,6 +102,7 @@ class AudioManager {
         duration: fadeDuration,
         onComplete: () => {
           this.currentBGM.stop();
+          this.currentBGM.destroy();
           this.currentBGM = null;
           this.currentBGMKey = null;
           window.currentBGMKey = null;

@@ -327,6 +327,10 @@ export default class YanilShopScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', () => this.closeShop());
     this.input.keyboard.on('keydown-X', () => this.closeShop());
     this.input.keyboard.on('keydown-SHIFT', () => this.closeShop());
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard.removeAllListeners();
+    });
   }
 
   closeShop() {
